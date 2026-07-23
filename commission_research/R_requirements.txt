@@ -1,0 +1,12 @@
+shiny>=1.8
+RSQLite>=2.3
+DBI>=1.2
+DT>=0.33
+ggplot2>=3.5
+bslib>=0.7
+plotly>=4.10
+lubridate>=1.9
+stringr>=1.5
+visNetwork>=2.1
+reactable>=0.4
+dplyr>=1.1

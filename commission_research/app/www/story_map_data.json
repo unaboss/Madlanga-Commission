@@ -1,0 +1,3787 @@
+{
+  "commission_timeline": [
+    {
+      "id": 18,
+      "date": "2025-08-20",
+      "title": "Media-Statement Hearings-and-Commission-Venue",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings",
+        "Venue"
+      ],
+      "file_path": "5ec22a41-fda3-4163-a05e-27b35f0e3f26-STATEMENT BY JUSTICE MBUYISELI MADLANGA, CHAIRPERSON OF THE JUDICIAL.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 17,
+      "date": "2025-08-26",
+      "title": "Media-Statement Postponement-of-Public-Hearings",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings"
+      ],
+      "file_path": "231b2ded-30c4-4c4c-97d6-70ae46200422-STATEMENT BY JUSTICE MBUYISELI MADLANGA, CHAIRPERSON OF THE JUDICIAL (2).pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 19,
+      "date": "2025-09-05",
+      "title": "Media-Statement Public-Hearings-Commencement",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings"
+      ],
+      "file_path": "c6ad4cdd-7844-492c-bb8e-f9693e9ea4e5-STATEMENT BY JEREMY MICHAELS, SPOKESPERSON OF THE JUDICIAL COMMISSION.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 21,
+      "date": "2025-09-08",
+      "title": "Media-Briefing Public-Hearings-Preparations",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Briefing Hearings Preparations"
+      ],
+      "file_path": "2eae2275-e1e8-45b1-b670-e7931cf77258-MEDIA BRIEFING BY THE JUDICIAL COMMISSION OF INQUIRY INTO CRIMINALITY,.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 20,
+      "date": "2025-09-15",
+      "title": "Media-Statement First-Public-Hearing-Arrangements",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Arrangements"
+      ],
+      "file_path": "e188e46b-4bfe-4dd6-8f4b-9180c4e08773-STATEMENT BY JEREMY MICHAELS, SPOKESPERSON OF THE JUDICIAL COMMISSION (2).pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 22,
+      "date": "2025-09-17",
+      "title": "Opening-Remarks Commencement-of-Public-Hearings",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings"
+      ],
+      "file_path": "a5cb9409-e785-4f5b-b4fb-cc7a7a752a68-CJS_COMMISSION_CHAIR_OPENING_REMARKS__FINAL_17092025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 48,
+      "date": "2025-09-17",
+      "title": "Legal-Teams-Opening-Address",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [],
+      "file_path": "4473395c-c8c0-44f0-a63a-35f38f6d968a-Legal Team Opening Address.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 23,
+      "date": "2025-09-30",
+      "title": "Media-Statement Change-of-Chief-Evidence-Leader",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Change",
+        "Chief Evidence Leader"
+      ],
+      "file_path": "a0b69619-f001-42ed-abd2-87216a1386a6-CJS_COMMISSION_STATEMENT_STAFF_30092025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 24,
+      "date": "2025-10-11",
+      "title": "Application In-Camera-Hearings-and-Witness-Protection",
+      "category": "application",
+      "category_label": "Application",
+      "snippet": "",
+      "entities": [
+        "Hearings"
+      ],
+      "file_path": "cfbf9f8d-dea3-4d3f-a513-5d0008343dcf-Application for In Camera Evidence 11 Oct 2025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 25,
+      "date": "2025-10-19",
+      "title": "Media-Statement Partially-In-Camera-Hearings",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Partially Hearings"
+      ],
+      "file_path": "bc3f8c2e-a175-4cad-8fa5-bfaa6479ecc1-CJS_COMMISSION_HEARINGS_20 TO 22 October_fv_19102025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 26,
+      "date": "2025-10-24",
+      "title": "Media-Advisory Camera-Use-at-Hearings",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [],
+      "file_path": "eeb21398-897d-4bf8-a04b-4752d039df4c-CJS_COMMISSION_CAMERAS_24102025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 27,
+      "date": "2025-10-26",
+      "title": "Media-Statement Hearings-27-to-31-October",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings"
+      ],
+      "file_path": "dee6f34d-23b9-4dfe-bf32-3122bc73b5e2-CJS_COMMISSION_HEARINGS_27 to 31 October_26102025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 28,
+      "date": "2025-11-02",
+      "title": "Media-Advisory Katiso-Molefe-Operation-Testimony",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Katiso Molefe Operation"
+      ],
+      "file_path": "01d1fca7-4bde-4f69-a79d-46b35b112723-CJS_COMMISSION_HEARING_3November2025_02112025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 29,
+      "date": "2025-11-03",
+      "title": "Media-Advisory Khumalo-Testimony-Resumption",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "Khumalo"
+      ],
+      "file_path": "1f6c29c0-ec24-4fea-8abd-880f78b4f19f-CJS_COMMISSION_HEARING_KHUMALO_4November2025_02112025_copy.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 30,
+      "date": "2025-11-17",
+      "title": "Media-Statement Commencement-of-Phase-Two",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Phase Two"
+      ],
+      "file_path": "842cdb70-b3f4-4f64-83e4-3ea18edf4461-CJSC_PHASE_TWO_17112025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 31,
+      "date": "2025-11-18",
+      "title": "Media-Advisory Phase-Two-Hearing-Time-Change",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Phase Two Time Change"
+      ],
+      "file_path": "ffc4a683-06b7-4426-bac5-181d9160f9cb-CJSC_PHASE_TWO_17112025 18 Nov.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 32,
+      "date": "2025-11-25",
+      "title": "Media-Statement Justice-Madlanga-Impersonation-Warning",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Impersonation Warning"
+      ],
+      "file_path": "6bc5ab52-4c5a-4817-a637-330e55c646c2-CJSC_MADLANGA_IMPERSONATION_WARNING_25112025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 33,
+      "date": "2025-11-26",
+      "title": "Order Senona-Statement-and-Testimony",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [
+        "Senona"
+      ],
+      "file_path": "f315b381-7f0a-4da4-ba4f-c12c6fce7928-CJSC_SENONA_ORDER_26112025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 34,
+      "date": "2025-11-26",
+      "title": "Government-Gazette Proclamation-298 Madlanga-Commission-Term-Amendment",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "Term"
+      ],
+      "file_path": "e50302b5-94c0-4ad0-a3df-509d774c2af9-Gov Gazette Commission Ext.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 35,
+      "date": "2025-12-01",
+      "title": "Media-Advisory Mchunu-Testimony",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Mchunu"
+      ],
+      "file_path": "1f3ddd15-b774-4919-b919-d2edf0af6a65-CJSC_MCHUNU_HEARING_01122025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 47,
+      "date": "2025-12-05",
+      "title": "Media-Statement Marius-van-der-Merwe-Killing",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Marius",
+        "Merwe Killing"
+      ],
+      "file_path": "18f28421-ad6f-464b-bbc8-db5cf67d792c-CJSC_Marius_van_der_Merwe_05122025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 46,
+      "date": "2025-12-06",
+      "title": "NATJOINTS-Joint-Statement Witness-and-Official-Security",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "NATJOINTS",
+        "Official Security"
+      ],
+      "file_path": "adb9d901-fc85-4df2-8e64-96f4c335cd83-witnessD.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 45,
+      "date": "2025-12-17",
+      "title": "Media-Statement First-Interim-Report-Submitted",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [],
+      "file_path": "a3eadfa6-734d-4388-ba28-f2140830a207-CJSC_InterimReport_Delivered_17122025.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 44,
+      "date": "2026-01-12",
+      "title": "Media-Statement Public-Hearings-Resume-26-January",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings Resume"
+      ],
+      "file_path": "bc4e375f-ea3e-45fb-bed8-c8d75f0e36a5-CJSC_Resume_Jan26_12012026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 43,
+      "date": "2026-01-26",
+      "title": "Media-Statement First-Public-Hearing-of-2026",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "3088a61b-b8cf-4161-8f38-6b1f190af0be-CJSC_STATEMENT_26012026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 49,
+      "date": "2026-03-09",
+      "title": "Reasons-for-Ruling",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "c1d70eee-38f9-46ef-87f5-600dfd323565-Unsigned Ruling Ex Parte Carrim_09.03.2026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 42,
+      "date": "2026-03-12",
+      "title": "Government-Gazette Proclamation-312 Madlanga-Commission-Term-Amendment",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "Term"
+      ],
+      "file_path": "ccc91cd7-89b4-4742-b664-76bfb539fb0d-54315 12-3 JustConstDev.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 41,
+      "date": "2026-03-17",
+      "title": "Provisional-Ruling Witness-G-Protection",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "467780c7-7954-46eb-971a-1e7ec67f1b48-Rule Nisi_Witness G_17.03.2026(1).pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 40,
+      "date": "2026-03-24",
+      "title": "Media-Statement Easter-Recess",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [],
+      "file_path": "6857e7e7-6029-4100-9b93-19ad9da1ec87-CJC_EASTER_24032026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 39,
+      "date": "2026-04-07",
+      "title": "Media-Statement Hearings-Resume-After-Easter-Recess",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Hearings Resume After"
+      ],
+      "file_path": "97c52c8d-12fa-4ba2-b139-139ca12d6600-MADLANGA_RESUMES_07042026 (1).pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 13,
+      "date": "2026-04-20",
+      "title": "Statement SAPS-Task-Team-Clarification",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "SAPS",
+        "Task Team"
+      ],
+      "file_path": "4e432823-b293-4fe9-a55b-c8c20e36fc41-CJS_SAPS_TaskTeam_Clarification_20042026 (1).pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 38,
+      "date": "2026-04-20",
+      "title": "Statement SAPS-Task-Team-Clarification",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [
+        "SAPS",
+        "Task Team"
+      ],
+      "file_path": "16d861ef-77d9-4703-891b-1f2fa03e626f-CJS_SAPS_TaskTeam_Clarification_20042026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 37,
+      "date": "2026-04-24",
+      "title": "Final-Ruling Witness-G-Protection",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "d7438bfe-7c5d-452c-8e04-20c78757370a-Final Ruling Witness G - 24.04.2026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 36,
+      "date": "2026-05-05",
+      "title": "Rule-4-Notice Witness-H-In-Camera-Application",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [],
+      "file_path": "98f33aaa-7ae9-4e14-8427-7734765a0db4-Rule 4 Notice signed.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 16,
+      "date": "2026-05-07",
+      "title": "Ruling Witness-H-In-Camera-Hearing",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "5b102d41-8a0a-4f80-8bd7-2e1392c31cd9-Madlanga_WitnessH_Order_07052026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 15,
+      "date": "2026-05-08",
+      "title": "Media-Statement Witness-H-In-Camera-Reminder",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Reminder"
+      ],
+      "file_path": "a4accf8d-273d-4260-97d1-014899abeeb8-STATEMENT REMINDER WITNESS H TO BE HEARD IN-CAMERA ON FRIDAY, 8 MAY 2026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 14,
+      "date": "2026-05-10",
+      "title": "Media-Statement Drug-Seizure-and-Theft-Hearings",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Drug Seizure",
+        "Theft Hearings"
+      ],
+      "file_path": "9af1a8cc-1b97-4618-8bb6-720a8323d0ec-STATEMENT MADLANGA COMMISSION TO CONTINUE FOCUS ON SEIZURE AND THEFT OF DRUGS AHEAD OF SECOND INTERIM REPORT.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 12,
+      "date": "2026-05-29",
+      "title": "Media-Statement Second-Interim-Report-Submitted",
+      "category": "media",
+      "category_label": "Media Release",
+      "snippet": "",
+      "entities": [
+        "Second"
+      ],
+      "file_path": "3c645948-282f-48d5-9c57-361d7d025add-MADLANGA_SECOND_INTERIM_29052026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 10,
+      "date": "2026-06-01",
+      "title": "Ruling Day-110 Lt-Col-Duma-Protection",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [
+        "Lt Col Duma"
+      ],
+      "file_path": "d4d1de57-952e-4fa2-a1a2-c139cb535750-MADLANGA_COMMISSION_RECORD_20260601_DAY110 RULING.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 11,
+      "date": "2026-06-01",
+      "title": "Media-Notice Witness-I-In-Camera-Application",
+      "category": "media",
+      "category_label": "Media Release",
+      "snippet": "",
+      "entities": [],
+      "file_path": "029ce704-372f-4e5f-ba22-c98d807612e5-LETTER TO MEDIA AND ALL 01.06.2026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 9,
+      "date": "2026-06-04",
+      "title": "Ruling Day-113 Witness-I-Protection",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "631ef655-554d-4f7c-9a86-6105287f736f-MADLANGA_COMMISSION_RULING_20260604.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 8,
+      "date": "2026-06-11",
+      "title": "Chairpersons-Remarks Bafana-Bafana-World-Cup",
+      "category": "statement",
+      "category_label": "Statement",
+      "snippet": "",
+      "entities": [],
+      "file_path": "59ad266c-e10a-410a-9970-e4cd37f910dd-MADLANGA BAFANA BAFANA SUCCESS IN THE 2026 FIFA WORLD .pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 7,
+      "date": "2026-06-22",
+      "title": "Ruling Day-123 Van-Wyk-Appearance",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [
+        "Van Wyk"
+      ],
+      "file_path": "c34d951c-c33e-47d7-a6b4-751fcee59053-MADLANGA_COMMISSION_RULING_20260622.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 6,
+      "date": "2026-06-23",
+      "title": "Ruling Day-124 Witness-K-Protection",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "b10d0049-1bc6-4111-84c7-8b0c27f0f327-MADLANGA_COMMISSION_RECORD_20260623_DAY124 RULING.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 5,
+      "date": "2026-07-15",
+      "title": "Ruling Day-140 Matlala-Testimony-Postponement",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [
+        "Matlala"
+      ],
+      "file_path": "9c1e2183-7173-4219-8119-3aebd0a9de6e-MADLANGA_COMMISSION_RECORD_20260715_Day 140_ruling (003).pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 2,
+      "date": "2026-07-16",
+      "title": "Notice-of-Motion Carrim-Postponement-and-Confidentiality",
+      "category": "application",
+      "category_label": "Application",
+      "snippet": "",
+      "entities": [
+        "Carrim"
+      ],
+      "file_path": "c6c86a20-6261-44c5-9867-9e7ec930de0d-Annexure A notice of motion.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 1,
+      "date": "2026-07-17",
+      "title": "Media-Notice Carrim-In-Camera-Application",
+      "category": "media_statement",
+      "category_label": "Media Statement",
+      "snippet": "",
+      "entities": [
+        "Carrim"
+      ],
+      "file_path": "c5425ec7-c600-47ca-92ed-8873f5dd0df6-LETTER TO MEDIA AND ALL - 17 July 2026.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 3,
+      "date": "2026-07-17",
+      "title": "Rule-4-Notice Carrim-In-Camera-Application",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [
+        "Carrim"
+      ],
+      "file_path": "3380aeec-4db2-458b-83ae-9b85119d4659-Rule 4 Notice - Carrim.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 4,
+      "date": "2026-07-17",
+      "title": "Ruling Carrim-Postponement-and-In-Camera-Application",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [
+        "Carrim"
+      ],
+      "file_path": "2006df84-8a62-45fb-8506-06d7770e7446-Draft Order - Agreed 260717 - S Carrim In Camera.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 50,
+      "date": "2026-07-21",
+      "title": "Proclamation Amendment-to-Terms-of-Reference",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "b1e19d1a-9ba2-4901-88ac-85c358a44e53-2025-11-26_Madlanga-Commission_Proclamation_Amendment-to-Terms-of-Reference.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 51,
+      "date": "2026-07-21",
+      "title": "Proclamation Amendment-to-Regulations",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "22cec720-d3b2-45dd-8713-989fd8a7d42a-2026-06-09_Madlanga-Commission_Proclamation_Amendment-to-Regulations.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 52,
+      "date": "2026-07-21",
+      "title": "Proclamation Amendment-to-Terms-of-Reference",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "2a5e4feb-6bfa-44f5-bf48-33ca59eead7f-2026-06-09_Madlanga-Commission_Proclamation_Amendment-to-Terms-of-Reference.pdf",
+      "source_type": "document"
+    },
+    {
+      "id": 53,
+      "date": "2026-07-21",
+      "title": "Proclamation Amendment-to-Terms-of-Reference",
+      "category": "ruling",
+      "category_label": "Ruling",
+      "snippet": "",
+      "entities": [],
+      "file_path": "e621ea81-1443-4b16-94f1-e92e42e4b0e2-2026-03-12_Madlanga-Commission_Proclamation_Amendment-to-Terms-of-Reference.pdf",
+      "source_type": "document"
+    }
+  ],
+  "witness_timeline": [
+    {
+      "day": 1,
+      "date": "2025-09-17",
+      "speaker": "Lt Gen Nhlanhla Mkhwanazi",
+      "role": "witness",
+      "segments": 286,
+      "summary": "The first hearing covers opening statements and initial submissions by parties involved.",
+      "entities": [
+        "NPA",
+        "reference make",
+        "Task Team",
+        "SAPS",
+        "SSA",
+        "DPCI",
+        "JMPD",
+        "121 docket"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 2,
+      "date": "2025-09-18",
+      "speaker": "Lt Gen Nhlanhla Mkhwanazi",
+      "role": "witness",
+      "segments": 269,
+      "summary": "Witness: Lieutenant General Mkhwanazi. \nEvidence leaders: Adv Sello SC",
+      "entities": [
+        "MK1",
+        "MK2",
+        "Volume 1",
+        "Volume 2",
+        "Task Team",
+        "121 docket",
+        "SSA",
+        "case docket"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 3,
+      "date": "2025-09-19",
+      "speaker": "Lt Gen Nhlanhla Mkhwanazi",
+      "role": "witness",
+      "segments": 344,
+      "summary": "Witness: Lieutenant Genera Mkhwanazi. Evidence leader: Adv Sello SC",
+      "entities": [
+        "MK17",
+        "SSA",
+        "case are",
+        "Annexure KZN",
+        "Crime Intelligence",
+        "case dockets",
+        "case almost",
+        "docket and"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 4,
+      "date": "2025-09-22",
+      "speaker": "Lt Gen Masemola",
+      "role": "witness",
+      "segments": 392,
+      "summary": "Witness: General Masemola. \nEvidence Leaders: Adv Motau SC, Adv Seegels-Ncube.",
+      "entities": [
+        "SAPS",
+        "Crime Intelligence",
+        "National Prosecuting Authority",
+        "NPA",
+        "case forward",
+        "Task Team",
+        "case Lieutenant",
+        "DPCI"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 5,
+      "date": "2025-09-23",
+      "speaker": "Lt Gen Masemola",
+      "role": "witness",
+      "segments": 314,
+      "summary": "Witness: General Masemola. \nEvidence Leaders: Adv Motau SC, Adv Seegels-Ncube.",
+      "entities": [
+        "Task Team",
+        "National Task Team",
+        "SAPS",
+        "NPA",
+        "SSA",
+        "case dockets",
+        "128 case",
+        "Organised Crime"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 8,
+      "date": "2025-09-29",
+      "speaker": "Lt Gen Khumalo",
+      "role": "witness",
+      "segments": 217,
+      "summary": "Witness: Lieutenant General Khumalo. \nEvidence Leaders: Adv Hassim SC, Adv Pooe.",
+      "entities": [
+        "Annexure WB1",
+        "SAPS",
+        "Task Team",
+        "Organised Crime",
+        "121 docket",
+        "Crime Intelligence",
+        "reference than",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 9,
+      "date": "2025-09-30",
+      "speaker": "Lt Gen Khumalo",
+      "role": "witness",
+      "segments": 366,
+      "summary": "Witness: Lieutenant General. \nEvidence Leaders: Adv Hassim SC, Adv Pooe",
+      "entities": [
+        "Annexure WB1",
+        "Bundle WB1",
+        "IPID",
+        "Task Team",
+        "Crime Intelligence",
+        "SSA",
+        "case date",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 15,
+      "date": "2025-10-20",
+      "speaker": "Witness A (protected)",
+      "role": "witness_protected",
+      "segments": 457,
+      "summary": "Witness: witness A",
+      "entities": [
+        "DPCI",
+        "Crime Intelligence",
+        "case was",
+        "case that",
+        "Organised Crime",
+        "Tactical Response Team",
+        "JMPD",
+        "SAPS"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 17,
+      "date": "2025-10-22",
+      "speaker": "Witness B (protected)",
+      "role": "witness_protected",
+      "segments": 351,
+      "summary": "Witness: Witness B. \nEvidence Leaders: Adv Pooe, Adv Seegels-Ncube",
+      "entities": [
+        "case number 275",
+        "case number 149",
+        "case number 286",
+        "docket itself",
+        "docket for",
+        "SAPS",
+        "SSA",
+        "case. Can"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 17,
+      "date": "2025-10-22",
+      "speaker": "Brigadier Nkhwashu",
+      "role": "witness",
+      "segments": 3,
+      "summary": "Witness: Witness B. \nEvidence Leaders: Adv Pooe, Adv Seegels-Ncube",
+      "entities": [
+        "case number 275",
+        "case number 149",
+        "case number 286",
+        "docket itself",
+        "docket for",
+        "SAPS",
+        "SSA",
+        "case. Can"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 18,
+      "date": "2025-10-23",
+      "speaker": "Witness B (protected)",
+      "role": "witness_protected",
+      "segments": 207,
+      "summary": "Witness B . \nEvidence Leaders : Adv Pooe, Adv Seegels-Ncube",
+      "entities": [
+        "SSA",
+        "reference the",
+        "IPID",
+        "exhibit 10",
+        "reference here",
+        "reference there",
+        "Annexure B11",
+        "Crime Intelligence"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 19,
+      "date": "2025-10-24",
+      "speaker": "Witness C (protected)",
+      "role": "witness_protected",
+      "segments": 269,
+      "summary": "Witness: Witness C. \nEvidence Leaders: Adv Motlhasedi, Adv Seegels-Ncube.",
+      "entities": [
+        "Task Team",
+        "Organised Crime",
+        "SAPS",
+        "docket and",
+        "SSA",
+        "case was",
+        "case pertaining",
+        "case which"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 20,
+      "date": "2025-10-27",
+      "speaker": "Brigadier Mkhabhela",
+      "role": "witness",
+      "segments": 387,
+      "summary": "Witness: Brigadier Mkhabela. \nEvidence leader: Adv Chaskalson SC, Adv Pooe.",
+      "entities": [
+        "SAPS",
+        "Forensic Science Laboratory",
+        "case files",
+        "SSA",
+        "case. Both",
+        "reference sample",
+        "case file",
+        "case. That"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 21,
+      "date": "2025-10-28",
+      "speaker": "Captain Mkhatshwa",
+      "role": "witness",
+      "segments": 162,
+      "summary": "Witness: Captain Mkhwatshwa. \nEvidence Leader: Adv Segeels-Ncube.",
+      "entities": [
+        "Annexure A",
+        "Task Team",
+        "Forensic Science Laboratory",
+        "case was",
+        "case files",
+        "case contained",
+        "case individually",
+        "case from"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 21,
+      "date": "2025-10-28",
+      "speaker": "Captain Modisane",
+      "role": "witness",
+      "segments": 111,
+      "summary": "Witness: Captain Mkhwatshwa. \nEvidence Leader: Adv Segeels-Ncube.",
+      "entities": [
+        "Annexure A",
+        "Task Team",
+        "Forensic Science Laboratory",
+        "case was",
+        "case files",
+        "case contained",
+        "case individually",
+        "case from"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 22,
+      "date": "2025-10-29",
+      "speaker": "Captain Kruger",
+      "role": "witness",
+      "segments": 393,
+      "summary": "Witness: Captain Mokoena. \nEvidence leader: Adv Segeels-Ncube",
+      "entities": [
+        "Task Team",
+        "Crime Intelligence",
+        "case and",
+        "HAWKS",
+        "SAPS",
+        "case that",
+        "National Task Team",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 22,
+      "date": "2025-10-29",
+      "speaker": "Brigadier Mokoena",
+      "role": "witness",
+      "segments": 209,
+      "summary": "Witness: Captain Mokoena. \nEvidence leader: Adv Segeels-Ncube",
+      "entities": [
+        "Task Team",
+        "Crime Intelligence",
+        "case and",
+        "HAWKS",
+        "SAPS",
+        "case that",
+        "National Task Team",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 22,
+      "date": "2025-10-29",
+      "speaker": "Captain Wanda",
+      "role": "witness",
+      "segments": 174,
+      "summary": "Witness: Captain Mokoena. \nEvidence leader: Adv Segeels-Ncube",
+      "entities": [
+        "Task Team",
+        "Crime Intelligence",
+        "case and",
+        "HAWKS",
+        "SAPS",
+        "case that",
+        "National Task Team",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 23,
+      "date": "2025-10-30",
+      "speaker": "Witness C (protected)",
+      "role": "witness_protected",
+      "segments": 226,
+      "summary": "Witness: Witness C",
+      "entities": [
+        "case that",
+        "reference was",
+        "SAPS",
+        "case and",
+        "reference chats",
+        "SSA",
+        "IPID",
+        "Crime Intelligence"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 24,
+      "date": "2025-11-03",
+      "speaker": "Lt Gen Mbotho",
+      "role": "witness",
+      "segments": 274,
+      "summary": "Witness: Chief Inspector Raftopoulos, Warrant Officer Nkosi, General Mbotho. \nEvidence leader: Adv Segeels-Ncube.",
+      "entities": [
+        "HAWKS",
+        "Annexure GR1",
+        "SAPS",
+        "Gauteng Traffic Police",
+        "case may",
+        "SSA",
+        "Task Team",
+        "reference and"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 25,
+      "date": "2025-11-04",
+      "speaker": "Lt Gen Khumalo",
+      "role": "witness",
+      "segments": 260,
+      "summary": "Witness: Lieutenant General. \nEvidence leader: Adv Hassim SC",
+      "entities": [
+        "SSA",
+        "Crime Intelligence",
+        "Task Team",
+        "Organised Crime",
+        "SAPS",
+        "case involving",
+        "case that",
+        "case was"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 26,
+      "date": "2025-11-05",
+      "speaker": "Lt Gen Khumalo",
+      "role": "witness",
+      "segments": 562,
+      "summary": "Witness: Lieutenant General. \nEvidence leader: Adv Hassim SC.",
+      "entities": [
+        "case that",
+        "case was",
+        "case against",
+        "case for",
+        "case. Those",
+        "National Prosecuting Authority",
+        "case then",
+        "IPID"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 27,
+      "date": "2025-11-06",
+      "speaker": "Chief Mapiyeye",
+      "role": "witness",
+      "segments": 443,
+      "summary": "Witness: Adv Hassim SC. \nEvidence leader: Adv Sello SC",
+      "entities": [
+        "EMPD",
+        "Annexure JM3",
+        "SAPS",
+        "SSA",
+        "case has",
+        "case which",
+        "NPA",
+        "reference perhaps"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 28,
+      "date": "2025-11-07",
+      "speaker": "Chief Mapiyeye",
+      "role": "witness",
+      "segments": 348,
+      "summary": "Witness: Chief Mapiyeye, Commissioner Spies. \nEvidence leader: Adv Sello SC.",
+      "entities": [
+        "EMPD",
+        "SSA",
+        "case you",
+        "IPID",
+        "reference insofar",
+        "reference five",
+        "case. Let",
+        "Case number"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 30,
+      "date": "2025-11-11",
+      "speaker": "Mr Nciza",
+      "role": "witness",
+      "segments": 93,
+      "summary": "Witness:Commissioner Spies, Mr Nciza. \nEvidence Leader: Adv Sello SC, Adv Motlhasedi.",
+      "entities": [
+        "EMPD",
+        "Crime Intelligence",
+        "SAPS",
+        "reference can",
+        "reference the",
+        "SSA",
+        "case which",
+        "case has"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 31,
+      "date": "2025-11-12",
+      "speaker": "Mr Nciza",
+      "role": "witness",
+      "segments": 492,
+      "summary": "Witness: Mr Nciza. \nEvidence Leader: Adv Motlhasedi",
+      "entities": [
+        "Annexure PN2",
+        "EMPD",
+        "SSA",
+        "Annexure PN3",
+        "case would",
+        "IPID",
+        "docket that",
+        "docket because"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 32,
+      "date": "2025-11-13",
+      "speaker": "Mr Nciza",
+      "role": "witness",
+      "segments": 443,
+      "summary": "Witness: Mr Nciza\nEvidence Leader: Adv Motlhasedi",
+      "entities": [
+        "SSA",
+        "case against",
+        "case. They",
+        "case number between",
+        "EMPD",
+        "case. Attached",
+        "docket. The",
+        "Case Management"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 33,
+      "date": "2025-11-14",
+      "speaker": "Lt Col Thepa",
+      "role": "witness",
+      "segments": 352,
+      "summary": "Witness: Lieutenant Colonel Thepa, Witness D. \nEvidence Leader: Adv Motlhasedi",
+      "entities": [
+        "EMPD",
+        "Annexure KX3",
+        "IPID",
+        "Annexure KX5",
+        "reference specifically",
+        "case are",
+        "Task Team",
+        "case registered"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 34,
+      "date": "2025-11-17",
+      "speaker": "Lt Col Khumalo",
+      "role": "witness",
+      "segments": 278,
+      "summary": "Witness: Major General Motsepe, Lieutenant Colonel Paul Ntate Khumalo. \nEvidence Leader: Adv Hassim",
+      "entities": [
+        "121 docket",
+        "SAPS",
+        "docket investigations",
+        "Crime Intelligence",
+        "docket actually",
+        "docket that",
+        "Task Team",
+        "docket being"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 34,
+      "date": "2025-11-17",
+      "speaker": "Maj Gen Motsepe",
+      "role": "witness",
+      "segments": 268,
+      "summary": "Witness: Major General Motsepe, Lieutenant Colonel Paul Ntate Khumalo. \nEvidence Leader: Adv Hassim",
+      "entities": [
+        "121 docket",
+        "SAPS",
+        "docket investigations",
+        "Crime Intelligence",
+        "docket actually",
+        "docket that",
+        "Task Team",
+        "docket being"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 35,
+      "date": "2025-11-18",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 573,
+      "summary": "Witness: Mr Mogotsi. \nEvidence Leader: Adv Chaskalson, Adv Pooe",
+      "entities": [
+        "Crime Intelligence",
+        "SSA",
+        "Crime Intelligence Division",
+        "SAPS",
+        "reference about",
+        "Task Team",
+        "case number mentioned",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 36,
+      "date": "2025-11-19",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 237,
+      "summary": "Witness: Mr Mogotsi. \nEvidence Leader: Adv Chaskalson SC, Adv Pooe",
+      "entities": [
+        "Crime Intelligence",
+        "SSA",
+        "Crime Intelligence Division",
+        "Task Team",
+        "SAPS",
+        "case which",
+        "case. When",
+        "case better"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 37,
+      "date": "2025-11-20",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 782,
+      "summary": "Witness: Mr Mogotsi.\nEvidence Leader: Adv Chaskalson SC, Adv Pooe.",
+      "entities": [
+        "IPID",
+        "case. What",
+        "Crime Intelligence",
+        "SSA",
+        "case date",
+        "case and",
+        "case needs",
+        "case. The"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 40,
+      "date": "2025-11-28",
+      "speaker": "Lt Gen Senthumule",
+      "role": "witness",
+      "segments": 380,
+      "summary": "Witness: Lieutenant General Senthumule. \nEvidence leader: Adv Pooe",
+      "entities": [
+        "SAPS",
+        "State Security Agency",
+        "DPCI",
+        "Crime Intelligence",
+        "Organised Crime",
+        "Forensic Science Laboratory",
+        "Detective Services",
+        "Task Team"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 41,
+      "date": "2025-12-01",
+      "speaker": "Dr Mashazi",
+      "role": "witness",
+      "segments": 762,
+      "summary": "Day 41, 1 Dec 2025. witness: Dr Mashazi.",
+      "entities": [
+        "EMPD",
+        "SSA",
+        "Annexure IM2",
+        "reference question",
+        "case that",
+        "case about",
+        "NPA",
+        "case opened"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 42,
+      "date": "2025-12-02",
+      "speaker": "Dr Mashazi",
+      "role": "witness",
+      "segments": 402,
+      "summary": "Day 42, 2 Dec 2025. witness: Dr Mashazi. evidence leader: Adv Sello SC",
+      "entities": [
+        "EMPD",
+        "case that",
+        "case numbers",
+        "IPID",
+        "SAPS",
+        "case and",
+        "SSA",
+        "case accepted"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 42,
+      "date": "2025-12-02",
+      "speaker": "Minister Mchunu",
+      "role": "witness",
+      "segments": 85,
+      "summary": "Day 42, 2 Dec 2025. witness: Dr Mashazi. evidence leader: Adv Sello SC",
+      "entities": [
+        "EMPD",
+        "case that",
+        "case numbers",
+        "IPID",
+        "SAPS",
+        "case and",
+        "SSA",
+        "case accepted"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 44,
+      "date": "2025-12-04",
+      "speaker": "Minister Mchunu",
+      "role": "witness",
+      "segments": 208,
+      "summary": "Day 44, 4 Dec 2025. witness: Commissioner Mkhwanazi. evidence leader: Adv Sello SC",
+      "entities": [
+        "EMPD",
+        "IPID",
+        "SAPS",
+        "SSA",
+        "HAWKS",
+        "reference there",
+        "case that",
+        "Task Team"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 45,
+      "date": "2025-12-05",
+      "speaker": "Minister Mchunu",
+      "role": "witness",
+      "segments": 1195,
+      "summary": "Day 45, 5 Dec 2025. witness: Minister Mchunu. evidence leader: Adv Sello SC, Adv Pooe",
+      "entities": [
+        "reference. Would",
+        "reference would",
+        "SSA",
+        "Task Team",
+        "Annexure 20",
+        "reference two",
+        "SAPS",
+        "Annexure SM1"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 46,
+      "date": "2026-01-26",
+      "speaker": "Witness E (protected)",
+      "role": "witness_protected",
+      "segments": 279,
+      "summary": "Day 46, 26 Jan 2026. witness: Major General Gopaul, Witness. evidence leader: Adv Mohlasedi, Adv Sello SC",
+      "entities": [
+        "Annexure MK",
+        "SAPS",
+        "Task Team",
+        "case here",
+        "Annexure AG3",
+        "case was",
+        "SSA",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 46,
+      "date": "2026-01-26",
+      "speaker": "Maj Gen Gopaul",
+      "role": "witness",
+      "segments": 216,
+      "summary": "Day 46, 26 Jan 2026. witness: Major General Gopaul, Witness. evidence leader: Adv Mohlasedi, Adv Sello SC",
+      "entities": [
+        "Annexure MK",
+        "SAPS",
+        "Task Team",
+        "case here",
+        "Annexure AG3",
+        "case was",
+        "SSA",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 47,
+      "date": "2026-01-27",
+      "speaker": "Maj Gen Senona",
+      "role": "witness",
+      "segments": 485,
+      "summary": "Day 47, 27 Jan 2026. witness: Major General Senona. evidence leader: Adv Hassim SC",
+      "entities": [
+        "DPCI",
+        "SSA",
+        "Directorate for Priority Crime Investigation",
+        "SAPS",
+        "Task Team",
+        "Detective Services",
+        "Organised Crime",
+        "Crime Intelligence"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 48,
+      "date": "2026-01-28",
+      "speaker": "Maj Gen Senona",
+      "role": "witness",
+      "segments": 695,
+      "summary": "Day 48,28 Jan 2026. witness: Major General Senona. evidence leader: Adv Hassim SC",
+      "entities": [
+        "Annexure S4",
+        "SSA",
+        "SAPS",
+        "HAWKS",
+        "Special Investigating Unit",
+        "case involving",
+        "DPCI",
+        "case here"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 49,
+      "date": "2026-01-29",
+      "speaker": "Maj Gen Senona",
+      "role": "witness",
+      "segments": 539,
+      "summary": "Day 49, witness: Major-General Lesetja Senona",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "case the",
+        "case. But",
+        "case because",
+        "case and",
+        "NPA",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 50,
+      "date": "2026-01-30",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 80,
+      "summary": "Day 50, 30 Jan 2026. witness: Witness F. evidence leader: Adv Chaskalson SC",
+      "entities": [
+        "SAPS",
+        "SSA",
+        "reference and",
+        "Annexure E"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 51,
+      "date": "2026-02-02",
+      "speaker": "Captain Makgotloe",
+      "role": "witness",
+      "segments": 133,
+      "summary": "Day 51, 2 Feb 2026. Witness: Captain Makgotloe. evidence leader: Adv Mosikili",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "Forensic Science Laboratory",
+        "case number",
+        "case. After",
+        "case. Warrant",
+        "case number lodged",
+        "case files"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 52,
+      "date": "2026-02-03",
+      "speaker": "Witness F (protected)",
+      "role": "witness_protected",
+      "segments": 247,
+      "summary": "Day 52, 3 Feb 2026. witness: Witness F.Evidence leader: Adv Chaskalson SC",
+      "entities": [
+        "SSA",
+        "case number and",
+        "SAPS",
+        "case and",
+        "Task Team",
+        "case. But",
+        "reference from",
+        "reference. The"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 52,
+      "date": "2026-02-03",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 74,
+      "summary": "Day 52, 3 Feb 2026. witness: Witness F.Evidence leader: Adv Chaskalson SC",
+      "entities": [
+        "SSA",
+        "case number and",
+        "SAPS",
+        "case and",
+        "Task Team",
+        "case. But",
+        "reference from",
+        "reference. The"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 53,
+      "date": "2026-02-04",
+      "speaker": "Witness F (protected)",
+      "role": "witness_protected",
+      "segments": 349,
+      "summary": "Day 53, 4 Feb 2026. witness: Witness F. evidence leader: Adv Chaskalson SC",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "HAWKS",
+        "case involving",
+        "Bundle 23",
+        "Bundle 24",
+        "case against"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 53,
+      "date": "2026-02-04",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 3,
+      "summary": "Day 53, 4 Feb 2026. witness: Witness F. evidence leader: Adv Chaskalson SC",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "HAWKS",
+        "case involving",
+        "Bundle 23",
+        "Bundle 24",
+        "case against"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 54,
+      "date": "2026-02-05",
+      "speaker": "Brigadier Matjeng",
+      "role": "witness",
+      "segments": 537,
+      "summary": "Day 54, 5 Feb 2026. witness: Brigadier Matjeng. evidence leader: Adv Pooe",
+      "entities": [
+        "SAPS",
+        "SSA",
+        "case now",
+        "case. Remember",
+        "case. You",
+        "case when"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 54,
+      "date": "2026-02-05",
+      "speaker": "Mr Shirindzi",
+      "role": "witness",
+      "segments": 13,
+      "summary": "Day 54, 5 Feb 2026. witness: Brigadier Matjeng. evidence leader: Adv Pooe",
+      "entities": [
+        "SAPS",
+        "SSA",
+        "case now",
+        "case. Remember",
+        "case. You",
+        "case when"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 55,
+      "date": "2026-02-06",
+      "speaker": "Brigadier Matjeng",
+      "role": "witness",
+      "segments": 399,
+      "summary": "Day 55, 6 Feb 2026. witness: Brigadier Rachel Matjeng, Witness F, Mr Carrim. evidence leader: Adv Pooe, Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "reference for",
+        "SAPS",
+        "case here",
+        "Detective Services",
+        "Annexure KMA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 55,
+      "date": "2026-02-06",
+      "speaker": "Mr Shirindzi",
+      "role": "witness",
+      "segments": 97,
+      "summary": "Day 55, 6 Feb 2026. witness: Brigadier Rachel Matjeng, Witness F, Mr Carrim. evidence leader: Adv Pooe, Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "reference for",
+        "SAPS",
+        "case here",
+        "Detective Services",
+        "Annexure KMA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 55,
+      "date": "2026-02-06",
+      "speaker": "Witness F (protected)",
+      "role": "witness_protected",
+      "segments": 3,
+      "summary": "Day 55, 6 Feb 2026. witness: Brigadier Rachel Matjeng, Witness F, Mr Carrim. evidence leader: Adv Pooe, Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "reference for",
+        "SAPS",
+        "case here",
+        "Detective Services",
+        "Annexure KMA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 57,
+      "date": "2026-02-10",
+      "speaker": "Ms Gxasheka",
+      "role": "witness",
+      "segments": 2,
+      "summary": "Day 57, 10 Feb 2026. witness: Adv Behari, Mrs Gxasheka. evidence leader: Adv Segeels-Ncube.",
+      "entities": [
+        "IPID",
+        "SSA",
+        "SIU",
+        "Annexure 2",
+        "EMPD",
+        "SAPS",
+        "case. What",
+        "case course"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 57,
+      "date": "2026-02-10",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 1,
+      "summary": "Day 57, 10 Feb 2026. witness: Adv Behari, Mrs Gxasheka. evidence leader: Adv Segeels-Ncube.",
+      "entities": [
+        "IPID",
+        "SSA",
+        "SIU",
+        "Annexure 2",
+        "EMPD",
+        "SAPS",
+        "case. What",
+        "case course"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 58,
+      "date": "2026-02-11",
+      "speaker": "Mr Keefelakae",
+      "role": "witness",
+      "segments": 314,
+      "summary": "Day 58, 11 Feb 2026. witness: Mr Keefelkae, Mrs Masuku. evidence leader: Adv Sello SC.",
+      "entities": [
+        "IPID",
+        "EMPD",
+        "SSA",
+        "Independent Police Investigative Directorate",
+        "SAPS",
+        "case may",
+        "case where",
+        "DPCI"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 58,
+      "date": "2026-02-11",
+      "speaker": "Ms Masuku",
+      "role": "witness",
+      "segments": 71,
+      "summary": "Day 58, 11 Feb 2026. witness: Mr Keefelkae, Mrs Masuku. evidence leader: Adv Sello SC.",
+      "entities": [
+        "IPID",
+        "EMPD",
+        "SSA",
+        "Independent Police Investigative Directorate",
+        "SAPS",
+        "case may",
+        "case where",
+        "DPCI"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 59,
+      "date": "2026-02-12",
+      "speaker": "Ms Masuku",
+      "role": "witness",
+      "segments": 274,
+      "summary": "Day 59, 12 Feb 2026. witness: Mrs Masuku. evidence leader: Adv Sello SC.",
+      "entities": [
+        "SAPS",
+        "EMPD",
+        "HAWKS",
+        "DPCI",
+        "IPID",
+        "case which",
+        "case has",
+        "case docket"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 59,
+      "date": "2026-02-12",
+      "speaker": "Mr Magagula",
+      "role": "witness",
+      "segments": 78,
+      "summary": "Day 59, 12 Feb 2026. witness: Mrs Masuku. evidence leader: Adv Sello SC.",
+      "entities": [
+        "SAPS",
+        "EMPD",
+        "HAWKS",
+        "DPCI",
+        "IPID",
+        "case which",
+        "case has",
+        "case docket"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 60,
+      "date": "2026-02-13",
+      "speaker": "Mr Magagula",
+      "role": "witness",
+      "segments": 546,
+      "summary": "Day 60, 13 Feb 2026. witness: Thulani Magagula. evidence leader: Adv Sello SC",
+      "entities": [
+        "SAPS",
+        "IPID",
+        "EMPD",
+        "docket also",
+        "case. This",
+        "case you",
+        "case before",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 61,
+      "date": "2026-02-16",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 1,
+      "summary": "Day 61, 16 Feb 2026. witness: Witness F, evidence leader: Adv Chaskalson SC.",
+      "entities": [
+        "Annexure I2"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 62,
+      "date": "2026-02-18",
+      "speaker": "Lt Gen Sibiya",
+      "role": "witness",
+      "segments": 455,
+      "summary": "Day 62, 18 Feb 2026, witness: Lieutenant General Sibiya. evidence leader: Adv Hassim SC",
+      "entities": [
+        "SAPS",
+        "HAWKS",
+        "SSA",
+        "Organised Crime",
+        "Scorpions",
+        "SIU",
+        "Task Team",
+        "DPCI"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 63,
+      "date": "2026-02-19",
+      "speaker": "Lt Gen Sibiya",
+      "role": "witness",
+      "segments": 432,
+      "summary": "Day 63, 19 Feb 2026. witness: Lieutenant General Sibiya. evidence leader: Adv Hassim SC",
+      "entities": [
+        "case dockets",
+        "SAPS",
+        "Crime Intelligence",
+        "docket from",
+        "Crime Intelligence Division",
+        "SSA",
+        "Annexure SS4",
+        "Case Unit"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 64,
+      "date": "2026-02-20",
+      "speaker": "Lt Gen Sibiya",
+      "role": "witness",
+      "segments": 469,
+      "summary": "Day 64, 20 Feb 2026. witness: Lieutenant General Sibiya. evidence leader: Adv Hassim SC",
+      "entities": [
+        "case any",
+        "docket. Now",
+        "docket inspection",
+        "docket that",
+        "docket was",
+        "121 docket",
+        "120 docket",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 65,
+      "date": "2026-02-23",
+      "speaker": "Lt Gen Sibiya",
+      "role": "witness",
+      "segments": 606,
+      "summary": "Day 65, 23 Feb 2026. witness: Lieutenant General Sibiya. evidence leader: Adv Hassim SC",
+      "entities": [
+        "SAPS",
+        "SSA",
+        "HAWKS",
+        "SIU",
+        "NPA",
+        "case comes",
+        "case happens",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 66,
+      "date": "2026-02-24",
+      "speaker": "Lt Gen Sibiya",
+      "role": "witness",
+      "segments": 896,
+      "summary": "Day 66, 24 Feb 2026. witness: Lieutenant General Sibiya. evidence leader: Adv Hassim SC",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "case from",
+        "case. When",
+        "case that",
+        "DPCI",
+        "case change",
+        "docket. The"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 68,
+      "date": "2026-02-26",
+      "speaker": "Ms Gxasheka",
+      "role": "witness",
+      "segments": 261,
+      "summary": "Day 68, 26 Feb 2026. witness: Witness G, Mrs Gxasheka. evidence leader: Adv Chaskalson.",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "EMPD",
+        "Task Team",
+        "IPID",
+        "case and",
+        "case you",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 68,
+      "date": "2026-02-26",
+      "speaker": "Mr Matlala",
+      "role": "witness",
+      "segments": 7,
+      "summary": "Day 68, 26 Feb 2026. witness: Witness G, Mrs Gxasheka. evidence leader: Adv Chaskalson.",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "EMPD",
+        "Task Team",
+        "IPID",
+        "case and",
+        "case you",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 69,
+      "date": "2026-02-27",
+      "speaker": "Ms Gxasheka",
+      "role": "witness",
+      "segments": 596,
+      "summary": "Day 69, 27 Feb 2026. witness: Mrs Gxasheka. evidence leader: Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "EMPD",
+        "volume 6",
+        "IPID",
+        "case was",
+        "reference. There",
+        "reference letter",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 71,
+      "date": "2026-03-04",
+      "speaker": "Lt Gen Shibiri",
+      "role": "witness",
+      "segments": 525,
+      "summary": "Day 71, 04 March 2026, Witness: Major General Shibiri. Evidence leaders: Adv Seegels-Ncube.",
+      "entities": [
+        "SIU",
+        "reference was",
+        "SAPS",
+        "case involving",
+        "SSA",
+        "reference made",
+        "Task Team",
+        "Organised Crime"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 71,
+      "date": "2026-03-04",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 6,
+      "summary": "Day 71, 04 March 2026, Witness: Major General Shibiri. Evidence leaders: Adv Seegels-Ncube.",
+      "entities": [
+        "SIU",
+        "reference was",
+        "SAPS",
+        "case involving",
+        "SSA",
+        "reference made",
+        "Task Team",
+        "Organised Crime"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 73,
+      "date": "2026-03-09",
+      "speaker": "Mr Carrim",
+      "role": "witness",
+      "segments": 588,
+      "summary": "Day 73, 9 March 2026, Witness: Com Mkhwanazi , Carrim . Evidence leaders: Adv Sello SC, Adv Chaskalson SC.",
+      "entities": [
+        "reference should",
+        "SIU",
+        "SAPS",
+        "NPA",
+        "SSA",
+        "EMPD",
+        "case. This",
+        "Bundle 2"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 74,
+      "date": "2026-03-10",
+      "speaker": "Mr Carrim",
+      "role": "witness",
+      "segments": 284,
+      "summary": "Day 74, 10 March 2026. Witness: Carrim. Evidence leaders: Adv Chaskalson SC",
+      "entities": [
+        "SAPS",
+        "case are",
+        "SSA",
+        "case was",
+        "case you",
+        "Annexure SC1",
+        "reference for"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 75,
+      "date": "2026-03-11",
+      "speaker": "Lt Gen Shibiri",
+      "role": "witness",
+      "segments": 902,
+      "summary": "Day 75, 11 March 2026, Witness: Witness G, Gen Shibiri. Evidence leaders: Adv Chaskalson SC, Adv Pooe.",
+      "entities": [
+        "SIU",
+        "SSA",
+        "SAPS",
+        "case for",
+        "Bundle 3",
+        "case and",
+        "Organised Crime",
+        "case involving"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 76,
+      "date": "2026-03-12",
+      "speaker": "Lt Gen Shibiri",
+      "role": "witness",
+      "segments": 517,
+      "summary": "Day 76, 12 March 2026. Witness: Gen Shibiri. Evidence leaders: Adv Seegels-Ncube.",
+      "entities": [
+        "Organised Crime",
+        "SAPS",
+        "case. Can",
+        "SSA",
+        "case must",
+        "case investigation",
+        "Crime Intelligence",
+        "case for"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 77,
+      "date": "2026-03-13",
+      "speaker": "Lt Gen Shibiri",
+      "role": "witness",
+      "segments": 301,
+      "summary": "Day 77, Friday, 13 March 2026. Witness: Gen Shibiri, Witness G. Evidence leaders: Adv Seegels-Ncube, Adv Chaskalson SC.",
+      "entities": [
+        "SAPS",
+        "reference was",
+        "case. Since",
+        "SSA",
+        "case with",
+        "docket says",
+        "DPCI",
+        "docket but"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 77,
+      "date": "2026-03-13",
+      "speaker": "Mr Matlala",
+      "role": "witness",
+      "segments": 10,
+      "summary": "Day 77, Friday, 13 March 2026. Witness: Gen Shibiri, Witness G. Evidence leaders: Adv Seegels-Ncube, Adv Chaskalson SC.",
+      "entities": [
+        "SAPS",
+        "reference was",
+        "case. Since",
+        "SSA",
+        "case with",
+        "docket says",
+        "DPCI",
+        "docket but"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 78,
+      "date": "2026-03-16",
+      "speaker": "Sergeant Nkosi",
+      "role": "witness",
+      "segments": 754,
+      "summary": "Day 78, Monday, 16 March 2026.Witness: Sergeant Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "reference. His",
+        "reference. The",
+        "SAPS",
+        "SSA",
+        "case may",
+        "case you",
+        "case open",
+        "case and"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 78,
+      "date": "2026-03-16",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 15,
+      "summary": "Day 78, Monday, 16 March 2026.Witness: Sergeant Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "reference. His",
+        "reference. The",
+        "SAPS",
+        "SSA",
+        "case may",
+        "case you",
+        "case open",
+        "case and"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 79,
+      "date": "2026-03-17",
+      "speaker": "Sergeant Nkosi",
+      "role": "witness",
+      "segments": 540,
+      "summary": "Day 79, 17 March 2026, Witness: Sergeant Fannie Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "SAPS",
+        "SSA",
+        "Crime Intelligence",
+        "case against",
+        "NPA",
+        "Crime Intelligence Division",
+        "case you",
+        "case with"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 79,
+      "date": "2026-03-17",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 36,
+      "summary": "Day 79, 17 March 2026, Witness: Sergeant Fannie Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "SAPS",
+        "SSA",
+        "Crime Intelligence",
+        "case against",
+        "NPA",
+        "Crime Intelligence Division",
+        "case you",
+        "case with"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 80,
+      "date": "2026-03-18",
+      "speaker": "Sergeant Nkosi",
+      "role": "witness",
+      "segments": 573,
+      "summary": "Day 80, 18 March 2026. Witness: Sergeant Fannie Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "Case Numbers",
+        "case numbers",
+        "SAPS",
+        "Task Team",
+        "SSA",
+        "case between",
+        "DPCI",
+        "IPID"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 80,
+      "date": "2026-03-18",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 13,
+      "summary": "Day 80, 18 March 2026. Witness: Sergeant Fannie Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "Case Numbers",
+        "case numbers",
+        "SAPS",
+        "Task Team",
+        "SSA",
+        "case between",
+        "DPCI",
+        "IPID"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 81,
+      "date": "2026-03-19",
+      "speaker": "Sergeant Nkosi",
+      "role": "witness",
+      "segments": 541,
+      "summary": "Witness: Sergeant Fannie Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "HAWKS",
+        "case was",
+        "volume 2",
+        "DPCI",
+        "NPA",
+        "TMPD",
+        "case the"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 82,
+      "date": "2026-03-20",
+      "speaker": "Sergeant Nkosi",
+      "role": "witness",
+      "segments": 539,
+      "summary": "Witness: \nSergeant Fannie Nkosi.\nCommissioner Mkhwanazi. \nEvidence leaders: \nAdv Chaskalson SC.\nAdv Sello SC.",
+      "entities": [
+        "TMPD",
+        "SSA",
+        "reference because",
+        "SAPS",
+        "reference. Because",
+        "case. Why",
+        "JMPD",
+        "case you"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 83,
+      "date": "2026-03-23",
+      "speaker": "Sergeant Nkosi",
+      "role": "witness",
+      "segments": 477,
+      "summary": "Witness: Sergeant Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "Annexure B",
+        "Annexure D",
+        "Annexure E",
+        "Annexure F",
+        "Annexure D1",
+        "Annexure 50"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 83,
+      "date": "2026-03-23",
+      "speaker": "Mr Ngoato",
+      "role": "witness",
+      "segments": 17,
+      "summary": "Witness: Sergeant Nkosi. Evidence leaders: Adv Chaskalson SC.",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "Annexure B",
+        "Annexure D",
+        "Annexure E",
+        "Annexure F",
+        "Annexure D1",
+        "Annexure 50"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 87,
+      "date": "2026-04-09",
+      "speaker": "Director Malatji",
+      "role": "witness",
+      "segments": 570,
+      "summary": "Witness: Director Malatji, Mr Phiri.",
+      "entities": [
+        "SSA",
+        "Annexure TP1",
+        "TMPD",
+        "Annexure TB3",
+        "State Security Agency"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 87,
+      "date": "2026-04-09",
+      "speaker": "Mr Mnisi",
+      "role": "witness",
+      "segments": 1,
+      "summary": "Witness: Director Malatji, Mr Phiri.",
+      "entities": [
+        "SSA",
+        "Annexure TP1",
+        "TMPD",
+        "Annexure TB3",
+        "State Security Agency"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 88,
+      "date": "2026-04-10",
+      "speaker": "Deputy Chief Dhlamini",
+      "role": "witness",
+      "segments": 245,
+      "summary": "Witness: Commissioner Dhlamnini",
+      "entities": [
+        "TMPD",
+        "SSA",
+        "Annexure F",
+        "Annexure G",
+        "Annexure H",
+        "reference there",
+        "Annexure D",
+        "Annexure I"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 92,
+      "date": "2026-04-17",
+      "speaker": "Mr Mnisi",
+      "role": "witness",
+      "segments": 392,
+      "summary": "Witness: Mr Mnisi.",
+      "entities": [
+        "Bundle 3",
+        "Bundle 4",
+        "reference and",
+        "Annexure GM1",
+        "Bundle 2",
+        "TMPD",
+        "SSA",
+        "reference just"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 93,
+      "date": "2026-04-20",
+      "speaker": "Mr Mnisi",
+      "role": "witness",
+      "segments": 709,
+      "summary": "Witness: Mr Mnisi.",
+      "entities": [
+        "TMPD",
+        "SSA",
+        "case where",
+        "case you",
+        "case that",
+        "NPA",
+        "Annexure GM2",
+        "case for"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 94,
+      "date": "2026-04-21",
+      "speaker": "Mr Mnisi",
+      "role": "witness",
+      "segments": 954,
+      "summary": "Witness: Mr Mnisi.",
+      "entities": [
+        "TMPD",
+        "case that",
+        "case and",
+        "SSA",
+        "Bundle 3",
+        "reference you",
+        "SAPS",
+        "Annexure A"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 95,
+      "date": "2026-04-22",
+      "speaker": "Brigadier Nkhwashu",
+      "role": "witness",
+      "segments": 755,
+      "summary": "Witness: Brigadier Nkhwashu.",
+      "entities": [
+        "reference for",
+        "SAPS",
+        "SSA",
+        "docket. The",
+        "case that",
+        "case you",
+        "case was",
+        "case actually"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 96,
+      "date": "2026-04-23",
+      "speaker": "Major Phiri",
+      "role": "witness",
+      "segments": 738,
+      "summary": "Witness: Mr Phiri, Commissioner Dhlamini .",
+      "entities": [
+        "TMPD",
+        "SAPS",
+        "SSA",
+        "Annexure 4",
+        "Annexure 5",
+        "Annexure A2",
+        "reference Monday",
+        "case even"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 96,
+      "date": "2026-04-23",
+      "speaker": "Deputy Chief Dhlamini",
+      "role": "witness",
+      "segments": 5,
+      "summary": "Witness: Mr Phiri, Commissioner Dhlamini .",
+      "entities": [
+        "TMPD",
+        "SAPS",
+        "SSA",
+        "Annexure 4",
+        "Annexure 5",
+        "Annexure A2",
+        "reference Monday",
+        "case even"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 97,
+      "date": "2026-04-24",
+      "speaker": "Deputy Chief Dhlamini",
+      "role": "witness",
+      "segments": 736,
+      "summary": "Witness: Commissioner Dhlamini.",
+      "entities": [
+        "TMPD",
+        "SAPS",
+        "Organised Crime",
+        "SSA",
+        "case you"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 98,
+      "date": "2026-04-28",
+      "speaker": "Deputy Chief Dhlamini",
+      "role": "witness",
+      "segments": 596,
+      "summary": " Witness: Commissioner Dhlamini, Mr Mogotsi .",
+      "entities": [
+        "TMPD",
+        "SSA",
+        "NPA",
+        "case. There",
+        "case numbers",
+        "SAPS",
+        "reference that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 98,
+      "date": "2026-04-28",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 2,
+      "summary": " Witness: Commissioner Dhlamini, Mr Mogotsi .",
+      "entities": [
+        "TMPD",
+        "SSA",
+        "NPA",
+        "case. There",
+        "case numbers",
+        "SAPS",
+        "reference that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 99,
+      "date": "2026-04-30",
+      "speaker": "Director Malatji",
+      "role": "witness",
+      "segments": 303,
+      "summary": "Witness: Director Malatji. Evidence leaders: Adv Sikhakhane.",
+      "entities": [
+        "SSA",
+        "TMPD",
+        "Annexure TP1",
+        "SAPS",
+        "Annexure TS5",
+        "case that",
+        "Bundle ST1"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 99,
+      "date": "2026-04-30",
+      "speaker": "Mr Nkosi",
+      "role": "witness",
+      "segments": 99,
+      "summary": "Witness: Director Malatji. Evidence leaders: Adv Sikhakhane.",
+      "entities": [
+        "SSA",
+        "TMPD",
+        "Annexure TP1",
+        "SAPS",
+        "Annexure TS5",
+        "case that",
+        "Bundle ST1"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 100,
+      "date": "2026-05-04",
+      "speaker": "Witness G (protected)",
+      "role": "witness_protected",
+      "segments": 36,
+      "summary": "Witness: Witness G.",
+      "entities": [
+        "Crime Intelligence",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 100,
+      "date": "2026-05-04",
+      "speaker": "Mr Matlala",
+      "role": "witness",
+      "segments": 2,
+      "summary": "Witness: Witness G.",
+      "entities": [
+        "Crime Intelligence",
+        "SSA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 101,
+      "date": "2026-05-05",
+      "speaker": "Maj Gen Flynn",
+      "role": "witness",
+      "segments": 315,
+      "summary": "Witness: Major General Flynn, Witness H .",
+      "entities": [
+        "SSA",
+        "NPA",
+        "DPCI",
+        "case here",
+        "case being",
+        "case. The",
+        "HAWKS",
+        "Organised Crime"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 102,
+      "date": "2026-05-06",
+      "speaker": "Maj Gen Flynn",
+      "role": "witness",
+      "segments": 263,
+      "summary": "Witness: Witness H.",
+      "entities": [
+        "case. Why",
+        "Forensic Science Laboratory",
+        "SSA",
+        "Annexure HH2",
+        "DPCI",
+        "case that",
+        "SAPS",
+        "reference number"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 103,
+      "date": "2026-05-07",
+      "speaker": "Lt Col Prinsloo",
+      "role": "witness",
+      "segments": 558,
+      "summary": "Witness: Lieutenant Colonel Prinsloo.",
+      "entities": [
+        "SSA",
+        "HAWKS",
+        "DPCI",
+        "Directorate for Priority Crime Investigation",
+        "Organised Crime",
+        "SAPS",
+        "Visible Policing",
+        "case. What"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 105,
+      "date": "2026-05-11",
+      "speaker": "Colonel Steyn",
+      "role": "witness",
+      "segments": 527,
+      "summary": "Witness: Colonel Steyn.",
+      "entities": [
+        "Organised Crime",
+        "Task Team",
+        "DPCI",
+        "Forensic Science Laboratory",
+        "NPA",
+        "case. Reason",
+        "case ends",
+        "Crime Intelligence"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 108,
+      "date": "2026-05-14",
+      "speaker": "Lt Col Sebola",
+      "role": "witness",
+      "segments": 670,
+      "summary": "Witness: Lieutenant Colonel Sebola.",
+      "entities": [
+        "docket and",
+        "case has",
+        "DPCI",
+        "SSA",
+        "SAPS",
+        "HAWKS",
+        "Crime Intelligence",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 109,
+      "date": "2026-05-15",
+      "speaker": "Mr Mogotsi",
+      "role": "witness",
+      "segments": 424,
+      "summary": "Witness: Mr Mogotsi.",
+      "entities": [
+        "case law",
+        "case you",
+        "case cited",
+        "SSA",
+        "case. And",
+        "case correctly",
+        "case. Now",
+        "case that"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 111,
+      "date": "2026-06-02",
+      "speaker": "Lt Col Duma",
+      "role": "witness",
+      "segments": 451,
+      "summary": "Witnesses: Warrant Officer Karl Sanders, Lieutenant Colonel Duma, Lieutenant ColonelSongca, Colonel Khuzwayo",
+      "entities": [
+        "DPCI",
+        "Crime Intelligence",
+        "SSA",
+        "SAPS",
+        "NPA",
+        "exhibit 20",
+        "docket with",
+        "docket because"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 112,
+      "date": "2026-06-03",
+      "speaker": "Colonel Jacob",
+      "role": "witness",
+      "segments": 910,
+      "summary": "Witness: Colonel Jacobs.",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "DPCI",
+        "Forensic Science Laboratory",
+        "Scorpions",
+        "Crime Intelligence",
+        "NPA",
+        "case. Here"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 113,
+      "date": "2026-06-04",
+      "speaker": "Colonel Jacob",
+      "role": "witness",
+      "segments": 970,
+      "summary": "Witness: Witness I, Colonel Jacobs, Major General Senona.",
+      "entities": [
+        "Exhibit 3",
+        "NPA",
+        "Crime Intelligence",
+        "SSA",
+        "Task Team",
+        "Exhibit 230",
+        "SAPS",
+        "Bundle B"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 114,
+      "date": "2026-06-05",
+      "speaker": "Lt Col Sibiya",
+      "role": "witness",
+      "segments": 891,
+      "summary": "Witness: Lieutenant Colonel Sibiya.",
+      "entities": [
+        "SSA",
+        "DPCI",
+        "SAPS",
+        "Tactical Response Team",
+        "Crime Intelligence",
+        "NPA",
+        "Organised Crime",
+        "case you"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 115,
+      "date": "2026-06-08",
+      "speaker": "Lt Col Sebola",
+      "role": "witness",
+      "segments": 480,
+      "summary": "Witness: Lieutenant Colonel Sebola, Ms Maphosho.",
+      "entities": [
+        "IPID",
+        "docket and",
+        "SSA",
+        "HAWKS",
+        "SAPS",
+        "DPCI",
+        "docket from",
+        "docket. You"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 115,
+      "date": "2026-06-08",
+      "speaker": "Asst Dir Maphosho",
+      "role": "witness",
+      "segments": 284,
+      "summary": "Witness: Lieutenant Colonel Sebola, Ms Maphosho.",
+      "entities": [
+        "IPID",
+        "docket and",
+        "SSA",
+        "HAWKS",
+        "SAPS",
+        "DPCI",
+        "docket from",
+        "docket. You"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 116,
+      "date": "2026-06-09",
+      "speaker": "Asst Dir Maphosho",
+      "role": "witness",
+      "segments": 350,
+      "summary": "Witness: Ms Maphosho, Lieutenant Colonel Schnelle, Witness I.",
+      "entities": [
+        "SAPS",
+        "DPCI",
+        "case that",
+        "Crime Intelligence",
+        "HAWKS",
+        "Forensic Science Laboratory",
+        "IPID",
+        "reference numbers"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 116,
+      "date": "2026-06-09",
+      "speaker": "Witness I (protected)",
+      "role": "witness_protected",
+      "segments": 129,
+      "summary": "Witness: Ms Maphosho, Lieutenant Colonel Schnelle, Witness I.",
+      "entities": [
+        "SAPS",
+        "DPCI",
+        "case that",
+        "Crime Intelligence",
+        "HAWKS",
+        "Forensic Science Laboratory",
+        "IPID",
+        "reference numbers"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 117,
+      "date": "2026-06-10",
+      "speaker": "Witness I (protected)",
+      "role": "witness_protected",
+      "segments": 317,
+      "summary": "Witness: Witness I, Chief Mashaba.",
+      "entities": [
+        "DPCI",
+        "SSA",
+        "Organised Crime",
+        "docket was",
+        "SAPS",
+        "case number",
+        "Annexure A",
+        "reference whatsoever"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 117,
+      "date": "2026-06-10",
+      "speaker": "Chief Mashaba",
+      "role": "witness",
+      "segments": 54,
+      "summary": "Witness: Witness I, Chief Mashaba.",
+      "entities": [
+        "DPCI",
+        "SSA",
+        "Organised Crime",
+        "docket was",
+        "SAPS",
+        "case number",
+        "Annexure A",
+        "reference whatsoever"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 118,
+      "date": "2026-06-11",
+      "speaker": "Chief Mashaba",
+      "role": "witness",
+      "segments": 701,
+      "summary": "Witness: Mr Nku, Chief Mashaba.",
+      "entities": [
+        "SAPS",
+        "docket. That",
+        "docket will",
+        "SSA",
+        "JMPD",
+        "DPCI",
+        "Crime Intelligence",
+        "Gauteng Traffic Police"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 119,
+      "date": "2026-06-12",
+      "speaker": "Chief Mashaba",
+      "role": "witness",
+      "segments": 519,
+      "summary": "Witness: Chief Mashaba.",
+      "entities": [
+        "SSA",
+        "reference CJC274",
+        "HAWKS",
+        "case you",
+        "case. You",
+        "SAPS",
+        "DPCI",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 120,
+      "date": "2026-06-17",
+      "speaker": "Brigadier Nyuswa",
+      "role": "witness",
+      "segments": 625,
+      "summary": "Witness: Brigadier Nyuswa.",
+      "entities": [
+        "case and",
+        "SAPS",
+        "DPCI",
+        "Directorate for Priority Crime Investigation",
+        "Detective Services",
+        "HAWKS",
+        "reference would",
+        "NPA"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 121,
+      "date": "2026-06-18",
+      "speaker": "Witness J (protected)",
+      "role": "witness_protected",
+      "segments": 235,
+      "summary": "Witness: Witness J .",
+      "entities": [
+        "SAPS",
+        "HAWKS",
+        "DPCI",
+        "Directorate for Priority Crime Investigation",
+        "SSA",
+        "case relates"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 121,
+      "date": "2026-06-18",
+      "speaker": "Mr Nku",
+      "role": "witness",
+      "segments": 6,
+      "summary": "Witness: Witness J .",
+      "entities": [
+        "SAPS",
+        "HAWKS",
+        "DPCI",
+        "Directorate for Priority Crime Investigation",
+        "SSA",
+        "case relates"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 122,
+      "date": "2026-06-19",
+      "speaker": "Maj Gen Senona",
+      "role": "witness",
+      "segments": 568,
+      "summary": "Witness: Major General Senona.",
+      "entities": [
+        "Annexure LS1",
+        "reference and",
+        "reference that",
+        "SSA",
+        "case. The",
+        "DPCI",
+        "SAPS",
+        "reference. The"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 126,
+      "date": "2026-06-25",
+      "speaker": "Mr Nku",
+      "role": "witness",
+      "segments": 603,
+      "summary": "Witness: Mr Nku.",
+      "entities": [
+        "SSA",
+        "HAWKS",
+        "DPCI",
+        "Organised Crime",
+        "case. Upon",
+        "case may",
+        "IPID",
+        "Crime Intelligence"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 127,
+      "date": "2026-06-26",
+      "speaker": "Mr Nku",
+      "role": "witness",
+      "segments": 4,
+      "summary": "Witness: Mr Nku.",
+      "entities": [],
+      "source_type": "testimony"
+    },
+    {
+      "day": 128,
+      "date": "2026-06-29",
+      "speaker": "Mr O'Sullivan",
+      "role": "witness",
+      "segments": 674,
+      "summary": "Witness: Mr. Nku, Mr O' Sullivan .",
+      "entities": [
+        "SSA",
+        "HAWKS",
+        "DPCI",
+        "case manager",
+        "SAPS",
+        "Annexure A",
+        "Organised Crime",
+        "Scorpions"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 128,
+      "date": "2026-06-29",
+      "speaker": "Mr Nku",
+      "role": "witness",
+      "segments": 406,
+      "summary": "Witness: Mr. Nku, Mr O' Sullivan .",
+      "entities": [
+        "SSA",
+        "HAWKS",
+        "DPCI",
+        "case manager",
+        "SAPS",
+        "Annexure A",
+        "Organised Crime",
+        "Scorpions"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 134,
+      "date": "2026-07-07",
+      "speaker": "Mr Matlala",
+      "role": "witness",
+      "segments": 3,
+      "summary": "Witness: Mr Matlala. Evidence Leader: Ms Sello SC. Witness: Major General Feroz Khan. Evidence Leaders: Mr Chaskalson SC, Ms Hassim SC, Ms Pooe.",
+      "entities": [
+        "SSA",
+        "SAPS",
+        "Crime Intelligence",
+        "HAWKS",
+        "case numbers",
+        "case number",
+        "case number being",
+        "case number and"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 139,
+      "date": "2026-07-14",
+      "speaker": "Colonel Padayachee",
+      "role": "witness",
+      "segments": 622,
+      "summary": "Witness: Colonel Padayachee. Evidence leader: Adv Sello",
+      "entities": [
+        "SSA",
+        "docket now",
+        "docket specifically",
+        "docket will",
+        "Annexure 1",
+        "Annexure 20",
+        "Annexure 29",
+        "National Prosecuting Authority"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 140,
+      "date": "2026-07-15",
+      "speaker": "Colonel Padayachee",
+      "role": "witness",
+      "segments": 167,
+      "summary": "witness: Mr Matlala, Colonel Brian Padayachee, Mr Carrim. evidence leader: Adv Sello SC",
+      "entities": [
+        "SSA",
+        "Annexure A",
+        "reference and",
+        "reference whatsoever",
+        "reference that",
+        "case throughout",
+        "reference was",
+        "docket which"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 140,
+      "date": "2026-07-15",
+      "speaker": "Mr Matlala",
+      "role": "witness",
+      "segments": 1,
+      "summary": "witness: Mr Matlala, Colonel Brian Padayachee, Mr Carrim. evidence leader: Adv Sello SC",
+      "entities": [
+        "SSA",
+        "Annexure A",
+        "reference and",
+        "reference whatsoever",
+        "reference that",
+        "case throughout",
+        "reference was",
+        "docket which"
+      ],
+      "source_type": "testimony"
+    },
+    {
+      "day": 141,
+      "date": "2026-07-16",
+      "speaker": "Colonel Padayachee",
+      "role": "witness",
+      "segments": 903,
+      "summary": "witness: Colonel Padayachee. evidence leader: Adv Sello.",
+      "entities": [
+        "docket disclosed",
+        "docket. Because",
+        "SSA",
+        "docket and",
+        "docket that",
+        "reference the",
+        "Case Evaluation",
+        "SAPS"
+      ],
+      "source_type": "testimony"
+    }
+  ],
+  "unique_witnesses": [
+    {
+      "name": "Lt Gen Nhlanhla Mkhwanazi",
+      "role": "witness",
+      "first_day": 1
+    },
+    {
+      "name": "Lt Gen Masemola",
+      "role": "witness",
+      "first_day": 4
+    },
+    {
+      "name": "Lt Gen Khumalo",
+      "role": "witness",
+      "first_day": 8
+    },
+    {
+      "name": "Witness A (protected)",
+      "role": "witness_protected",
+      "first_day": 15
+    },
+    {
+      "name": "Witness B (protected)",
+      "role": "witness_protected",
+      "first_day": 17
+    },
+    {
+      "name": "Brigadier Nkhwashu",
+      "role": "witness",
+      "first_day": 17
+    },
+    {
+      "name": "Witness C (protected)",
+      "role": "witness_protected",
+      "first_day": 19
+    },
+    {
+      "name": "Brigadier Mkhabhela",
+      "role": "witness",
+      "first_day": 20
+    },
+    {
+      "name": "Captain Mkhatshwa",
+      "role": "witness",
+      "first_day": 21
+    },
+    {
+      "name": "Captain Modisane",
+      "role": "witness",
+      "first_day": 21
+    },
+    {
+      "name": "Captain Kruger",
+      "role": "witness",
+      "first_day": 22
+    },
+    {
+      "name": "Brigadier Mokoena",
+      "role": "witness",
+      "first_day": 22
+    },
+    {
+      "name": "Captain Wanda",
+      "role": "witness",
+      "first_day": 22
+    },
+    {
+      "name": "Lt Gen Mbotho",
+      "role": "witness",
+      "first_day": 24
+    },
+    {
+      "name": "Chief Mapiyeye",
+      "role": "witness",
+      "first_day": 27
+    },
+    {
+      "name": "Mr Nciza",
+      "role": "witness",
+      "first_day": 30
+    },
+    {
+      "name": "Lt Col Thepa",
+      "role": "witness",
+      "first_day": 33
+    },
+    {
+      "name": "Lt Col Khumalo",
+      "role": "witness",
+      "first_day": 34
+    },
+    {
+      "name": "Maj Gen Motsepe",
+      "role": "witness",
+      "first_day": 34
+    },
+    {
+      "name": "Mr Mogotsi",
+      "role": "witness",
+      "first_day": 35
+    },
+    {
+      "name": "Lt Gen Senthumule",
+      "role": "witness",
+      "first_day": 40
+    },
+    {
+      "name": "Dr Mashazi",
+      "role": "witness",
+      "first_day": 41
+    },
+    {
+      "name": "Minister Mchunu",
+      "role": "witness",
+      "first_day": 42
+    },
+    {
+      "name": "Witness E (protected)",
+      "role": "witness_protected",
+      "first_day": 46
+    },
+    {
+      "name": "Maj Gen Gopaul",
+      "role": "witness",
+      "first_day": 46
+    },
+    {
+      "name": "Maj Gen Senona",
+      "role": "witness",
+      "first_day": 47
+    },
+    {
+      "name": "Mr Ngoato",
+      "role": "witness",
+      "first_day": 50
+    },
+    {
+      "name": "Captain Makgotloe",
+      "role": "witness",
+      "first_day": 51
+    },
+    {
+      "name": "Witness F (protected)",
+      "role": "witness_protected",
+      "first_day": 52
+    },
+    {
+      "name": "Brigadier Matjeng",
+      "role": "witness",
+      "first_day": 54
+    },
+    {
+      "name": "Mr Shirindzi",
+      "role": "witness",
+      "first_day": 54
+    },
+    {
+      "name": "Ms Gxasheka",
+      "role": "witness",
+      "first_day": 57
+    },
+    {
+      "name": "Mr Keefelakae",
+      "role": "witness",
+      "first_day": 58
+    },
+    {
+      "name": "Ms Masuku",
+      "role": "witness",
+      "first_day": 58
+    },
+    {
+      "name": "Mr Magagula",
+      "role": "witness",
+      "first_day": 59
+    },
+    {
+      "name": "Lt Gen Sibiya",
+      "role": "witness",
+      "first_day": 62
+    },
+    {
+      "name": "Mr Matlala",
+      "role": "witness",
+      "first_day": 68
+    },
+    {
+      "name": "Lt Gen Shibiri",
+      "role": "witness",
+      "first_day": 71
+    },
+    {
+      "name": "Mr Carrim",
+      "role": "witness",
+      "first_day": 73
+    },
+    {
+      "name": "Sergeant Nkosi",
+      "role": "witness",
+      "first_day": 78
+    },
+    {
+      "name": "Director Malatji",
+      "role": "witness",
+      "first_day": 87
+    },
+    {
+      "name": "Mr Mnisi",
+      "role": "witness",
+      "first_day": 87
+    },
+    {
+      "name": "Deputy Chief Dhlamini",
+      "role": "witness",
+      "first_day": 88
+    },
+    {
+      "name": "Major Phiri",
+      "role": "witness",
+      "first_day": 96
+    },
+    {
+      "name": "Mr Nkosi",
+      "role": "witness",
+      "first_day": 99
+    },
+    {
+      "name": "Witness G (protected)",
+      "role": "witness_protected",
+      "first_day": 100
+    },
+    {
+      "name": "Maj Gen Flynn",
+      "role": "witness",
+      "first_day": 101
+    },
+    {
+      "name": "Lt Col Prinsloo",
+      "role": "witness",
+      "first_day": 103
+    },
+    {
+      "name": "Colonel Steyn",
+      "role": "witness",
+      "first_day": 105
+    },
+    {
+      "name": "Lt Col Sebola",
+      "role": "witness",
+      "first_day": 108
+    },
+    {
+      "name": "Lt Col Duma",
+      "role": "witness",
+      "first_day": 111
+    },
+    {
+      "name": "Colonel Jacob",
+      "role": "witness",
+      "first_day": 112
+    },
+    {
+      "name": "Lt Col Sibiya",
+      "role": "witness",
+      "first_day": 114
+    },
+    {
+      "name": "Asst Dir Maphosho",
+      "role": "witness",
+      "first_day": 115
+    },
+    {
+      "name": "Witness I (protected)",
+      "role": "witness_protected",
+      "first_day": 116
+    },
+    {
+      "name": "Chief Mashaba",
+      "role": "witness",
+      "first_day": 117
+    },
+    {
+      "name": "Brigadier Nyuswa",
+      "role": "witness",
+      "first_day": 120
+    },
+    {
+      "name": "Witness J (protected)",
+      "role": "witness_protected",
+      "first_day": 121
+    },
+    {
+      "name": "Mr Nku",
+      "role": "witness",
+      "first_day": 121
+    },
+    {
+      "name": "Mr O'Sullivan",
+      "role": "witness",
+      "first_day": 128
+    },
+    {
+      "name": "Colonel Padayachee",
+      "role": "witness",
+      "first_day": 139
+    }
+  ],
+  "shared_entities": [
+    "saps",
+    "task team"
+  ],
+  "all_entities": [
+    "120 docket",
+    "121 docket",
+    "128 case",
+    "annexure 1",
+    "annexure 2",
+    "annexure 20",
+    "annexure 29",
+    "annexure 4",
+    "annexure 5",
+    "annexure 50",
+    "annexure a",
+    "annexure a2",
+    "annexure ag3",
+    "annexure b",
+    "annexure b11",
+    "annexure d",
+    "annexure d1",
+    "annexure e",
+    "annexure f",
+    "annexure g",
+    "annexure gm1",
+    "annexure gm2",
+    "annexure gr1",
+    "annexure h",
+    "annexure hh2",
+    "annexure i",
+    "annexure i2",
+    "annexure im2",
+    "annexure jm3",
+    "annexure kma",
+    "annexure kx3",
+    "annexure kx5",
+    "annexure kzn",
+    "annexure ls1",
+    "annexure mk",
+    "annexure pn2",
+    "annexure pn3",
+    "annexure s4",
+    "annexure sc1",
+    "annexure sm1",
+    "annexure ss4",
+    "annexure tb3",
+    "annexure tp1",
+    "annexure ts5",
+    "annexure wb1",
+    "arrangements",
+    "briefing hearings preparations",
+    "bundle 2",
+    "bundle 23",
+    "bundle 24",
+    "bundle 3",
+    "bundle 4",
+    "bundle b",
+    "bundle st1",
+    "bundle wb1",
+    "carrim",
+    "case about",
+    "case accepted",
+    "case actually",
+    "case against",
+    "case almost",
+    "case and",
+    "case any",
+    "case are",
+    "case because",
+    "case before",
+    "case being",
+    "case better",
+    "case between",
+    "case change",
+    "case cited",
+    "case comes",
+    "case contained",
+    "case correctly",
+    "case course",
+    "case date",
+    "case docket",
+    "case dockets",
+    "case ends",
+    "case evaluation",
+    "case even",
+    "case file",
+    "case files",
+    "case for",
+    "case forward",
+    "case from",
+    "case happens",
+    "case has",
+    "case here",
+    "case individually",
+    "case investigation",
+    "case involving",
+    "case law",
+    "case lieutenant",
+    "case management",
+    "case manager",
+    "case may",
+    "case must",
+    "case needs",
+    "case now",
+    "case number",
+    "case number 149",
+    "case number 275",
+    "case number 286",
+    "case number and",
+    "case number being",
+    "case number between",
+    "case number lodged",
+    "case number mentioned",
+    "case numbers",
+    "case open",
+    "case opened",
+    "case pertaining",
+    "case registered",
+    "case relates",
+    "case that",
+    "case the",
+    "case then",
+    "case throughout",
+    "case unit",
+    "case was",
+    "case when",
+    "case where",
+    "case which",
+    "case with",
+    "case would",
+    "case you",
+    "case. after",
+    "case. and",
+    "case. attached",
+    "case. both",
+    "case. but",
+    "case. can",
+    "case. here",
+    "case. let",
+    "case. now",
+    "case. reason",
+    "case. remember",
+    "case. since",
+    "case. that",
+    "case. the",
+    "case. there",
+    "case. they",
+    "case. this",
+    "case. those",
+    "case. upon",
+    "case. warrant",
+    "case. what",
+    "case. when",
+    "case. why",
+    "case. you",
+    "change",
+    "chief evidence leader",
+    "crime intelligence",
+    "crime intelligence division",
+    "detective services",
+    "directorate for priority crime investigation",
+    "docket actually",
+    "docket also",
+    "docket and",
+    "docket because",
+    "docket being",
+    "docket but",
+    "docket disclosed",
+    "docket for",
+    "docket from",
+    "docket inspection",
+    "docket investigations",
+    "docket itself",
+    "docket now",
+    "docket says",
+    "docket specifically",
+    "docket that",
+    "docket was",
+    "docket which",
+    "docket will",
+    "docket with",
+    "docket. because",
+    "docket. now",
+    "docket. that",
+    "docket. the",
+    "docket. you",
+    "dpci",
+    "drug seizure",
+    "empd",
+    "exhibit 10",
+    "exhibit 20",
+    "exhibit 230",
+    "exhibit 3",
+    "forensic science laboratory",
+    "gauteng traffic police",
+    "hawks",
+    "hearings",
+    "hearings resume",
+    "hearings resume after",
+    "impersonation warning",
+    "independent police investigative directorate",
+    "ipid",
+    "jmpd",
+    "katiso molefe operation",
+    "khumalo",
+    "lt col duma",
+    "marius",
+    "matlala",
+    "mchunu",
+    "merwe killing",
+    "mk1",
+    "mk17",
+    "mk2",
+    "national prosecuting authority",
+    "national task team",
+    "natjoints",
+    "npa",
+    "official security",
+    "organised crime",
+    "partially hearings",
+    "phase two",
+    "phase two time change",
+    "reference about",
+    "reference and",
+    "reference because",
+    "reference can",
+    "reference chats",
+    "reference cjc274",
+    "reference five",
+    "reference for",
+    "reference from",
+    "reference here",
+    "reference insofar",
+    "reference just",
+    "reference letter",
+    "reference made",
+    "reference make",
+    "reference monday",
+    "reference number",
+    "reference numbers",
+    "reference perhaps",
+    "reference question",
+    "reference sample",
+    "reference should",
+    "reference specifically",
+    "reference than",
+    "reference that",
+    "reference the",
+    "reference there",
+    "reference two",
+    "reference was",
+    "reference whatsoever",
+    "reference would",
+    "reference you",
+    "reference. because",
+    "reference. his",
+    "reference. the",
+    "reference. there",
+    "reference. would",
+    "reminder",
+    "saps",
+    "scorpions",
+    "second",
+    "senona",
+    "siu",
+    "special investigating unit",
+    "ssa",
+    "state security agency",
+    "tactical response team",
+    "task team",
+    "term",
+    "theft hearings",
+    "tmpd",
+    "van wyk",
+    "venue",
+    "visible policing",
+    "volume 1",
+    "volume 2",
+    "volume 6"
+  ],
+  "stats": {
+    "total_commission_events": 53,
+    "total_witness_slots": 136,
+    "total_hearing_days": 103,
+    "total_unique_witnesses": 61,
+    "total_shared_entities": 2,
+    "date_range": {
+      "first": "2025-08-20",
+      "last": "2026-07-21"
+    }
+  }
+}

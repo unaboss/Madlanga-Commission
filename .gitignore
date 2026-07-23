@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# R
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+
+# Large downloaded data files
+madlanga_downloads/metadata/
+madlanga_downloads/hearings/
+madlanga_downloads/transcripts_txt/
+madlanga_downloads/documents/
+
+# Generated database & parsed data
+commission_research/data/commission_research.db
+commission_research/data/parsed/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Environment
+.env
+*.token
