@@ -368,7 +368,8 @@ server <- function(input, output, session) {
     })
 
     build_nodes_df <- function(nodes) {
-      do.call(rbind, lapply(nodes, function(n) {
+      do.call(rbind, lapply(seq_along(nodes), function(i) {
+        n <- nodes[[i]]
         role <- n$role
         segs <- n$value
         bg <- n$color$background
@@ -391,7 +392,11 @@ server <- function(input, output, session) {
           }
         }
         data.frame(
-          id = n$id, label = n$label, group = n$group,
+          id = n$id,
+          label = if (i == 1) n$label else "",
+          origLabel = n$label,
+          startLabel = if (i == 1) n$label else "",
+          group = n$group,
           value = n$value, size = n$size * 0.7,
           baseSize = n$size * 0.7,
           shape = "dot",
@@ -446,14 +451,15 @@ server <- function(input, output, session) {
         }
         net.body.data.edges.update(eBatch);
 
-        // Nodes: connected enlarge 1.5x, others stay at baseSize
+        // Nodes: connected enlarge 1.5x, labels only for clicked node
         var nBatch = [];
         for (var i = 0; i < allNodeIds.length; i++) {
           var d = net.body.data.nodes.get(allNodeIds[i]);
           nBatch.push({
             id: allNodeIds[i],
             size: connNodeIds.indexOf(allNodeIds[i]) !== -1
-              ? d.baseSize * 1.5 : d.baseSize
+              ? d.baseSize * 1.5 : d.baseSize,
+            label: allNodeIds[i] === selId ? d.origLabel : ''
           });
         }
         net.body.data.nodes.update(nBatch);
@@ -472,7 +478,7 @@ server <- function(input, output, session) {
         var nBatch = [];
         for (var i = 0; i < allNodeIds.length; i++) {
           var d = net.body.data.nodes.get(allNodeIds[i]);
-          nBatch.push({id: allNodeIds[i], size: d.baseSize});
+          nBatch.push({id: allNodeIds[i], size: d.baseSize, label: d.startLabel});
         }
         net.body.data.nodes.update(nBatch);
       }",
@@ -491,7 +497,7 @@ server <- function(input, output, session) {
           var nBatch = [];
           for (var i = 0; i < allNodeIds.length; i++) {
             var d = net.body.data.nodes.get(allNodeIds[i]);
-            nBatch.push({id: allNodeIds[i], size: d.baseSize});
+            nBatch.push({id: allNodeIds[i], size: d.baseSize, label: d.startLabel});
           }
           net.body.data.nodes.update(nBatch);
         }
