@@ -17,71 +17,8 @@ def build_network():
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
 
-    # ── Nodes ───────────────────────────────────────────────────
-    print("Building nodes...")
-    rows = conn.execute("""
-        SELECT s.id, s.canonical_name, s.role, COUNT(ts.id) AS segments,
-               COUNT(DISTINCT ts.hearing_id) AS hearing_days,
-               MIN(h.hearing_date) AS first_date,
-               MAX(h.hearing_date) AS last_date
-        FROM speakers s
-        JOIN transcript_segments ts ON ts.speaker_id = s.id
-        JOIN hearings h ON h.id = ts.hearing_id
-        GROUP BY s.id
-        ORDER BY segments DESC
-    """).fetchall()
-
-    # Color map by role
-    role_colors = {
-        "commissioner":       {"bg": "#FFD700", "border": "#B8860B", "highlight": "#FFEC8B"},
-        "evidence_leader":    {"bg": "#87CEEB", "border": "#4682B4", "highlight": "#B0E0E6"},
-        "witness":            {"bg": "#90EE90", "border": "#228B22", "highlight": "#C1FFC1"},
-        "witness_protected":  {"bg": "#FF6347", "border": "#8B0000", "highlight": "#FF7F50"},
-        "other":              {"bg": "#D3D3D3", "border": "#808080", "highlight": "#E8E8E8"},
-    }
-
-    role_shapes = {
-        "commissioner":      "star",
-        "evidence_leader":   "diamond",
-        "witness":           "dot",
-        "witness_protected": "triangle",
-        "other":             "square",
-    }
-
-    nodes = []
-    max_segments = max(r["segments"] for r in rows)
-    for r in rows:
-        rc = role_colors.get(r["role"], role_colors["other"])
-        name = r["canonical_name"]
-        title = extract_title(name)
-        size = 10 + (r["segments"] / max_segments) * 50
-
-        nodes.append({
-            "id": r["id"],
-            "label": name,
-            "title": f"<b>{name}</b><br>Role: {r['role']}<br>"
-                     f"Segments: {r['segments']:,}<br>"
-                     f"Days: {r['hearing_days']}<br>"
-                     f"First: {r['first_date']}<br>Last: {r['last_date']}",
-            "group": r["role"],
-            "value": r["segments"],
-            "size": size,
-            "role": r["role"],
-            "rank": title,
-            "segments": r["segments"],
-            "days": r["hearing_days"],
-            "color": {
-                "background": rc["bg"],
-                "border": rc["border"],
-                "highlight": {"background": rc["highlight"], "border": rc["border"]},
-            },
-            "shape": role_shapes.get(r["role"], "dot"),
-            "font": {"size": 10 + (r["segments"] / max_segments) * 8},
-        })
-
-    # ── Edges ───────────────────────────────────────────────────
+    # ── Edges first (needed for centrality) ──────────────────────
     print("Building edges...")
-    # Edges: two speakers appearing on the same hearing day = connection
     edge_rows = conn.execute("""
         SELECT a.speaker_id AS from_id, b.speaker_id AS to_id,
                COUNT(*) AS weight,
@@ -96,6 +33,12 @@ def build_network():
         LIMIT 3000
     """).fetchall()
 
+    # Compute degree centrality (unique connections per node)
+    degree_counts = Counter()
+    for e in edge_rows:
+        degree_counts[e["from_id"]] += 1
+        degree_counts[e["to_id"]] += 1
+
     edges = []
     max_weight = max(r["weight"] for r in edge_rows) if edge_rows else 1
     for r in edge_rows:
@@ -108,6 +51,66 @@ def build_network():
                      f"{r['weight']} shared segments",
             "width": thickness,
             "color": {"opacity": 0.3 + (r["weight"] / max_weight) * 0.5},
+        })
+
+
+    # ── Nodes ───────────────────────────────────────────────────
+    print("Building nodes...")
+    rows = conn.execute("""
+        SELECT s.id, s.canonical_name, s.role, COUNT(ts.id) AS segments,
+               COUNT(DISTINCT ts.hearing_id) AS hearing_days,
+               MIN(h.hearing_date) AS first_date,
+               MAX(h.hearing_date) AS last_date
+        FROM speakers s
+        JOIN transcript_segments ts ON ts.speaker_id = s.id
+        JOIN hearings h ON h.id = ts.hearing_id
+        GROUP BY s.id
+        ORDER BY segments DESC
+    """).fetchall()
+
+    role_colors = {
+        "commissioner":       {"bg": "#FFD700", "border": "#B8860B", "highlight": "#FFEC8B"},
+        "evidence_leader":    {"bg": "#87CEEB", "border": "#4682B4", "highlight": "#B0E0E6"},
+        "witness":            {"bg": "#90EE90", "border": "#228B22", "highlight": "#C1FFC1"},
+        "witness_protected":  {"bg": "#FF6347", "border": "#8B0000", "highlight": "#FF7F50"},
+        "other":              {"bg": "#D3D3D3", "border": "#808080", "highlight": "#E8E8E8"},
+    }
+
+    max_segments = max(r["segments"] for r in rows)
+    max_degree = max(degree_counts.values()) if degree_counts else 1
+
+    nodes = []
+    for r in rows:
+        rc = role_colors.get(r["role"], role_colors["other"])
+        name = r["canonical_name"]
+        title = extract_title(name)
+        sid = r["id"]
+        seg_norm = r["segments"] / max_segments
+        deg_norm = degree_counts.get(sid, 0) / max_degree
+        size = 10 + (seg_norm * 0.4 + deg_norm * 0.6) * 50
+
+        nodes.append({
+            "id": sid,
+            "label": name,
+            "title": f"<b>{name}</b><br>Role: {r['role']}<br>"
+                     f"Segments: {r['segments']:,}<br>"
+                     f"Days: {r['hearing_days']}<br>"
+                     f"First: {r['first_date']}<br>Last: {r['last_date']}",
+            "group": r["role"],
+            "value": r["segments"],
+            "size": round(size, 1),
+            "role": r["role"],
+            "rank": title,
+            "segments": r["segments"],
+            "days": r["hearing_days"],
+            "centrality": degree_counts.get(sid, 0),
+            "color": {
+                "background": rc["bg"],
+                "border": rc["border"],
+                "highlight": {"background": rc["highlight"], "border": rc["border"]},
+            },
+            "shape": "dot",
+            "font": {"size": 10 + (r["segments"] / max_segments) * 8},
         })
 
     # ── Role groupings ──────────────────────────────────────────

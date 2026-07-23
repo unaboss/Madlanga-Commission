@@ -269,6 +269,47 @@ ui <- page_navbar(
         card_body(uiOutput("story_detail_panel"))
       )
     )
+  ),
+
+  # ── Evidence Compare ─────────────────────────────────────────
+  nav_panel(
+    title = "Evidence Compare",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 300,
+        h6("Select Topic"),
+        selectizeInput("ec_entity", "Entity / Topic",
+          choices = NULL, multiple = FALSE,
+          options = list(placeholder = "Type to search for an entity...")),
+        selectInput("ec_type", "Entity Type",
+          choices = c("Any", "organization", "case_reference", "exhibit",
+                      "location", "money", "date", "vehicle"),
+          selected = "Any"),
+        hr(),
+        h6("Results"),
+        uiOutput("ec_summary"),
+        hr(),
+        tags$small(class = "text-muted",
+          "Select an entity above to compare what the commission's documents and witnesses say about it.")
+      ),
+      layout_columns(
+        col_widths = c(6, 6),
+        card(
+          style = "min-height: 380px;",
+          card_header(tags$span(class = "text-warning", "Commission Documents")),
+          card_body(reactableOutput("ec_docs_table"))
+        ),
+        card(
+          style = "min-height: 380px;",
+          card_header(tags$span(class = "text-success", "Witness Testimony")),
+          card_body(reactableOutput("ec_wit_table"))
+        )
+      ),
+      card(
+        card_header(textOutput("ec_detail_header")),
+        card_body(uiOutput("ec_detail_panel"))
+      )
+    )
   )
 )
 
@@ -352,6 +393,7 @@ server <- function(input, output, session) {
         data.frame(
           id = n$id, label = n$label, group = n$group,
           value = n$value, size = n$size * 0.7,
+          baseSize = n$size * 0.7,
           shape = "dot",
           font.size = n$font$size %||% 10,
           color.background = bg,
@@ -384,35 +426,74 @@ server <- function(input, output, session) {
                  barnesHut = list(gravitationalConstant = -2000, springLength = 200,
                                   springConstant = 0.001, damping = 0.09)) |>
       visEvents(selectNode = "function(params) {
-        var allIds = this.body.data.edges.getIds().map(String);
-        var connIds = this.getConnectedEdges(params.nodes[0]).map(String);
-        var batch = [];
-        for (var i = 0; i < allIds.length; i++) {
-          var isConn = connIds.indexOf(allIds[i]) !== -1;
-          batch.push({
-            id: allIds[i],
-            color: isConn ? '#f1c40f' : {color: '#3498db', opacity: 0.12},
-            width: isConn ? 3 : 1
+        var net = this;
+        var selId = params.nodes[0];
+        var connNodeIds = net.getConnectedNodes(selId).map(String);
+        var connEdgeIds = net.getConnectedEdges(selId).map(String);
+
+        var allNodeIds = net.body.data.nodes.getIds().map(String);
+        var allEdgeIds = net.body.data.edges.getIds().map(String);
+
+        // Edges: connected yellow, others dimmed
+        var eBatch = [];
+        for (var i = 0; i < allEdgeIds.length; i++) {
+          eBatch.push({
+            id: allEdgeIds[i],
+            color: connEdgeIds.indexOf(allEdgeIds[i]) !== -1
+              ? '#f1c40f' : {color: '#3498db', opacity: 0.12},
+            width: connEdgeIds.indexOf(allEdgeIds[i]) !== -1 ? 3 : 1
           });
         }
-        this.body.data.edges.update(batch);
+        net.body.data.edges.update(eBatch);
+
+        // Nodes: connected enlarge 1.5x, others stay at baseSize
+        var nBatch = [];
+        for (var i = 0; i < allNodeIds.length; i++) {
+          var d = net.body.data.nodes.get(allNodeIds[i]);
+          nBatch.push({
+            id: allNodeIds[i],
+            size: connNodeIds.indexOf(allNodeIds[i]) !== -1
+              ? d.baseSize * 1.5 : d.baseSize
+          });
+        }
+        net.body.data.nodes.update(nBatch);
       }",
       deselectNode = "function() {
-        var ids = this.body.data.edges.getIds().map(String);
-        var batch = [];
-        for (var i = 0; i < ids.length; i++) {
-          batch.push({id: ids[i], color: '#3498db', width: 1});
+        var net = this;
+        var allNodeIds = net.body.data.nodes.getIds().map(String);
+        var allEdgeIds = net.body.data.edges.getIds().map(String);
+
+        var eBatch = [];
+        for (var i = 0; i < allEdgeIds.length; i++) {
+          eBatch.push({id: allEdgeIds[i], color: '#3498db', width: 1});
         }
-        this.body.data.edges.update(batch);
+        net.body.data.edges.update(eBatch);
+
+        var nBatch = [];
+        for (var i = 0; i < allNodeIds.length; i++) {
+          var d = net.body.data.nodes.get(allNodeIds[i]);
+          nBatch.push({id: allNodeIds[i], size: d.baseSize});
+        }
+        net.body.data.nodes.update(nBatch);
       }",
       click = "function(params) {
         if (params.nodes.length === 0) {
-          var ids = this.body.data.edges.getIds().map(String);
-          var batch = [];
-          for (var i = 0; i < ids.length; i++) {
-            batch.push({id: ids[i], color: '#3498db', width: 1});
+          var net = this;
+          var allNodeIds = net.body.data.nodes.getIds().map(String);
+          var allEdgeIds = net.body.data.edges.getIds().map(String);
+
+          var eBatch = [];
+          for (var i = 0; i < allEdgeIds.length; i++) {
+            eBatch.push({id: allEdgeIds[i], color: '#3498db', width: 1});
           }
-          this.body.data.edges.update(batch);
+          net.body.data.edges.update(eBatch);
+
+          var nBatch = [];
+          for (var i = 0; i < allNodeIds.length; i++) {
+            var d = net.body.data.nodes.get(allNodeIds[i]);
+            nBatch.push({id: allNodeIds[i], size: d.baseSize});
+          }
+          net.body.data.nodes.update(nBatch);
         }
       }")
   })
@@ -957,6 +1038,110 @@ server <- function(input, output, session) {
       )
     } else {
       p("Select an event from either timeline to view details here.", class = "text-muted")
+    }
+  })
+
+  # ── Evidence Compare ─────────────────────────────────────────
+  observe({
+    req(sm)
+    ents <- sm$all_entities
+    if (length(ents) == 0) ents <- sm$shared_entities
+    updateSelectizeInput(session, "ec_entity", choices = unique(ents), server = TRUE)
+  })
+
+  ec_docs <- reactive({
+    req(input$ec_entity)
+    ent <- tolower(input$ec_entity)
+    events <- sm$commission_timeline
+    Filter(function(e) any(tolower(unlist(e$entities)) == ent), events)
+  })
+
+  ec_wit <- reactive({
+    req(input$ec_entity)
+    get_entity_mentions(conn, input$ec_entity)
+  })
+
+  output$ec_summary <- renderUI({
+    nd <- length(ec_docs())
+    nw <- if (is.null(ec_wit())) 0 else nrow(ec_wit())
+    tagList(
+      tags$p(tags$b("Entity: "), input$ec_entity),
+      tags$p(nd, " documents, ", nw, " testimony mentions")
+    )
+  })
+
+  output$ec_docs_table <- renderReactable({
+    events <- ec_docs()
+    if (length(events) == 0) return(NULL)
+    df <- data.frame(
+      Date = sapply(events, `[[`, "date"),
+      Type = sapply(events, `[[`, "category_label"),
+      Title = sapply(events, `[[`, "title"),
+      stringsAsFactors = FALSE
+    )
+    reactable(df, columns = list(
+      Date = colDef(width = 100), Type = colDef(width = 120),
+      Title = colDef(minWidth = 200)
+    ), defaultPageSize = 8, compact = TRUE, bordered = TRUE,
+    selection = "single", onClick = "select",
+    theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+      borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
+  output$ec_wit_table <- renderReactable({
+    df <- ec_wit()
+    if (is.null(df) || nrow(df) == 0) return(NULL)
+    df$ctx <- substr(df$context_text, 1, 200)
+    reactable(df[, c("hearing_date", "speaker", "speaker_role", "ctx")],
+      columns = list(
+        hearing_date = colDef(name = "Date", width = 100),
+        speaker = colDef(name = "Witness", width = 160),
+        speaker_role = colDef(name = "Role", width = 100),
+        ctx = colDef(name = "Context", minWidth = 200)
+      ), defaultPageSize = 8, compact = TRUE, bordered = TRUE,
+      selection = "single", onClick = "select",
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
+  sel_ec_doc <- reactive({
+    sel <- getReactableState("ec_docs_table", "selected")
+    if (is.null(sel)) return(NULL)
+    ev <- ec_docs(); if (sel > length(ev)) return(NULL); ev[[sel]]
+  })
+
+  sel_ec_wit <- reactive({
+    sel <- getReactableState("ec_wit_table", "selected")
+    if (is.null(sel)) return(NULL)
+    df <- ec_wit(); if (sel > nrow(df)) return(NULL); df[sel, ]
+  })
+
+  output$ec_detail_header <- renderText({
+    if (!is.null(sel_ec_doc())) paste0("Document: ", sel_ec_doc()$title)
+    else if (!is.null(sel_ec_wit())) paste0("Testimony by ", sel_ec_wit()$speaker)
+    else "Click a row to see full context"
+  })
+
+  output$ec_detail_panel <- renderUI({
+    doc <- sel_ec_doc(); wit <- sel_ec_wit()
+    if (!is.null(doc)) {
+      tagList(
+        tags$p(tags$b("Date: "), doc$date),
+        tags$p(tags$b("Type: "), doc$category_label),
+        tags$p(tags$b("Title: "), doc$title)
+      )
+    } else if (!is.null(wit)) {
+      tagList(
+        tags$p(tags$b("Speaker: "), wit$speaker, " (", wit$speaker_role, ")"),
+        tags$p(tags$b("Date: "), wit$hearing_date, " | Day ", wit$day_number),
+        tags$p(tags$b("Entity: "), wit$entity_value, " (", wit$entity_type, ")"),
+        tags$hr(),
+        tags$b("Context:"),
+        tags$blockquote(style = "font-size:0.9rem; border-left:3px solid #3498db; padding-left:12px; margin:8px 0;",
+          wit$context_text)
+      )
+    } else {
+      p("Click a row to see full context and source.", class = "text-muted")
     }
   })
 }

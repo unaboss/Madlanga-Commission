@@ -18,6 +18,8 @@ madlanga_downloads/documents/
 
 # Generated database & parsed data
 commission_research/data/commission_research.db
+commission_research/data/commission_research.db-shm
+commission_research/data/commission_research.db-wal
 commission_research/data/parsed/
 
 # OS

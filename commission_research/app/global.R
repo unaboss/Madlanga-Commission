@@ -124,3 +124,19 @@ get_entity_context <- function(conn, entity_value, limit = 100) {
     params = list(entity_value, limit)
   ))
 }
+
+get_entity_mentions <- function(conn, entity_value, limit = 200) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e.id, e.entity_type, e.entity_value, e.context_text,
+            h.hearing_date, h.day_number,
+            s.canonical_name AS speaker, s.role AS speaker_role,
+            e.source AS source_type
+     FROM entities e
+     LEFT JOIN hearings h ON h.id = e.hearing_id
+     LEFT JOIN speakers s ON s.id = e.speaker_id
+     WHERE LOWER(e.entity_value) = LOWER(?)
+     ORDER BY h.hearing_date
+     LIMIT ?",
+    params = list(entity_value, limit)
+  ))
+}
