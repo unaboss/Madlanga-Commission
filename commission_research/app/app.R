@@ -400,7 +400,11 @@ server <- function(input, output, session) {
           value = n$value, size = n$size * 0.7,
           baseSize = n$size * 0.7,
           shape = "dot",
-          font.size = n$font$size %||% 10,
+          font.size = (n$font$size %||% 10) * 1.1,
+          font.color = "#FFFFFF",
+          font.face = "Arial",
+          font.strokeWidth = 3,
+          font.strokeColor = "#0f0f1a",
           color.background = bg,
           color.border = bd,
           color.highlight.background = hbg,
@@ -423,7 +427,8 @@ server <- function(input, output, session) {
 
     visNetwork(nodes = build_nodes_df(top_nodes),
                edges = build_edges_df(top_edges)) |>
-      visNodes(font = list(size = 10)) |>
+      visNodes(font = list(size = 14, color = "#FFFFFF", face = "Arial",
+               strokeWidth = 3, strokeColor = "#0f0f1a")) |>
       visEdges(smooth = FALSE,
                color = list(color = "#3498db", opacity = 1)) |>
       visInteraction(dragNodes = FALSE, dragView = TRUE, zoomView = TRUE) |>
