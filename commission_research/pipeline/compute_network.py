@@ -437,6 +437,168 @@ def build_network():
         },
     }
 
+    # ── 8a. Person-to-person edges (typed) ──────────────────────
+    print("Building person-to-person edges...")
+    person_to_person_edges = []
+    p_ids_set = set(person_ids)
+    # Edge type 1: questioning — evidence_leader seg immediately before witness seg
+    el_ids = set(r["id"] for r in conn.execute(
+        "SELECT id FROM speakers WHERE role IN ('evidence_leader', 'commissioner')"
+    ))
+    questioning_pairs = conn.execute("""
+        SELECT a.speaker_id AS from_id, b.speaker_id AS to_id, COUNT(*) AS weight
+        FROM transcript_segments a
+        JOIN transcript_segments b ON a.id = b.id - 1
+                                 AND a.hearing_id = b.hearing_id
+        WHERE a.speaker_id IN ({})
+          AND b.speaker_id IN ({})
+        GROUP BY a.speaker_id, b.speaker_id
+        HAVING weight >= 2
+    """.format(
+        ",".join("?" for _ in el_ids),
+        ",".join("?" for _ in p_ids_set),
+    ), [*el_ids, *p_ids_set]).fetchall()
+    for r in questioning_pairs:
+        person_to_person_edges.append({
+            "from": r["from_id"],
+            "to": r["to_id"],
+            "type": "questioning",
+            "weight": r["weight"],
+        })
+
+    # Edge type 2: co_testified — same hearing day, min 3 shared days
+    co_test_pairs = conn.execute("""
+        SELECT a.speaker_id AS from_id, b.speaker_id AS to_id,
+               COUNT(DISTINCT a.hearing_id) AS shared_days
+        FROM transcript_segments a
+        JOIN transcript_segments b ON a.hearing_id = b.hearing_id
+                                   AND a.speaker_id < b.speaker_id
+        WHERE a.speaker_id IN ({})
+          AND b.speaker_id IN ({})
+        GROUP BY a.speaker_id, b.speaker_id
+        HAVING shared_days >= 2
+        ORDER BY shared_days DESC
+        LIMIT 800
+    """.format(
+        ",".join("?" for _ in p_ids_set),
+        ",".join("?" for _ in p_ids_set)
+    ), [*p_ids_set, *p_ids_set]).fetchall()
+    for r in co_test_pairs:
+        person_to_person_edges.append({
+            "from": r["from_id"],
+            "to": r["to_id"],
+            "type": "co_testified",
+            "weight": r["shared_days"],
+        })
+
+    # Edge type 3: mentions — any speaker talking about another speaker (by surname match)
+    # Build a lookup: surname -> speaker_id for all witnesses
+    witness_surname_map = {}
+    for pn in person_nodes:
+        surname = pn["label"].split()[-1].lower().strip("()")
+        if len(surname) > 2:
+            witness_surname_map.setdefault(surname, []).append(pn["id"])
+
+    # Get all speaker IDs that have entity data (for source of mentions)
+    all_speakers_with_entities = set(r[0] for r in conn.execute(
+        "SELECT DISTINCT speaker_id FROM entities"
+    ))
+    # Query entities where value matches a witness surname
+    surname_list = sorted(witness_surname_map.keys(), key=len, reverse=True)
+    mention_edges_added = set()
+    for r in conn.execute("""
+        SELECT e.speaker_id, e.entity_value, e.entity_type, COUNT(*) AS weight
+        FROM entities e
+        WHERE e.speaker_id IN ({})
+          AND e.entity_type IN ('organization', 'case_reference')
+        GROUP BY e.speaker_id, e.entity_value
+        HAVING weight >= 3
+        LIMIT 800
+    """.format(",".join("?" for _ in all_speakers_with_entities)),
+    [*all_speakers_with_entities]).fetchall():
+        val = r["entity_value"].lower().strip()
+        for surname, target_ids in witness_surname_map.items():
+            if surname in val or val in surname:
+                for tid in target_ids:
+                    if r["speaker_id"] == tid:
+                        continue
+                    key = (r["speaker_id"], tid)
+                    if key not in mention_edges_added:
+                        mention_edges_added.add(key)
+                        person_to_person_edges.append({
+                            "from": r["speaker_id"],
+                            "to": tid,
+                            "type": "mentions",
+                            "weight": r["weight"],
+                        })
+                break
+
+    # ── 8b. Attention matrix (questioning heatmap) ──────────────
+    print("Building attention matrix...")
+    # Get all evidence leaders (questioners) with segment counts, and witnesses
+    questioners = conn.execute("""
+        SELECT s.id, s.canonical_name, COUNT(ts.id) AS segments
+        FROM speakers s
+        JOIN transcript_segments ts ON ts.speaker_id = s.id
+        WHERE s.role IN ('evidence_leader', 'commissioner')
+        GROUP BY s.id ORDER BY segments DESC
+    """).fetchall()
+    witnesses_list = conn.execute("""
+        SELECT s.id, s.canonical_name, COUNT(ts.id) AS segments
+        FROM speakers s
+        JOIN transcript_segments ts ON ts.speaker_id = s.id
+        WHERE s.role IN ('witness', 'witness_protected')
+        GROUP BY s.id ORDER BY segments DESC
+        LIMIT 40
+    """).fetchall()
+
+    # Build a lookup: (questioner_id, witness_id) -> questioning count
+    questioning_counts = {}
+    for r in conn.execute("""
+        SELECT a.speaker_id AS q_id, b.speaker_id AS w_id, COUNT(*) AS cnt
+        FROM transcript_segments a
+        JOIN transcript_segments b ON a.id = b.id - 1
+                                 AND a.hearing_id = b.hearing_id
+        WHERE a.speaker_id IN (SELECT id FROM speakers WHERE role IN ('evidence_leader', 'commissioner'))
+          AND b.speaker_id IN (SELECT id FROM speakers WHERE role IN ('witness', 'witness_protected'))
+        GROUP BY a.speaker_id, b.speaker_id
+        HAVING cnt >= 2
+    """).fetchall():
+        questioning_counts[(r["q_id"], r["w_id"])] = r["cnt"]
+
+    q_labels = [q["canonical_name"] for q in questioners[:15]]
+    w_labels = [w["canonical_name"] for w in witnesses_list]
+    q_ids = [q["id"] for q in questioners[:15]]
+    w_ids = [w["id"] for w in witnesses_list]
+
+    att_matrix = []
+    for qi in q_ids:
+        row = []
+        for wi in w_ids:
+            row.append(questioning_counts.get((qi, wi), 0))
+        att_matrix.append(row)
+
+    # ── 8c. Speaker entity profiles ─────────────────────────────
+    print("Building speaker entity profiles...")
+    profile_rows = conn.execute("""
+        SELECT e.speaker_id, e.entity_value, e.entity_type, COUNT(*) AS cnt
+        FROM entities e
+        WHERE e.speaker_id IN (SELECT id FROM speakers WHERE role IN ('witness', 'witness_protected', 'evidence_leader', 'commissioner'))
+        GROUP BY e.speaker_id, e.entity_value
+        HAVING cnt >= 2
+        ORDER BY e.speaker_id, cnt DESC
+    """).fetchall()
+    speaker_profiles = {}
+    for r in profile_rows:
+        sid = r["speaker_id"]
+        if sid not in speaker_profiles:
+            speaker_profiles[sid] = []
+        speaker_profiles[sid].append({
+            "value": r["entity_value"],
+            "type": r["entity_type"],
+            "count": r["cnt"],
+        })
+
     # ── 8. Output ──────────────────────────────────────────────
     top_entities_data = [
         {"value": r["entity_value"], "type": r["entity_type"], "count": r["total_count"]}
@@ -449,6 +611,13 @@ def build_network():
         "roles": roles_data,
         "stats": stats,
         "top_entities": top_entities_data,
+        "person_edges": person_to_person_edges,
+        "attention_matrix": {
+            "questioners": q_labels,
+            "witnesses": w_labels,
+            "matrix": att_matrix,
+        },
+        "speaker_profiles": speaker_profiles,
     }
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

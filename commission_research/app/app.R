@@ -46,6 +46,10 @@ ui <- page_navbar(
   ),
   theme = DARK_THEME,
   id = "nav",
+  footer = div(
+    style = "text-align:center; padding:15px; font-size:0.75rem; color:#666; border-top:1px solid #2a2a2a; margin-top:20px;",
+    "\u00a9 2026 Open Eye Data Analyst. All rights reserved."
+  ),
   header = tagList(
     tags$head(
       tags$style(HTML("
@@ -106,12 +110,21 @@ ui <- page_navbar(
     )
   ),
 
-  # ── Network Graph ────────────────────────────────────────────
+  # ── Connections Graph ─────────────────────────────────────────
   nav_panel(
-    title = "Network",
+    title = "Connections",
     layout_sidebar(
       sidebar = sidebar(
-        width = 280,
+        width = 300,
+        h6("Connection Type"),
+        radioButtons("conn_edge_type", NULL,
+          choices = c("All connections" = "all",
+                      "Questioning" = "questioning",
+                      "Co-testified" = "co_testified",
+                      "Mentions" = "mentions"),
+          selected = "all"
+        ),
+        hr(),
         h6("Filter Nodes"),
         checkboxGroupInput("net_roles", "Show roles:",
           choices = names(ROLE_COLORS),
@@ -120,6 +133,7 @@ ui <- page_navbar(
         sliderInput("net_min_edges", "Min connections:", 0, 100, 0, step = 5),
         hr(),
         h6("Selected Node"),
+        textOutput("net_debug"),
         uiOutput("net_node_info"),
         hr(),
         actionButton("net_reset", "Reset View", class = "btn-sm btn-outline-secondary",
@@ -133,19 +147,46 @@ ui <- page_navbar(
     )
   ),
 
-  # ── Role Groupings ───────────────────────────────────────────
+  # ── Witnesses and Entities ────────────────────────────────────
   nav_panel(
-    title = "Roles",
+    title = "Witnesses and Entities",
     layout_sidebar(
       sidebar = sidebar(
-        width = 250,
+        width = 350,
         h6("Role Categories"),
         selectInput("roles_filter", NULL,
           choices = c("All", names(ROLE_COLORS)),
           selected = "All"
-        )
+        ),
+        hr(),
+        uiOutput("witness_entity_detail")
       ),
       uiOutput("role_cards")
+    )
+  ),
+
+  # ── Attention Map ────────────────────────────────────────────
+  nav_panel(
+    title = "Attention Map",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 300,
+        h6("Heatmap: Who Questioned Whom"),
+        p("Row = evidence leader / commissioner, Column = witness.",
+          style = "font-size:0.85rem;", class = "text-muted"),
+        sliderInput("att_top_n", "Show top N:",
+          min = 5, max = 15, value = 10, step = 1),
+        hr(),
+        h6("Selected Interaction"),
+        uiOutput("att_detail")
+      ),
+      card(
+        full_screen = TRUE, style = "min-height: 650px;",
+        card_header("Questioning Attention Matrix"),
+        card_body(
+          plotlyOutput("attention_heatmap", height = "620px")
+        )
+      )
     )
   ),
 
@@ -284,6 +325,8 @@ ui <- page_navbar(
         h6("Results"),
         uiOutput("ec_summary"),
         hr(),
+        uiOutput("ec_bundle_button"),
+        hr(),
         tags$small(class = "text-muted",
           "Select an entity above to compare what the commission's documents and witnesses say about it.")
       ),
@@ -303,6 +346,41 @@ ui <- page_navbar(
       card(
         card_header(textOutput("ec_detail_header")),
         card_body(uiOutput("ec_detail_panel"))
+      )
+    )
+  ),
+
+  # ── Contradictions ────────────────────────────────────────────
+  nav_panel(
+    title = "Contradictions",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 300,
+        h6("Contradiction Detection"),
+        p("Entities mentioned by multiple witnesses. Review statements side by side to find contradictions.",
+          class = "text-muted", style = "font-size:0.85rem;"),
+        hr(),
+        h6("Filter"),
+        selectInput("contradiction_type", "Entity Type",
+          choices = c("All", "organization", "person", "location", "case_reference", "exhibit", "money", "date", "vehicle"),
+          selected = "All"),
+        sliderInput("contradiction_min_wit", "Min witnesses", 2, 20, 2, step = 1),
+        hr(),
+        h6("Selected Entity"),
+        uiOutput("contradiction_summary")
+      ),
+      layout_columns(
+        col_widths = c(5, 7),
+        card(
+          full_screen = TRUE,
+          card_header(textOutput("contradiction_list_header")),
+          card_body(reactableOutput("contradiction_list"))
+        ),
+        card(
+          full_screen = TRUE,
+          card_header(textOutput("contradiction_detail_header")),
+          card_body(uiOutput("contradiction_detail"))
+        )
       )
     )
   ),
@@ -358,6 +436,8 @@ ui <- page_navbar(
       )
     )
   ),
+  nav_spacer(),
+  nav_item(uiOutput("license_status")),
   nav_menu("Stats",
     nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
       span(style = "font-weight:700;font-size:1.2rem;color:#3498db;", textOutput("stat_hearings", inline = TRUE)),
@@ -390,6 +470,55 @@ server <- function(input, output, session) {
   onStop(function() { dbDisconnect(conn) })
 
   net <- load_network()
+
+  # ── License status ────────────────────────────────────────────
+  output$license_status <- renderUI({
+    if (LICENSE$status == "valid") {
+      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#27ae60;",
+        icon("check-circle"), " Licensed — ", LICENSE$expiry)
+    } else if (LICENSE$status == "grace_period") {
+      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#f39c12;",
+        icon("exclamation-triangle"), " License expires in ", LICENSE$grace_left, " days")
+    } else {
+      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#e74c3c;",
+        icon("lock"), " License expired")
+    }
+  })
+
+  observe({
+    if (LICENSE$status == "expired") {
+      showModal(modalDialog(
+        title = div(style = "color:#e74c3c;", icon("lock"), " License Expired"),
+        h4("Access to the Commission Research Dashboard has been blocked."),
+        p("Your license has expired. To continue using the dashboard, please renew your subscription."),
+        p(
+          "Contact ", tags$b("Mabek"),
+          " at ", tags$a(href = "mailto:mabek@madlangaresearch.co.za", "mabek@madlangaresearch.co.za"),
+          " to renew."
+        ),
+        tags$hr(),
+        p("After renewing, place the new license.key file in the app directory and click below.",
+          class = "text-muted", style = "font-size:0.85rem;"),
+        footer = actionButton("renew_check", "Check for Updated License",
+          class = "btn-primary", icon = icon("refresh"),
+          style = "width:100%;"),
+        size = "m", easyClose = FALSE, fade = FALSE
+      ))
+    }
+  })
+
+  observeEvent(input$renew_check, {
+    lic <- validate_license()
+    if (lic$status != "expired") {
+      removeModal()
+      session$reload()
+    } else {
+      showNotification(
+        "License still expired. Ensure the new license.key file is in the app directory.",
+        type = "error", duration = 8
+      )
+    }
+  })
 
   # ── Overview Stats ───────────────────────────────────────────
   output$stat_hearings <- renderText({ net$stats$total_hearings })
@@ -982,9 +1111,20 @@ server <- function(input, output, session) {
     }
   })
 
-  # ── Full Network Graph ───────────────────────────────────────
+  # ── Connections Graph ────────────────────────────────────
   filtered_nodes <- reactive({
-    nodes <- net$nodes
+    edge_type <- input$conn_edge_type %||% "all"
+
+    if (edge_type == "all") {
+      nodes <- net$nodes
+    } else {
+      person_edges <- Filter(function(e) e$type == edge_type, net$person_edges %||% list())
+      edge_from <- sapply(person_edges, `[[`, "from")
+      edge_to <- sapply(person_edges, `[[`, "to")
+      active_ids <- unique(c(edge_from, edge_to))
+      nodes <- Filter(function(n) n$id %in% active_ids && n$nodeType == "person", net$nodes)
+    }
+
     if (!is.null(input$net_roles)) {
       nodes <- Filter(function(n) n$role %in% input$net_roles, nodes)
     }
@@ -1001,12 +1141,26 @@ server <- function(input, output, session) {
   })
 
   filtered_edges <- reactive({
+    edge_type <- input$conn_edge_type %||% "all"
     node_ids <- sapply(filtered_nodes(), `[[`, "id")
-    Filter(function(e) e$from %in% node_ids && e$to %in% node_ids, net$edges)
+
+    if (edge_type == "all") {
+      Filter(function(e) e$from %in% node_ids && e$to %in% node_ids, net$edges)
+    } else {
+      person_edges <- Filter(function(e) e$type == edge_type, net$person_edges %||% list())
+      Filter(function(e) e$from %in% node_ids && e$to %in% node_ids, person_edges)
+    }
   })
 
   output$net_header <- renderText({
-    paste0("Interaction Network — ", length(filtered_nodes()), " people, ",
+    edge_type <- input$conn_edge_type %||% "all"
+    type_label <- switch(edge_type,
+      all = "Case Web",
+      questioning = "Questioning Patterns",
+      co_testified = "Co-testified",
+      mentions = "Mentions",
+      edge_type)
+    paste0(type_label, " — ", length(filtered_nodes()), " people, ",
            length(filtered_edges()), " connections")
   })
 
@@ -1014,24 +1168,40 @@ server <- function(input, output, session) {
     fn <- filtered_nodes()
     fe <- filtered_edges()
     if (length(fn) == 0) return(NULL)
+    edge_type <- input$conn_edge_type %||% "all"
+
+    # Edge color by type
+    edge_color <- switch(edge_type,
+      questioning = "#f39c12",
+      co_testified = "#3498db",
+      mentions = "#e74c3c",
+      "#3498db")
 
     nodes_df <- do.call(rbind, lapply(fn, function(n) {
       data.frame(id = n$id, label = n$label, group = n$group,
-                 value = n$value, size = n$size,
-                 color.background = n$color$background,
-                 color.border = n$color$border,
-                 color.highlight.background = n$color$highlight$background,
-                 color.highlight.border = n$color$highlight$border,
-                 shape = n$shape, font.size = n$font$size,
+                 value = n$value, size = n$size %||% 25,
+                 color.background = n$color$background %||% "#999999",
+                 color.border = n$color$border %||% "#666666",
+                 color.highlight.background = n$color$highlight.background %||% "#BBBBBB",
+                 color.highlight.border = n$color$highlight.border %||% "#666666",
+                 shape = n$shape %||% "dot", font.size = n$font$size %||% 12,
                  stringsAsFactors = FALSE)
     }))
 
     edges_df <- if (length(fe) > 0) {
       do.call(rbind, lapply(fe, function(e) {
-        data.frame(from = e$from, to = e$to, value = e$value,
-                   width = e$width, title = e$title,
-                   dashes = isTRUE(e$dashes %||% FALSE),
-                   stringsAsFactors = FALSE)
+        if (edge_type == "all") {
+          data.frame(from = e$from, to = e$to, value = e$value,
+                     width = e$width %||% 1, title = e$title %||% "",
+                     dashes = isTRUE(e$dashes %||% FALSE),
+                     stringsAsFactors = FALSE)
+        } else {
+          data.frame(from = e$from, to = e$to,
+                     value = e$weight %||% 1, width = 1 + (e$weight %||% 1) / 10,
+                     title = paste0(e$type, " (", e$weight, "x)"),
+                     color = edge_color,
+                     stringsAsFactors = FALSE)
+        }
       }))
     } else {
       data.frame(from = integer(), to = integer())
@@ -1039,7 +1209,7 @@ server <- function(input, output, session) {
 
     visNetwork(nodes_df, edges_df) |>
       visNodes(font = list(color = "#ecf0f1")) |>
-      visEdges(smooth = list(type = "continuous"), color = list(opacity = 0.3)) |>
+      visEdges(smooth = list(type = "continuous"), color = list(opacity = 0.4)) |>
       visOptions(
         highlightNearest = list(enabled = TRUE, degree = 2, hover = TRUE),
         selectedBy = list(variable = "group", multiple = TRUE)
@@ -1055,8 +1225,12 @@ server <- function(input, output, session) {
         stabilization = list(iterations = 300)
       ) |>
       visLayout(randomSeed = 42) |>
-      visEvents(select = "function(data) {
-        Shiny.setInputValue('net_selected', data.nodes[0], {priority: 'event'});
+      visEvents(click = "function(data) {
+        if (data.nodes.length > 0) {
+          Shiny.setInputValue('net_selected', data.nodes[0], {priority: 'event'});
+        } else {
+          Shiny.setInputValue('net_selected', null, {priority: 'event'});
+        }
       }")
   })
 
@@ -1064,23 +1238,112 @@ server <- function(input, output, session) {
     session$sendCustomMessage("reset_network", list())
   })
 
-  # ── Selected node info ───────────────────────────────────────
-  output$net_node_info <- renderUI({
-    sel_id <- input$net_selected
-    if (is.null(sel_id) || length(sel_id) == 0) return(p("Click a node to see details", class = "text-muted"))
-    node <- Filter(function(n) n$id == sel_id, net$nodes)[[1]]
-    if (is.null(node)) return(NULL)
-
-    tagList(
-      h5(node$label),
-      p(tags$b("Role: "), node$role),
-      p(tags$b("Rank: "), node$rank),
-      p(tags$b("Segments: "), format(node$segments, big.mark = ",")),
-      p(tags$b("Hearing days: "), node$days)
-    )
+  # ── Attention Map ────────────────────────────────────────────
+  att_n <- reactive({
+    min(input$att_top_n %||% 10, length(net$attention_matrix$questioners %||% list()))
   })
 
-  # ── Role Groupings ───────────────────────────────────────────
+  output$attention_heatmap <- renderPlotly({
+    am <- net$attention_matrix
+    if (is.null(am) || length(am$questioners) == 0) {
+      return(plotly_empty(type = "heatmap") |>
+               layout(title = "No attention data available"))
+    }
+
+    n <- att_n()
+    qs <- am$questioners[1:min(n, length(am$questioners))]
+    ws <- am$witnesses
+    mat <- am$matrix[1:min(n, length(am$matrix)), , drop = FALSE]
+
+    # Only keep witnesses with at least one interaction
+    col_sums <- colSums(mat)
+    keep <- col_sums > 0
+    ws <- ws[keep]
+    mat <- mat[, keep, drop = FALSE]
+    if (ncol(mat) == 0) {
+      return(plotly_empty(type = "heatmap") |>
+               layout(title = "No questioning interactions found"))
+    }
+
+    plot_ly(
+      x = ws,
+      y = qs,
+      z = mat,
+      type = "heatmap",
+      colorscale = list(c(0, 0.3, 0.7, 1), c("#1a1a2e", "#3498db", "#f39c12", "#e74c3c")),
+      hovertemplate = "<b>%{y}</b> questioned <b>%{x}</b><br>%{z} interactions<extra></extra>"
+    ) |>
+      layout(
+        xaxis = list(title = "", tickangle = -45, tickfont = list(size = 9)),
+        yaxis = list(title = "", tickfont = list(size = 9)),
+        plot_bgcolor = "#16213e",
+        paper_bgcolor = "#16213e",
+        font = list(color = "#ecf0f1"),
+        margin = list(l = 120, b = 120)
+      ) |>
+      event_register("plotly_click")
+  })
+
+  observeEvent(event_data("plotly_click", source = "attention_heatmap"), {
+    click <- event_data("plotly_click", source = "attention_heatmap")
+    if (is.null(click)) return()
+    output$att_detail <- renderUI({
+      am <- net$attention_matrix
+      q_idx <- click$y + 1
+      w_idx <- click$x + 1
+      if (q_idx > length(am$questioners) || w_idx > length(am$witnesses)) return(NULL)
+      q_name <- am$questioners[q_idx]
+      w_name <- am$witnesses[w_idx]
+      count <- am$matrix[q_idx, w_idx]
+      tagList(
+        h6(paste0(q_name, " \u2192 ", w_name)),
+        p(paste0(count, " direct questioning interactions"), class = "text-muted")
+      )
+    })
+  })
+
+  # ── Selected node info (Connections tab) ─────────────────────
+  # Debug: show raw selected node ID
+  output$net_debug <- renderText({
+    paste0("Selected ID: ", input$net_selected %||% "(none)")
+  })
+
+  output$net_node_info <- renderUI({
+    sel_id <- input$net_selected
+    if (is.null(sel_id) || length(sel_id) == 0 || nchar(sel_id) == 0) {
+      return(p("Click a node to see details", class = "text-muted"))
+    }
+
+    sel_id_num <- as.numeric(sel_id)
+
+    # Search all nodes (not just filtered) to always find the clicked node
+    node <- NULL
+    for (n in net$nodes) {
+      if (as.numeric(n$id) == sel_id_num) { node <- n; break }
+    }
+    if (is.null(node)) {
+      return(p("Node not found", class = "text-muted"))
+    }
+
+    if (!is.null(node$nodeType) && node$nodeType == "entity") {
+      tagList(
+        h5(node$label),
+        p(tags$b("Type: "), node$entityType %||% "entity"),
+        p(tags$b("Mentions: "), format(node$value %||% 0, big.mark = ",")),
+        p(tags$b("Witnesses named: "), node$witnessCount %||% 0)
+      )
+    } else {
+      tagList(
+        h5(node$label),
+        p(tags$b("Role: "), node$role %||% ""),
+        p(tags$b("Rank: "), node$rank %||% ""),
+        p(tags$b("Segments: "), format(node$segments %||% 0, big.mark = ",")),
+        p(tags$b("Hearing days: "), node$days %||% 0)
+      )
+    }
+  })
+
+  # ── Witnesses and Entities ──────────────────────────────────
   output$role_cards <- renderUI({
     roles_to_show <- if (input$roles_filter == "All") {
       names(net$roles)
@@ -1094,8 +1357,14 @@ server <- function(input, output, session) {
       color <- ROLE_COLORS[[role]] %||% "#95a5a6"
 
       member_html <- lapply(members[1:min(20, length(members))], function(m) {
-        tags$div(class = "role-card",
-          style = paste0("border-left-color: ", color, "; background: rgba(255,255,255,0.03);"),
+        tags$button(
+          class = "role-card",
+          onclick = sprintf("Shiny.setInputValue('selected_witness', '%s', {priority: 'event'})",
+                            gsub("'", "\\\\'", m$name)),
+          style = paste0("border-left-color: ", color,
+                         "; background: rgba(255,255,255,0.03); width:100%; text-align:left; "
+                         , "border: none; border-left: 4px solid ", color,
+                         "; cursor: pointer; display: block;"),
           tags$strong(m$name),
           tags$br(),
           tags$small(paste0(m$rank, " · ", format(m$segments, big.mark = ","),
@@ -1109,13 +1378,93 @@ server <- function(input, output, session) {
                     paste0(toupper(sub("_", " ", role)), "S"),
                     tags$small(paste0(" (", length(members), ")")))
         ),
-        card_body(do.call(tagList, member_html),
+        card_body(
+          div(style = "display:flex; flex-direction:column; gap:4px;",
+            do.call(tagList, member_html)
+          ),
           if (length(members) > 20) p(paste0("... and ", length(members) - 20, " more"), class = "text-muted")
         )
       )
     })
 
     layout_column_wrap(width = "400px", do.call(tagList, cards[!sapply(cards, is.null)]))
+  })
+
+  selected_witness_name <- reactiveVal(NULL)
+
+  observeEvent(input$selected_witness, {
+    selected_witness_name(input$selected_witness)
+  })
+
+  output$witness_entity_detail <- renderUI({
+    name <- selected_witness_name()
+    if (is.null(name)) {
+      return(tagList(
+        h6("Click a witness to see details"),
+        p("Entity profiles show what organizations, cases, locations and exhibits each witness named in testimony.", class = "text-muted")
+      ))
+    }
+
+    # Find the speaker profile
+    prof <- NULL
+    prof_id <- NULL
+    for (n in net$nodes) {
+      if (n$nodeType == "person" && n$label == name) {
+        prof_id <- as.character(n$id)
+        break
+      }
+    }
+
+    # Get entities from network data's speaker_profiles
+    entities <- NULL
+    if (!is.null(prof_id)) {
+      prof_id_num <- as.numeric(prof_id)
+      entities <- net$speaker_profiles[[as.character(prof_id_num)]]
+      if (is.null(entities)) {
+        # Try numeric key
+        entities <- net$speaker_profiles[[prof_id_num]]
+      }
+    }
+
+    # Also get from DB
+    db_entities <- NULL
+    if (!is.null(prof_id)) {
+      tryCatch({
+        db_entities <- get_person_entities(conn, as.numeric(prof_id), limit = 25)
+      }, error = function(e) {})
+    }
+
+    # Prefer DB data
+    display_ents <- db_entities
+    if (is.null(display_ents) || nrow(display_ents) == 0) {
+      if (!is.null(entities) && length(entities) > 0) {
+        display_ents <- do.call(rbind, lapply(entities, function(e) {
+          data.frame(entity_value = e$value, entity_type = e$type, cnt = e$count, stringsAsFactors = FALSE)
+        }))
+      }
+    }
+
+    tagList(
+      h5(name),
+      if (!is.null(display_ents) && nrow(display_ents) > 0) {
+        tagList(
+          p(tags$b("Entities named in testimony:"), style = "margin-bottom:4px;"),
+          div(style = "display:flex; flex-direction:column; gap:4px;",
+            lapply(seq_len(min(nrow(display_ents), 25)), function(i) {
+              e <- display_ents[i, ]
+              tags$div(
+                style = "font-size:0.85rem; padding:4px 6px; border-radius:4px; background:rgba(255,255,255,0.03);",
+                tags$span(style = "font-weight:bold;", e$entity_value),
+                tags$span(style = "color:#888;font-size:0.75rem;", paste0(" (", e$entity_type, ", ", e$cnt, "x)"))
+              )
+            })
+          )
+        )
+      } else {
+        p("No entity data found for this witness.", class = "text-muted")
+      },
+      uiOutput("witness_prep_pack")
+    )
   })
 
   # ── Timeline ─────────────────────────────────────────────────
@@ -1591,6 +1940,194 @@ server <- function(input, output, session) {
     } else {
       p("Click a row to see full context and source.", class = "text-muted")
     }
+  })
+
+  # ── Premium: Evidence Bundle Export ────────────────────────────
+  output$ec_bundle_button <- renderUI({
+    req(input$ec_entity)
+    if (LICENSE$tier == "starter") {
+      div(style = "text-align:center; padding:8px;",
+        tags$small(class = "text-muted",
+          icon("lock"), " Evidence Bundle available on ",
+          tags$strong("Professional"), " tier")
+      )
+    } else {
+      actionButton("generate_bundle", "Generate Evidence Bundle",
+        icon = icon("file-alt"), class = "btn-success btn-sm",
+        width = "100%")
+    }
+  })
+
+  observeEvent(input$generate_bundle, {
+    req(input$ec_entity)
+    html <- generate_bundle_html(conn, input$ec_entity, input$ec_type)
+    if (is.null(html)) {
+      showNotification("No data to generate bundle.", type = "warning")
+      return()
+    }
+    tmp <- file.path(tempdir(), paste0("evidence_bundle_", gsub("[^A-Za-z0-9]", "_", input$ec_entity), ".html"))
+    writeLines(html, tmp)
+    showNotification("Evidence bundle generated! Opening in browser...", type = "success", duration = 5)
+    browseURL(tmp)
+  })
+
+  # ── Premium: Witness Preparation Pack ──────────────────────────
+  output$witness_prep_pack <- renderUI({
+    name <- selected_witness_name()
+    if (is.null(name)) return(NULL)
+    if (LICENSE$tier == "starter") {
+      div(style = "text-align:center; padding:8px; margin-top:8px;",
+        tags$small(class = "text-muted",
+          icon("lock"), " Witness Prep Pack available on ",
+          tags$strong("Professional"), " tier")
+      )
+    } else {
+      actionButton("show_prep_pack", "Witness Preparation Pack",
+        icon = icon("user-graduate"), class = "btn-info btn-sm",
+        width = "100%")
+    }
+  })
+
+  observeEvent(input$show_prep_pack, {
+    name <- selected_witness_name()
+    if (is.null(name)) return()
+    hearings <- get_witness_hearings(conn, name)
+    entities <- tryCatch(get_person_entities(conn, as.numeric(input$overview_selected)), error = function(e) NULL)
+    questioners <- tryCatch(get_witness_questioners(conn, name), error = function(e) NULL)
+    segs <- tryCatch(get_witness_segments(conn, name), error = function(e) NULL)
+
+    showModal(modalDialog(
+      title = div(icon("user-graduate"), " Witness Preparation Pack: ", name),
+      size = "l",
+      easyClose = TRUE,
+      fade = FALSE,
+      tagList(
+        layout_columns(
+          col_widths = c(4, 4, 4),
+          div(class = "stat-card", style = "background:#1a3a5c; border-radius:8px; padding:15px;",
+            h2(style = "margin:0;color:#3498db;", nrow(hearings)),
+            p(style = "margin:0;font-size:0.75rem;text-transform:uppercase;opacity:0.7;", "Days Testified")),
+          div(class = "stat-card", style = "background:#1a3a5c; border-radius:8px; padding:15px;",
+            h2(style = "margin:0;color:#27ae60;", if (!is.null(entities)) nrow(entities) else 0),
+            p(style = "margin:0;font-size:0.75rem;text-transform:uppercase;opacity:0.7;", "Entities Named")),
+          div(class = "stat-card", style = "background:#1a3a5c; border-radius:8px; padding:15px;",
+            h2(style = "margin:0;color:#f39c12;", if (!is.null(segs)) nrow(segs) else 0),
+            p(style = "margin:0;font-size:0.75rem;text-transform:uppercase;opacity:0.7;", "Testimony Segments"))
+        ),
+        hr(),
+        if (!is.null(questioners) && nrow(questioners) > 0) tagList(
+          h5("Who Questioned This Witness"),
+          reactable(questioners, columns = list(
+            questioner = colDef(name = "Questioner", minWidth = 200),
+            interactions = colDef(name = "Interactions", width = 120)
+          ), defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+          theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+            borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+        ),
+        if (!is.null(entities) && nrow(entities) > 0) tagList(
+          h5("Top Entities Named"),
+          reactable(entities, columns = list(
+            entity_value = colDef(name = "Entity", minWidth = 200),
+            entity_type = colDef(name = "Type", width = 120),
+            cnt = colDef(name = "Times", width = 80)
+          ), defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+          theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+            borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+        ),
+        if (!is.null(hearings) && nrow(hearings) > 0) tagList(
+          h5("Hearing Dates"),
+          reactable(hearings[, c("day_number", "hearing_date", "summary")], columns = list(
+            day_number = colDef(name = "Day", width = 60),
+            hearing_date = colDef(name = "Date", width = 100),
+            summary = colDef(name = "Summary", minWidth = 250)
+          ), defaultPageSize = 8, compact = TRUE, bordered = TRUE,
+          theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+            borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+        )
+      ),
+      footer = modalButton("Close")
+    ))
+  })
+
+  # ── Premium: Contradiction Engine ──────────────────────────────
+  contradiction_data <- reactive({
+    etype <- if (input$contradiction_type == "All") NULL else input$contradiction_type
+    get_contradiction_candidates(conn, min_witnesses = input$contradiction_min_wit)
+  })
+
+  output$contradiction_list_header <- renderText({
+    df <- contradiction_data()
+    if (is.null(df) || nrow(df) == 0) return("No entities with multiple witnesses")
+    paste0("Entities mentioned by 2+ witnesses (", nrow(df), " found)")
+  })
+
+  output$contradiction_list <- renderReactable({
+    df <- contradiction_data()
+    if (is.null(df) || nrow(df) == 0) return(NULL)
+    reactable(df, columns = list(
+      entity_value = colDef(name = "Entity", minWidth = 200),
+      entity_type = colDef(name = "Type", width = 100),
+      witness_count = colDef(name = "Witnesses", width = 90,
+        style = function(v) list(fontWeight = "bold",
+          color = if (v >= 5) "#e74c3c" else if (v >= 3) "#f39c12" else "#ecf0f1")),
+      total_mentions = colDef(name = "Mentions", width = 90)
+    ), defaultPageSize = 20, compact = TRUE, bordered = TRUE,
+    selection = "single", onClick = "select",
+    theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+      borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
+  selected_contradiction <- reactive({
+    sel <- getReactableState("contradiction_list", "selected")
+    if (is.null(sel)) return(NULL)
+    df <- contradiction_data()
+    if (sel > nrow(df)) return(NULL)
+    df[sel, ]
+  })
+
+  output$contradiction_detail_header <- renderText({
+    sel <- selected_contradiction()
+    if (is.null(sel)) return("Select an entity to compare witness statements")
+    paste0("Comparing statements about: ", sel$entity_value)
+  })
+
+  output$contradiction_summary <- renderUI({
+    sel <- selected_contradiction()
+    if (is.null(sel)) return(p("Select an entity from the list", class = "text-muted"))
+    tagList(
+      p(tags$b("Entity: "), sel$entity_value),
+      p(tags$b("Type: "), sel$entity_type),
+      p(tags$b("Witnesses: "), sel$witness_count),
+      p(tags$b("Total mentions: "), sel$total_mentions)
+    )
+  })
+
+  output$contradiction_detail <- renderUI({
+    sel <- selected_contradiction()
+    if (is.null(sel)) return(p("Select an entity to see side-by-side witness statements.", class = "text-muted"))
+
+    by_witness <- get_entity_by_witness(conn, sel$entity_value)
+    if (is.null(by_witness) || nrow(by_witness) == 0) {
+      return(p("No detailed data available.", class = "text-muted"))
+    }
+
+    witnesses <- unique(by_witness$witness)
+    cards <- lapply(witnesses, function(w) {
+      w_data <- by_witness[by_witness$witness == w, ]
+      card(
+        card_header(span(style = "color:#e74c3c;font-weight:bold;", icon("user"), " ", w)),
+        card_body(
+          reactable(w_data[, c("hearing_date", "day_number", "context_text")], columns = list(
+            hearing_date = colDef(name = "Date", width = 100),
+            day_number = colDef(name = "Day", width = 60),
+            context_text = colDef(name = "Statement", minWidth = 350)
+          ), defaultPageSize = 5, compact = TRUE, bordered = TRUE,
+          theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+            borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+        )
+      )
+    })
+    do.call(tagList, cards)
   })
 }
 

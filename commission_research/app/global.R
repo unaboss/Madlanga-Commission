@@ -6,11 +6,31 @@ library(lubridate)
 library(stringr)
 library(jsonlite)
 
+# ── License check ────────────────────────────────────────────────
+source("license_check.r")
+LICENSE <- validate_license()
+
+if (LICENSE$status == "expired") {
+  stop(LICENSE$message)
+}
+
 # ── Paths ───────────────────────────────────────────────────────
 APP_DIR  <- getwd()
 DB_PATH <- normalizePath(file.path(APP_DIR, "data", "commission_research.db"), mustWork = FALSE)
 NETWORK_PATH   <- file.path(APP_DIR, "www", "network_data.json")
 STORYMAP_PATH  <- file.path(APP_DIR, "www", "story_map_data.json")
+
+# ── Helpers ──────────────────────────────────────────────────────
+escape_html <- function(x) {
+  if (is.null(x) || is.na(x)) return("")
+  x <- as.character(x)
+  x <- gsub("&", "&amp;", x)
+  x <- gsub("<", "&lt;", x)
+  x <- gsub(">", "&gt;", x)
+  x <- gsub("\"", "&quot;", x)
+  x <- gsub("'", "&#39;", x)
+  x
+}
 
 # ── DB Connection ───────────────────────────────────────────────
 get_db <- function() {
@@ -176,6 +196,19 @@ get_entity_snippets <- function(conn, speaker_id, entity_value, limit = 3) {
   ))
 }
 
+get_speaker_profiles <- function(conn) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e.speaker_id, s.canonical_name, s.role,
+            e.entity_value, e.entity_type, COUNT(*) AS cnt
+     FROM entities e
+     JOIN speakers s ON s.id = e.speaker_id
+     WHERE s.role IN ('witness', 'witness_protected', 'evidence_leader', 'commissioner')
+     GROUP BY e.speaker_id, e.entity_value
+     HAVING cnt >= 2
+     ORDER BY e.speaker_id, cnt DESC"
+  ))
+}
+
 get_accusation_stats <- function(conn) {
   as.data.frame(dbGetQuery(conn,
     "SELECT entity_type, COUNT(*) AS total_mentions,
@@ -197,4 +230,173 @@ get_top_accused <- function(conn, limit = 25) {
      ORDER BY mentions DESC
      LIMIT ?",
     params = list(limit)))
+}
+
+# ── Premium: Witness Preparation Pack ────────────────────────────
+
+get_witness_hearings <- function(conn, speaker_name) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT DISTINCT h.day_number, h.hearing_date, h.summary
+     FROM transcript_segments ts
+     JOIN speakers s ON s.id = ts.speaker_id
+     JOIN hearings h ON h.id = ts.hearing_id
+     WHERE s.canonical_name LIKE ?
+     ORDER BY h.day_number",
+    params = list(paste0("%", speaker_name, "%"))
+  ))
+}
+
+get_witness_questioners <- function(conn, speaker_name) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT s2.canonical_name AS questioner, COUNT(*) AS interactions
+     FROM transcript_segments ts
+     JOIN speakers s ON s.id = ts.speaker_id
+     JOIN transcript_segments ts2 ON ts2.hearing_id = ts.hearing_id
+       AND ts2.id BETWEEN ts.id - 5 AND ts.id + 5
+     JOIN speakers s2 ON s2.id = ts2.speaker_id
+     WHERE s.canonical_name LIKE ?
+       AND s2.role IN ('evidence_leader', 'commissioner')
+       AND s2.id != s.id
+     GROUP BY s2.canonical_name
+     ORDER BY interactions DESC
+     LIMIT 15",
+    params = list(paste0("%", speaker_name, "%"))
+  ))
+}
+
+# ── Premium: Contradiction Engine ────────────────────────────────
+
+get_contradiction_candidates <- function(conn, min_witnesses = 2, limit = 50) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e.entity_value, e.entity_type,
+            COUNT(DISTINCT e.speaker_id) AS witness_count,
+            COUNT(*) AS total_mentions
+     FROM entities e
+     JOIN speakers s ON s.id = e.speaker_id
+     WHERE s.role IN ('witness', 'witness_protected')
+     GROUP BY e.entity_value
+     HAVING witness_count >= ?
+     ORDER BY witness_count DESC, total_mentions DESC
+     LIMIT ?",
+    params = list(min_witnesses, limit)
+  ))
+}
+
+get_entity_by_witness <- function(conn, entity_value) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT s.canonical_name AS witness, s.role,
+            e.context_text, h.hearing_date, h.day_number
+     FROM entities e
+     JOIN speakers s ON s.id = e.speaker_id
+     LEFT JOIN hearings h ON h.id = e.hearing_id
+     WHERE LOWER(e.entity_value) = LOWER(?)
+       AND s.role IN ('witness', 'witness_protected')
+     ORDER BY s.canonical_name, h.day_number
+     LIMIT 500",
+    params = list(entity_value)
+  ))
+}
+
+# ── Premium: Evidence Bundle Export ──────────────────────────────
+
+generate_bundle_html <- function(conn, entity_value, entity_type) {
+  mentions <- get_entity_mentions(conn, entity_value, limit = 500)
+  if (is.null(mentions) || nrow(mentions) == 0) return(NULL)
+
+  docs <- mentions[mentions$source_type != "transcript", , drop = FALSE]
+  testimony <- mentions[mentions$source_type == "transcript", , drop = FALSE]
+
+  total_witnesses <- length(unique(testimony$speaker))
+  total_docs <- length(unique(docs$source))
+  date_range <- ""
+  if (nrow(mentions) > 0) {
+    dates <- na.omit(as.Date(mentions$hearing_date))
+    if (length(dates) > 0) date_range <- paste(min(dates), "to", max(dates))
+  }
+
+    rows_html <- ""
+  if (nrow(testimony) > 0) {
+    for (i in seq_len(nrow(testimony))) {
+      r <- testimony[i, ]
+      rows_html <- paste0(rows_html, '
+        <tr>
+          <td class="date">', r$hearing_date %||% "", '</td>
+          <td class="witness">', escape_html(r$speaker %||% ""), '</td>
+          <td class="context">', escape_html(substr(r$context_text %||% "", 1, 300)), '</td>
+          <td class="day">Day ', r$day_number %||% "", '</td>
+        </tr>')
+    }
+  }
+
+  doc_rows <- ""
+  if (nrow(docs) > 0) {
+    for (i in seq_len(nrow(docs))) {
+      r <- docs[i, ]
+      doc_rows <- paste0(doc_rows, '
+        <tr>
+          <td class="date">', r$hearing_date %||% "", '</td>
+          <td class="witness">', escape_html(r$speaker %||% ""), '</td>
+          <td class="context">', escape_html(substr(r$context_text %||% "", 1, 300)), '</td>
+          <td class="type">', r$source_type %||% "", '</td>
+        </tr>')
+    }
+  }
+
+  html <- paste0('
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Evidence Bundle — ', escape_html(entity_value), '</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Inter", "Segoe UI", Arial, sans-serif; background: #fff; color: #222; padding: 40px; }
+  h1 { font-size: 1.8rem; border-bottom: 3px solid #1a3a5c; padding-bottom: 8px; margin-bottom: 20px; }
+  .meta { display: flex; gap: 24px; margin-bottom: 30px; flex-wrap: wrap; }
+  .meta-item { background: #f5f7fa; padding: 12px 20px; border-radius: 8px; }
+  .meta-item strong { display: block; font-size: 0.7rem; text-transform: uppercase; color: #666; }
+  .meta-item span { font-size: 1.3rem; font-weight: 700; color: #1a3a5c; }
+  h2 { font-size: 1.2rem; margin: 24px 0 12px; color: #1a3a5c; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 0.85rem; }
+  th { background: #1a3a5c; color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:hover { background: #f0f4ff; }
+  .date { white-space: nowrap; width: 100px; }
+  .witness { white-space: nowrap; width: 160px; }
+  .day { white-space: nowrap; width: 60px; color: #666; }
+  .type { width: 80px; color: #666; text-transform: capitalize; }
+  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 0.75rem; color: #999; }
+  @media print { body { padding: 20px; } th { background: #1a3a5c !important; color: #fff !important; } }
+</style>
+</head>
+<body>
+  <h1>Evidence Bundle: ', escape_html(entity_value), '</h1>
+  <p style="color:#666;margin-bottom:20px;">', escape_html(entity_type %||% ""), ' &mdash; Generated ', Sys.Date(), '</p>
+  <div class="meta">
+    <div class="meta-item"><strong>Witnesses</strong><span>', total_witnesses, '</span></div>
+    <div class="meta-item"><strong>Documents</strong><span>', total_docs, '</span></div>
+    <div class="meta-item"><strong>Total Mentions</strong><span>', nrow(mentions), '</span></div>
+    <div class="meta-item"><strong>Date Range</strong><span>', date_range, '</span></div>
+  </div>
+
+  <h2>Witness Testimony (', nrow(testimony), ' mentions)</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Witness</th><th>Context</th><th>Day</th></tr></thead>
+    <tbody>', rows_html, '</tbody>
+  </table>
+
+  <h2>Commission Documents (', nrow(docs), ' mentions)</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Source</th><th>Context</th><th>Type</th></tr></thead>
+    <tbody>', doc_rows, '</tbody>
+  </table>
+
+  <div class="footer">
+    Commission Research Intelligence Dashboard &mdash; Confidential',
+    '<br>Generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), '
+  </div>
+</body>
+</html>')
+
+  html
 }
