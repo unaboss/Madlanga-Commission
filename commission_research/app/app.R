@@ -1265,21 +1265,24 @@ server <- function(input, output, session) {
                layout(title = "No questioning interactions found"))
     }
 
+    # Transpose: x = questioners, y = witnesses (cleaner x-axis layout)
     plot_ly(
-      x = ws,
-      y = qs,
-      z = mat,
+      x = qs,
+      y = ws,
+      z = t(mat),
       type = "heatmap",
       colorscale = list(c(0, 0.3, 0.7, 1), c("#1a1a2e", "#3498db", "#f39c12", "#e74c3c")),
-      hovertemplate = "<b>%{y}</b> questioned <b>%{x}</b><br>%{z} interactions<extra></extra>"
+      hovertemplate = "<b>%{x}</b> questioned <b>%{y}</b><br>%{z} interactions<extra></extra>"
     ) |>
       layout(
         xaxis = list(title = "", tickangle = -45, tickfont = list(size = 9)),
         yaxis = list(title = "", tickfont = list(size = 9)),
+        xaxis_title = "",
+        yaxis_title = "",
         plot_bgcolor = "#16213e",
         paper_bgcolor = "#16213e",
         font = list(color = "#ecf0f1"),
-        margin = list(l = 120, b = 120)
+        margin = list(l = 120, b = 80)
       ) |>
       event_register("plotly_click")
   })
@@ -1289,15 +1292,15 @@ server <- function(input, output, session) {
     if (is.null(click)) return()
     output$att_detail <- renderUI({
       am <- net$attention_matrix
-      q_idx <- click$y + 1
-      w_idx <- click$x + 1
+      q_idx <- click$x + 1  # x is now questioner (after transpose)
+      w_idx <- click$y + 1  # y is now witness
       if (q_idx > length(am$questioners) || w_idx > length(am$witnesses)) return(NULL)
       q_name <- am$questioners[q_idx]
       w_name <- am$witnesses[w_idx]
-      count <- am$matrix[q_idx, w_idx]
+      val <- am$matrix[q_idx, w_idx]
       tagList(
         h6(paste0(q_name, " \u2192 ", w_name)),
-        p(paste0(count, " direct questioning interactions"), class = "text-muted")
+        p(paste0(val, " direct questioning interactions"), class = "text-muted")
       )
     })
   })
