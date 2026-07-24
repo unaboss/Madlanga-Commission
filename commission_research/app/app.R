@@ -46,8 +46,9 @@ ui <- page_navbar(
   ),
   theme = DARK_THEME,
   id = "nav",
-  header = tags$head(
-    tags$style(HTML("
+  header = tagList(
+    tags$head(
+      tags$style(HTML("
       .stat-card { text-align: center; padding: 20px 10px; border-radius: 8px; }
       .stat-card h2 { font-size: 2rem; margin: 5px 0; font-weight: 700; }
       .stat-card p { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin: 0; }
@@ -58,50 +59,41 @@ ui <- page_navbar(
       .entity-tag:hover { background: #3498db; color: white; }
       .nav-link { font-size: 0.9rem; }
     "))
-  ),
+  )),
 
   # ── Overview ─────────────────────────────────────────────────
   nav_panel(
     title = "Overview",
     layout_columns(
-      col_widths = c(3, 3, 3, 3),
-      div(class = "stat-card",
-        style = "background: linear-gradient(135deg, #1a3a5c, #2980b9);",
-        p("Hearing Days"), h2(textOutput("stat_hearings", inline = TRUE))
-      ),
-      div(class = "stat-card",
-        style = "background: linear-gradient(135deg, #1e5a3a, #27ae60);",
-        p("Witnesses & Speakers"), h2(textOutput("stat_speakers", inline = TRUE))
-      ),
-      div(class = "stat-card",
-        style = "background: linear-gradient(135deg, #5a3a1a, #f39c12);",
-        p("Transcript Segments"), h2(textOutput("stat_segments", inline = TRUE))
-      ),
-      div(class = "stat-card",
-        style = "background: linear-gradient(135deg, #3a1a5a, #8e44ad);",
-        p("Extracted Entities"), h2(textOutput("stat_entities", inline = TRUE))
-      )
-    ),
-    br(),
-    layout_columns(
       col_widths = c(8, 4),
       card(
         full_screen = TRUE, style = "min-height: 450px;",
-        card_header("Mini Network Map — Key Players"),
+        card_header("Case Network"),
         card_body(visNetworkOutput("overview_network", height = "390px")),
         card_footer(
           div(style = "display:flex; justify-content:space-between; align-items:center;",
             actionButton("legend_btn", "Show Legend",
               class = "btn-sm btn-outline-secondary"),
-            tags$small(class = "text-muted", "Hover to highlight connections")
+            tags$small(class = "text-muted", "Click a node or edge for details")
           )
         )
       ),
       card(
         full_screen = TRUE, style = "min-height: 450px;",
-        card_header("Top Entities"),
+        card_header(
+          div(style = "display:flex; align-items:center; gap:8px;",
+            "Top Entities",
+            actionButton("ent_toggle", "Show All \u25BC",
+              class = "btn-sm btn-outline-secondary")
+          )
+        ),
         card_body(uiOutput("overview_entities"))
       )
+    ),
+    card(
+      style = "min-height: 120px;",
+      card_header(textOutput("overview_detail_header")),
+      card_body(uiOutput("overview_detail_panel"))
     )
   ),
 
@@ -304,6 +296,24 @@ ui <- page_navbar(
         card_body(uiOutput("ec_detail_panel"))
       )
     )
+  ),
+  nav_menu("Stats",
+    nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
+      span(style = "font-weight:700;font-size:1.2rem;color:#3498db;", textOutput("stat_hearings", inline = TRUE)),
+      span(style = "font-size:0.75rem;text-transform:uppercase;opacity:0.7;color:#ecf0f1;margin-left:5px;", "Hearings")
+    )),
+    nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
+      span(style = "font-weight:700;font-size:1.2rem;color:#27ae60;", textOutput("stat_speakers", inline = TRUE)),
+      span(style = "font-size:0.75rem;text-transform:uppercase;opacity:0.7;color:#ecf0f1;margin-left:5px;", "Witnesses")
+    )),
+    nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
+      span(style = "font-weight:700;font-size:1.2rem;color:#f39c12;", textOutput("stat_segments", inline = TRUE)),
+      span(style = "font-size:0.75rem;text-transform:uppercase;opacity:0.7;color:#ecf0f1;margin-left:5px;", "Segments")
+    )),
+    nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
+      span(style = "font-weight:700;font-size:1.2rem;color:#8e44ad;", textOutput("stat_entities", inline = TRUE)),
+      span(style = "font-size:0.75rem;text-transform:uppercase;opacity:0.7;color:#ecf0f1;margin-left:5px;", "Entities")
+    ))
   )
 )
 
@@ -337,6 +347,9 @@ server <- function(input, output, session) {
 
   output$overview_network <- renderVisNetwork({
     all_nodes <- net$nodes
+    # Sort by value descending — mixes persons and entities by importance
+    vals <- sapply(all_nodes, `[[`, "value")
+    all_nodes <- all_nodes[order(vals, decreasing = TRUE)]
     n_take <- min(80, length(all_nodes))
     if (n_take == 0) return(NULL)
     top_nodes <- all_nodes[1:n_take]
@@ -353,10 +366,10 @@ server <- function(input, output, session) {
     n_edges <- min(300, length(top_edges))
     top_edges <- top_edges[1:n_edges]
 
-    # Compute quantile thresholds for shade variation within each role
-    role_segments <- split(sapply(top_nodes, `[[`, "value"),
-                           sapply(top_nodes, `[[`, "role"))
-    role_thresholds <- lapply(role_segments, function(v) {
+    # Compute quantile thresholds for shade variation within each group
+    grp_values <- sapply(top_nodes, function(n) n$group %||% "other")
+    grp_segments <- split(sapply(top_nodes, `[[`, "value"), grp_values)
+    grp_thresholds <- lapply(grp_segments, function(v) {
       if (length(v) < 3) return(c(Inf, Inf))
       quantile(v, probs = c(0.25, 0.75))
     })
@@ -364,14 +377,14 @@ server <- function(input, output, session) {
     build_nodes_df <- function(nodes) {
       do.call(rbind, lapply(seq_along(nodes), function(i) {
         n <- nodes[[i]]
-        role <- n$role
+        grp <- n$group %||% "other"
         segs <- n$value
         bg <- n$color$background
         bd <- n$color$border
         hbg <- n$color$highlight$background
         hbd <- n$color$highlight$border
         # Vary shade: top 25% = original, middle 50% = lightened, bottom 25% = lightest
-        th <- role_thresholds[[role]]
+        th <- grp_thresholds[[grp]]
         if (length(th) == 2 && !is.na(th[2]) && is.finite(th[2])) {
           if (segs >= th[2]) {
             # top quartile — keep original
@@ -415,7 +428,6 @@ server <- function(input, output, session) {
           from = e$from, to = e$to, value = e$value,
           width = e$width %||% 1,
           title = e$title %||% "",
-          arrows = "to",
           stringsAsFactors = FALSE
         )
       }))
@@ -484,7 +496,7 @@ server <- function(input, output, session) {
         net.body.data.nodes.update(nBatch);
       }",
       click = "function(params) {
-        if (params.nodes.length === 0) {
+        if (params.nodes.length === 0 && params.edges.length === 0) {
           var net = this;
           var allNodeIds = net.body.data.nodes.getIds().map(String);
           var allEdgeIds = net.body.data.edges.getIds().map(String);
@@ -501,6 +513,23 @@ server <- function(input, output, session) {
             nBatch.push({id: allNodeIds[i], size: d.baseSize, label: d.startLabel});
           }
           net.body.data.nodes.update(nBatch);
+          Shiny.setInputValue('overview_selected', null, {priority: 'event'});
+          Shiny.setInputValue('overview_edge', null, {priority: 'event'});
+        }
+      }",
+      select = "function(params) {
+        if (params.nodes.length > 0) {
+          Shiny.setInputValue('overview_selected', params.nodes[0], {priority: 'event'});
+        }
+      }",
+      selectEdge = "function(params) {
+        if (params.edges.length > 0) {
+          var d = this.body.data.edges.get(params.edges[0]);
+          Shiny.setInputValue('overview_edge', {
+            from: String(d.from), to: String(d.to),
+            entityValue: d.entityValue || '',
+            entityType: d.entityType || ''
+          }, {priority: 'event'});
         }
       }")
   })
@@ -518,22 +547,149 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "Node Legend",
       tags$div(
-        style = "display:flex; flex-direction:column; gap:10px;",
+        style = "display:flex; flex-direction:column; gap:8px;",
+        tags$b("Persons"),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:18px; height:18px;
+          tags$span(style = "display:inline-block; width:16px; height:16px;
             background:#90EE90; border:2px solid #228B22; border-radius:50%;"),
           tags$span("Witness")),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:18px; height:18px;
-            background:#FF6347; border:2px solid #8B0000; border-radius:2px;"),
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#FF6347; border:2px solid #8B0000; border-radius:50%;"),
           tags$span("Protected Witness")),
         tags$hr(),
+        tags$b("Case Entities"),
+        tags$div(style = "display:flex; align-items:center; gap:10px;",
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#FFD700; border:2px solid #B8860B; border-radius:50%;"),
+          tags$span("Organization")),
+        tags$div(style = "display:flex; align-items:center; gap:10px;",
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#4FC3F7; border:2px solid #0288D1; border-radius:50%;"),
+          tags$span("Case Reference")),
+        tags$div(style = "display:flex; align-items:center; gap:10px;",
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#009688; border:2px solid #004D40; border-radius:50%;"),
+          tags$span("Exhibit")),
+        tags$div(style = "display:flex; align-items:center; gap:10px;",
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#CE93D8; border:2px solid #7B1FA2; border-radius:50%;"),
+          tags$span("Location")),
+        tags$div(style = "display:flex; align-items:center; gap:10px;",
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#FFB74D; border:2px solid #E65100; border-radius:50%;"),
+          tags$span("Money")),
+        tags$hr(),
         tags$p(class = "text-muted", style = "font-size:0.8rem;",
-          "Darker shade = more prominent. Lighter shade = less segments.")
+          "Darker shade = more frequent. Bigger node = more mentions.")
       ),
       easyClose = TRUE, size = "s",
       footer = modalButton("Close")
     ))
+  })
+
+  # ── Overview Detail Panel ───────────────────────────────────
+  overview_detail_data <- reactive({
+    sel <- input$overview_selected
+    if (is.null(sel) || length(sel) == 0) return(NULL)
+    sel <- as.character(sel)
+    # Find node in net$nodes
+    nd <- NULL
+    for (n in net$nodes) {
+      if (as.character(n$id) == sel) { nd <- n; break }
+    }
+    nd
+  })
+
+  overview_edge_data <- reactive({
+    ed <- input$overview_edge
+    if (is.null(ed) || is.null(ed$from)) return(NULL)
+    ed
+  })
+
+  output$overview_detail_header <- renderText({
+    nd <- overview_detail_data()
+    ed <- overview_edge_data()
+    if (!is.null(nd)) paste0(nd$label, " (", nd$nodeType, ")")
+    else if (!is.null(ed)) paste0("Connection: Person \u2192 Entity")
+    else "Click a node or edge to see case details"
+  })
+
+  output$overview_detail_panel <- renderUI({
+    nd <- overview_detail_data()
+    ed <- overview_edge_data()
+
+    # Priority: edge click > node click
+    if (!is.null(ed)) {
+      from_id <- as.numeric(ed$from)
+      to_id <- as.numeric(ed$to)
+      # Find person name and entity value
+      from_nm <- ""
+      to_nm <- ed$entityValue %||% ""
+      for (n in net$nodes) {
+        if (n$id == from_id) from_nm <- n$label
+      }
+      # Query snippet
+      snippets <- NULL
+      tryCatch({
+        sn <- get_entity_snippets(conn, from_id, to_nm, limit = 2)
+        if (nrow(sn) > 0) snippets <- sn
+      }, error = function(e) {})
+      tagList(
+        tags$p(tags$b("Accuser: "), from_nm),
+        tags$p(tags$b("Accused entity: "), to_nm, " (", ed$entityType, ")"),
+        if (!is.null(snippets) && nrow(snippets) > 0)
+          tagList(tags$hr(), tags$b("Evidence excerpt:"),
+            lapply(seq_len(nrow(snippets)), function(i) {
+              tags$blockquote(style = "font-size:0.85rem; border-left:3px solid #3498db; padding-left:12px; margin:6px 0;",
+                tags$small(class = "text-muted", paste0("Day ", snippets[i,"day_number"], " — ", snippets[i,"hearing_date"])),
+                tags$br(),
+                substr(snippets[i,"context_text"], 1, 400))
+            }))
+      )
+    } else if (!is.null(nd)) {
+      if (nd$nodeType == "person") {
+        # Show entities this person named
+        ents <- NULL
+        tryCatch({
+          ents <- get_person_entities(conn, nd$id)
+        }, error = function(e) {})
+        tagList(
+          tags$p(tags$b("Role: "), nd$role, " | ",
+                 tags$b("Segments: "), format(nd$segments, big.mark = ","), " | ",
+                 tags$b("Days: "), nd$days),
+          tags$p(tags$b("Entities named in testimony:")),
+          if (!is.null(ents) && nrow(ents) > 0)
+            tags$div(style = "display:flex; flex-wrap:wrap; gap:8px;",
+              lapply(seq_len(min(nrow(ents), 15)), function(i) {
+                tags$span(class = "entity-tag",
+                  paste0(ents[i,"entity_value"], " (", ents[i,"cnt"], "x, ", ents[i,"entity_type"], ")"))
+              }))
+          else tags$p("No entity data found", class = "text-muted")
+        )
+      } else {
+        # Entity node — show witnesses who named it
+        wits <- NULL
+        tryCatch({
+          wits <- get_entity_witnesses(conn, nd$label)
+        }, error = function(e) {})
+        tagList(
+          tags$p(tags$b("Type: "), nd$entityType, " | ",
+                 tags$b("Total mentions: "), nd$mentionCount, " | ",
+                 tags$b("Witnesses: "), nd$witnessCount),
+          tags$p(tags$b("Witnesses who named this:")),
+          if (!is.null(wits) && nrow(wits) > 0)
+            tags$div(style = "display:flex; flex-wrap:wrap; gap:8px;",
+              lapply(seq_len(min(nrow(wits), 15)), function(i) {
+                tags$span(class = "entity-tag",
+                  paste0(wits[i,"canonical_name"], " (", wits[i,"cnt"], "x, ", wits[i,"role"], ")"))
+              }))
+          else tags$p("No witness data found", class = "text-muted")
+        )
+      }
+    } else {
+      p("Click any person (green/red) to see what entities they named, or any entity (gold/blue/purple) to see who named it. Click an edge to see evidence.", class = "text-muted")
+    }
   })
 
   # ── Full Network Graph ───────────────────────────────────────
@@ -584,7 +740,6 @@ server <- function(input, output, session) {
       do.call(rbind, lapply(fe, function(e) {
         data.frame(from = e$from, to = e$to, value = e$value,
                    width = e$width, title = e$title,
-                   arrows = "to",
                    stringsAsFactors = FALSE)
       }))
     } else {

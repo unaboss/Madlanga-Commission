@@ -140,3 +140,39 @@ get_entity_mentions <- function(conn, entity_value, limit = 200) {
     params = list(entity_value, limit)
   ))
 }
+
+get_person_entities <- function(conn, speaker_id, limit = 20) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e.entity_value, e.entity_type, COUNT(*) AS cnt
+     FROM entities e
+     WHERE e.speaker_id = ?
+     GROUP BY e.entity_value
+     ORDER BY cnt DESC
+     LIMIT ?",
+    params = list(speaker_id, limit)
+  ))
+}
+
+get_entity_witnesses <- function(conn, entity_value, limit = 20) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT s.canonical_name, s.role, COUNT(*) AS cnt
+     FROM entities e
+     JOIN speakers s ON s.id = e.speaker_id
+     WHERE e.entity_value = ?
+     GROUP BY e.speaker_id
+     ORDER BY cnt DESC
+     LIMIT ?",
+    params = list(entity_value, limit)
+  ))
+}
+
+get_entity_snippets <- function(conn, speaker_id, entity_value, limit = 3) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e.context_text, h.hearing_date, h.day_number
+     FROM entities e
+     LEFT JOIN hearings h ON h.id = e.hearing_id
+     WHERE e.speaker_id = ? AND LOWER(e.entity_value) = LOWER(?)
+     LIMIT ?",
+    params = list(speaker_id, entity_value, limit)
+  ))
+}
