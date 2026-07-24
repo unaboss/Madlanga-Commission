@@ -29,19 +29,13 @@ DARK_THEME <- bs_theme(
 
 # ── Role colors ─────────────────────────────────────────────────
 ROLE_COLORS <- c(
-  commissioner      = "#FFD700",
-  evidence_leader   = "#3498db",
   witness           = "#2ecc71",
-  witness_protected = "#e74c3c",
-  other             = "#95a5a6"
+  witness_protected = "#e74c3c"
 )
 
 ROLE_ICONS <- c(
-  commissioner      = "star",
-  evidence_leader   = "scale-balanced",
   witness           = "user",
-  witness_protected = "user-secret",
-  other             = "circle-question"
+  witness_protected = "user-secret"
 )
 
 # ── UI ──────────────────────────────────────────────────────────
@@ -391,11 +385,12 @@ server <- function(input, output, session) {
             hbg <- lighten_hex(hbg, 0.30)
           }
         }
+        is_mkhwanazi <- grepl("Mkhwanazi", n$label)
         data.frame(
           id = n$id,
-          label = if (i == 1) n$label else "",
+          label = if (is_mkhwanazi) n$label else "",
           origLabel = n$label,
-          startLabel = if (i == 1) n$label else "",
+          startLabel = if (is_mkhwanazi) n$label else "",
           group = n$group,
           value = n$value, size = n$size * 0.7,
           baseSize = n$size * 0.7,
@@ -525,24 +520,12 @@ server <- function(input, output, session) {
         style = "display:flex; flex-direction:column; gap:10px;",
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:18px; height:18px;
-            background:#FFD700; border:2px solid #B8860B; border-radius:2px;"),
-          tags$span("Commissioner")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:18px; height:18px;
-            background:#87CEEB; border:2px solid #4682B4; border-radius:2px;"),
-          tags$span("Evidence Leader")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:18px; height:18px;
             background:#90EE90; border:2px solid #228B22; border-radius:50%;"),
           tags$span("Witness")),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:18px; height:18px;
             background:#FF6347; border:2px solid #8B0000; border-radius:2px;"),
           tags$span("Protected Witness")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:18px; height:18px;
-            background:#D3D3D3; border:2px solid #808080; border-radius:2px;"),
-          tags$span("Other")),
         tags$hr(),
         tags$p(class = "text-muted", style = "font-size:0.8rem;",
           "Darker shade = more prominent. Lighter shade = less segments.")

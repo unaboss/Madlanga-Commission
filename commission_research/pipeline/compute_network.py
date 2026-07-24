@@ -26,6 +26,10 @@ def build_network():
         FROM transcript_segments a
         JOIN transcript_segments b ON a.hearing_id = b.hearing_id
                                    AND a.speaker_id < b.speaker_id
+        JOIN speakers sa ON sa.id = a.speaker_id
+                         AND sa.role IN ('witness', 'witness_protected')
+        JOIN speakers sb ON sb.id = b.speaker_id
+                         AND sb.role IN ('witness', 'witness_protected')
         WHERE a.speaker_id != b.speaker_id
         GROUP BY a.speaker_id, b.speaker_id
         HAVING weight >= 3
@@ -64,16 +68,14 @@ def build_network():
         FROM speakers s
         JOIN transcript_segments ts ON ts.speaker_id = s.id
         JOIN hearings h ON h.id = ts.hearing_id
+        WHERE s.role IN ('witness', 'witness_protected')
         GROUP BY s.id
         ORDER BY segments DESC
     """).fetchall()
 
     role_colors = {
-        "commissioner":       {"bg": "#FFD700", "border": "#B8860B", "highlight": "#FFEC8B"},
-        "evidence_leader":    {"bg": "#87CEEB", "border": "#4682B4", "highlight": "#B0E0E6"},
         "witness":            {"bg": "#90EE90", "border": "#228B22", "highlight": "#C1FFC1"},
         "witness_protected":  {"bg": "#FF6347", "border": "#8B0000", "highlight": "#FF7F50"},
-        "other":              {"bg": "#D3D3D3", "border": "#808080", "highlight": "#E8E8E8"},
     }
 
     max_segments = max(r["segments"] for r in rows)
@@ -81,7 +83,7 @@ def build_network():
 
     nodes = []
     for r in rows:
-        rc = role_colors.get(r["role"], role_colors["other"])
+        rc = role_colors.get(r["role"], role_colors["witness"])
         name = r["canonical_name"]
         title = extract_title(name)
         sid = r["id"]
@@ -132,8 +134,14 @@ def build_network():
     # ── Stats ───────────────────────────────────────────────────
     stats = {
         "total_hearings": conn.execute("SELECT COUNT(*) FROM hearings").fetchone()[0],
-        "total_speakers": conn.execute("SELECT COUNT(*) FROM speakers").fetchone()[0],
-        "total_segments": conn.execute("SELECT COUNT(*) FROM transcript_segments").fetchone()[0],
+        "total_speakers": conn.execute(
+            "SELECT COUNT(*) FROM speakers WHERE role IN ('witness', 'witness_protected')"
+        ).fetchone()[0],
+        "total_segments": conn.execute(
+            "SELECT COUNT(*) FROM transcript_segments ts "
+            "JOIN speakers s ON s.id = ts.speaker_id "
+            "WHERE s.role IN ('witness', 'witness_protected')"
+        ).fetchone()[0],
         "total_statements": conn.execute("SELECT COUNT(*) FROM statements").fetchone()[0],
         "total_documents": conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
         "total_entities": conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0],
