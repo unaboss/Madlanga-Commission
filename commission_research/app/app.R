@@ -14,17 +14,17 @@ DARK_THEME <- bs_theme(
   version = 5,
   bootswatch = "darkly",
   primary = "#3498db",
-  secondary = "#2c3e50",
+  secondary = "#6c757d",
   success = "#27ae60",
   info = "#2980b9",
   warning = "#f39c12",
   danger = "#e74c3c",
   base_font = font_google("Inter"),
   heading_font = font_google("Inter"),
-  "navbar-bg" = "#1a1a2e",
-  "body-bg" = "#0f0f1a",
-  "card-bg" = "#16213e",
-  "card-cap-bg" = "#0f3460"
+  "navbar-bg" = "#1a1a1a",
+  "body-bg" = "#121212",
+  "card-bg" = "#1e1e1e",
+  "card-cap-bg" = "#2a2a2a"
 )
 
 # ── Role colors ─────────────────────────────────────────────────
@@ -58,6 +58,15 @@ ui <- page_navbar(
                     font-size: 0.75rem; background: #1a3a5c; color: #3498db; cursor: pointer; }
       .entity-tag:hover { background: #3498db; color: white; }
       .nav-link { font-size: 0.9rem; }
+      .navbar { border-bottom: 1px solid #333 !important; }
+      .navbar .nav-link { color: #ccc !important; }
+      .navbar .nav-link:hover, .navbar .nav-link:focus { color: #fff !important; }
+      .navbar .nav-link.active { color: #fff !important; border-bottom: 2px solid #888; }
+      .navbar .navbar-brand, .navbar .navbar-brand * { color: #fff !important; }
+      .navbar .dropdown-menu { background: #222 !important; border: 1px solid #444 !important; }
+      .navbar .dropdown-item { color: #ccc !important; }
+      .navbar .dropdown-item:hover { background: #333 !important; color: #fff !important; }
+      .navbar .dropdown-divider { border-color: #444 !important; }
     "))
   )),
 
@@ -297,6 +306,92 @@ ui <- page_navbar(
       )
     )
   ),
+
+  # ── Dashboard ─────────────────────────────────────────────────
+  nav_panel(
+    title = "Dashboard",
+    layout_columns(
+      col_widths = c(2, 2, 2, 2, 2, 2),
+      card(
+        class = "stat-card",
+        style = "border-top: 3px solid #3498db;",
+        card_body(
+          h2(textOutput("dash_hearings", inline = TRUE)),
+          p("Hearings")
+        )
+      ),
+      card(
+        class = "stat-card",
+        style = "border-top: 3px solid #27ae60;",
+        card_body(
+          h2(textOutput("dash_witnesses", inline = TRUE)),
+          p("Witnesses")
+        )
+      ),
+      card(
+        class = "stat-card",
+        style = "border-top: 3px solid #f39c12;",
+        card_body(
+          h2(textOutput("dash_segments", inline = TRUE)),
+          p("Segments")
+        )
+      ),
+      card(
+        class = "stat-card",
+        style = "border-top: 3px solid #8e44ad;",
+        card_body(
+          h2(textOutput("dash_documents", inline = TRUE)),
+          p("Documents")
+        )
+      ),
+      card(
+        class = "stat-card",
+        style = "border-top: 3px solid #e74c3c;",
+        card_body(
+          h2(textOutput("dash_accusations", inline = TRUE)),
+          p("Accusations")
+        )
+      ),
+      card(
+        class = "stat-card",
+        style = "border-top: 3px solid #1abc9c;",
+        card_body(
+          h2(textOutput("dash_corroborated", inline = TRUE)),
+          p("Corroborated")
+        )
+      )
+    ),
+    card(
+      full_screen = TRUE,
+      style = "min-height: 380px;",
+      card_header(
+        div(style = "display:flex; justify-content:space-between; align-items:center;",
+          span("Top Accused Entities"),
+          span(class = "text-muted", style = "font-size:0.8rem;", textOutput("dash_acc_count"))
+        )
+      ),
+      card_body(reactableOutput("dash_accused_table"))
+    ),
+    card(
+      full_screen = TRUE,
+      card_header("Evidence Corroboration"),
+      card_body(
+        layout_columns(
+          col_widths = c(4, 8),
+          card(
+            card_body(
+              h3(textOutput("dash_validity_pct", inline = TRUE)),
+              p("of accused entities have documentary corroboration"),
+              p(textOutput("dash_validity_detail"), class = "text-muted", style = "font-size:0.85rem;")
+            )
+          ),
+          card(
+            card_body(reactableOutput("dash_validity_table"))
+          )
+        )
+      )
+    )
+  ),
   nav_menu("Stats",
     nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
       span(style = "font-weight:700;font-size:1.2rem;color:#3498db;", textOutput("stat_hearings", inline = TRUE)),
@@ -313,6 +408,11 @@ ui <- page_navbar(
     nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
       span(style = "font-weight:700;font-size:1.2rem;color:#8e44ad;", textOutput("stat_entities", inline = TRUE)),
       span(style = "font-size:0.75rem;text-transform:uppercase;opacity:0.7;color:#ecf0f1;margin-left:5px;", "Entities")
+    )),
+    nav_item(div(style = "padding:6px 15px; border-bottom:1px solid #444;")),
+    nav_item(div(style = "padding:6px 15px;",
+      tags$b(style = "font-size:0.75rem; text-transform:uppercase; opacity:0.7;", "Top Mentioned"),
+      uiOutput("stat_top_mentioned")
     ))
   )
 )
@@ -331,6 +431,101 @@ server <- function(input, output, session) {
   output$stat_segments <- renderText({ format(net$stats$total_segments, big.mark = ",") })
   output$stat_entities <- renderText({ format(net$stats$total_entities, big.mark = ",") })
 
+  output$stat_top_mentioned <- renderUI({
+    top <- net$stats$top_mentioned
+    if (is.null(top) || length(top) == 0) return(NULL)
+    tagList(lapply(seq_len(min(length(top), 5)), function(i) {
+      tags$div(style = "font-size:0.78rem; padding:1px 0; color:#ccc;",
+        tags$span(style = "color:#888;margin-right:4px;", paste0(i, ".")),
+        tags$span(top[[i]]$name),
+        tags$span(style = "color:#888;margin-left:6px;font-size:0.7rem;",
+                  paste0(top[[i]]$count, "x"))
+      )
+    }))
+  })
+
+  # ── Dashboard ─────────────────────────────────────────────────
+  sm <- load_story_map()
+
+  output$dash_hearings <- renderText({ net$stats$total_hearings })
+  output$dash_witnesses <- renderText({ net$stats$total_speakers })
+  output$dash_segments <- renderText({ format(net$stats$total_segments, big.mark = ",") })
+  output$dash_documents <- renderText({ sm$stats$total_commission_events })
+
+  output$dash_accusations <- renderText({
+    df <- get_accusation_stats(conn)
+    format(sum(df$total_mentions), big.mark = ",")
+  })
+
+  output$dash_corroborated <- renderText({ sm$stats$total_shared_entities })
+
+  output$dash_acc_count <- renderText({
+    df <- get_accusation_stats(conn)
+    total_ents <- sum(df$unique_entities)
+    paste0(total_ents, " unique accused entities")
+  })
+
+  output$dash_accused_table <- renderReactable({
+    df <- get_top_accused(conn, 25)
+    if (nrow(df) == 0) return(NULL)
+    shared <- tolower(sm$shared_entities)
+    df$corroborated <- tolower(df$entity_value) %in% shared
+    df$corroborated_label <- ifelse(df$corroborated, "\u2705 Corroborated", "\u274c Testimony only")
+    df$entity_type <- tools::toTitleCase(gsub("_", " ", df$entity_type))
+    reactable(df[, c("entity_value", "entity_type", "mentions", "witnesses", "corroborated_label")],
+      columns = list(
+        entity_value = colDef(name = "Entity", minWidth = 180),
+        entity_type = colDef(name = "Type", width = 120),
+        mentions = colDef(name = "Mentions", width = 90),
+        witnesses = colDef(name = "Witnesses", width = 90),
+        corroborated_label = colDef(name = "Status", width = 160)
+      ),
+      defaultPageSize = 15, compact = TRUE, bordered = TRUE,
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
+  output$dash_validity_pct <- renderText({
+    shared <- sm$stats$total_shared_entities
+    acc_stats <- get_accusation_stats(conn)
+    total_ents <- sum(acc_stats$unique_entities)
+    if (total_ents == 0) return("0%")
+    paste0(round(shared / total_ents * 100), "%")
+  })
+
+  output$dash_validity_detail <- renderText({
+    shared <- sm$stats$total_shared_entities
+    acc_stats <- get_accusation_stats(conn)
+    total_ents <- sum(acc_stats$unique_entities)
+    paste0(shared, " of ", total_ents, " accused entities have both documentary evidence and witness testimony support")
+  })
+
+  output$dash_validity_table <- renderReactable({
+    df <- get_top_accused(conn, 25)
+    if (nrow(df) == 0) return(NULL)
+    shared <- tolower(sm$shared_entities)
+    df$corroborated <- tolower(df$entity_value) %in% shared
+    df$entity_type <- tools::toTitleCase(gsub("_", " ", df$entity_type))
+    summ <- as.data.frame(
+      aggregate(corroborated ~ entity_type, data = df, FUN = sum)
+    )
+    names(summ) <- c("Type", "Corroborated")
+    total_per_type <- as.data.frame(
+      aggregate(corroborated ~ entity_type, data = df, FUN = length)
+    )
+    summ$Total <- total_per_type$corroborated
+    summ$Pct <- ifelse(summ$Total > 0, round(summ$Corroborated / summ$Total * 100), 0)
+    summ$Rate <- paste0(summ$Corroborated, "/", summ$Total, " (", summ$Pct, "%)")
+    reactable(summ[, c("Type", "Rate")],
+      columns = list(
+        Type = colDef(name = "Entity Type", width = 150),
+        Rate = colDef(name = "Corroboration Rate", minWidth = 200)
+      ),
+      defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
   # ── Overview Mini Network ────────────────────────────────────
   lighten_hex <- function(hex, by = 0.15) {
     hex <- sub("^#", "", hex)
@@ -347,12 +542,15 @@ server <- function(input, output, session) {
 
   output$overview_network <- renderVisNetwork({
     all_nodes <- net$nodes
-    # Sort by value descending — mixes persons and entities by importance
-    vals <- sapply(all_nodes, `[[`, "value")
-    all_nodes <- all_nodes[order(vals, decreasing = TRUE)]
-    n_take <- min(80, length(all_nodes))
+    # Balanced selection: top 40 persons + top 40 entities
+    p_nodes <- Filter(function(n) n$nodeType == "person", all_nodes)
+    e_nodes <- Filter(function(n) n$nodeType == "entity", all_nodes)
+    p_sorted <- p_nodes[order(sapply(p_nodes, `[[`, "value"), decreasing = TRUE)]
+    e_sorted <- e_nodes[order(sapply(e_nodes, `[[`, "value"), decreasing = TRUE)]
+    top_nodes <- c(p_sorted[1:min(40, length(p_sorted))],
+                   e_sorted[1:min(40, length(e_sorted))])
+    n_take <- length(top_nodes)
     if (n_take == 0) return(NULL)
-    top_nodes <- all_nodes[1:n_take]
     top_ids <- sapply(top_nodes, function(n) n$id)
 
     # Rank nodes by prominence to vary shade within each role
@@ -407,6 +605,9 @@ server <- function(input, output, session) {
           group = n$group,
           value = n$value, size = n$size * 0.7,
           baseSize = n$size * 0.7,
+          fixed = n$fixed %||% FALSE,
+          x = n$x %||% NA,
+          y = n$y %||% NA,
           shape = "dot",
           font.size = (n$font$size %||% 10) * 1.1,
           font.color = "#FFFFFF",
@@ -424,12 +625,13 @@ server <- function(input, output, session) {
     build_edges_df <- function(edges) {
       if (length(edges) == 0) return(data.frame(from = integer(), to = integer()))
       do.call(rbind, lapply(edges, function(e) {
-        data.frame(
-          from = e$from, to = e$to, value = e$value,
-          width = e$width %||% 1,
-          title = e$title %||% "",
-          stringsAsFactors = FALSE
-        )
+          data.frame(
+            from = e$from, to = e$to, value = e$value,
+            width = e$width %||% 1,
+            title = e$title %||% "",
+            dashes = isTRUE(e$dashes %||% FALSE),
+            stringsAsFactors = FALSE
+          )
       }))
     }
 
@@ -440,9 +642,9 @@ server <- function(input, output, session) {
       visEdges(smooth = list(type = "curvedCW", roundness = 0.2),
                color = list(color = "#3498db", opacity = 1)) |>
       visInteraction(dragNodes = FALSE, dragView = TRUE, zoomView = TRUE) |>
-      visPhysics(solver = "barnesHut", stabilization = list(enabled = TRUE, iterations = 500),
-                 barnesHut = list(gravitationalConstant = -2000, springLength = 200,
-                                  springConstant = 0.001, damping = 0.09)) |>
+      visPhysics(solver = "barnesHut", stabilization = list(enabled = TRUE, iterations = 80),
+                 barnesHut = list(gravitationalConstant = -1000, springLength = 300,
+                                  springConstant = 0.0008, damping = 0.12)) |>
       visEvents(selectNode = "function(params) {
         var net = this;
         var selId = params.nodes[0];
@@ -534,13 +736,24 @@ server <- function(input, output, session) {
       }")
   })
 
+  ent_expanded <- reactiveVal(FALSE)
+
   output$overview_entities <- renderUI({
     top <- net$top_entities
+    show_all <- isTRUE(ent_expanded())
+    if (!show_all) return(tags$p("Click 'Show All' to view entities", class = "text-muted"))
     tags <- lapply(top, function(e) {
       tags$span(class = "entity-tag",
                 paste0(e$value, " (", e$count, ")"))
     })
     do.call(tagList, tags)
+  })
+
+  observeEvent(input$ent_toggle, {
+    new <- !ent_expanded()
+    ent_expanded(new)
+    updateActionButton(session, "ent_toggle",
+      label = if (new) "Hide" else "Show All")
   })
 
   observeEvent(input$legend_btn, {
@@ -557,28 +770,16 @@ server <- function(input, output, session) {
           tags$span(style = "display:inline-block; width:16px; height:16px;
             background:#FF6347; border:2px solid #8B0000; border-radius:50%;"),
           tags$span("Protected Witness")),
+        tags$div(style = "display:flex; align-items:center; gap:10px;",
+          tags$span(style = "display:inline-block; width:16px; height:16px;
+            background:#777777; border:2px solid #444444; border-radius:50%;"),
+          tags$span("Mkhwanazi (Whistleblower)")),
         tags$hr(),
-        tags$b("Case Entities"),
+        tags$b("Case Entities (all grey)"),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#FFD700; border:2px solid #B8860B; border-radius:50%;"),
-          tags$span("Organization")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#4FC3F7; border:2px solid #0288D1; border-radius:50%;"),
-          tags$span("Case Reference")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#009688; border:2px solid #004D40; border-radius:50%;"),
-          tags$span("Exhibit")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#CE93D8; border:2px solid #7B1FA2; border-radius:50%;"),
-          tags$span("Location")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#FFB74D; border:2px solid #E65100; border-radius:50%;"),
-          tags$span("Money")),
+            background:#999999; border:2px solid #666666; border-radius:50%;"),
+          tags$span("Organization, Case, Exhibit, Location, Money")),
         tags$hr(),
         tags$p(class = "text-muted", style = "font-size:0.8rem;",
           "Darker shade = more frequent. Bigger node = more mentions.")
@@ -740,6 +941,7 @@ server <- function(input, output, session) {
       do.call(rbind, lapply(fe, function(e) {
         data.frame(from = e$from, to = e$to, value = e$value,
                    width = e$width, title = e$title,
+                   dashes = isTRUE(e$dashes %||% FALSE),
                    stringsAsFactors = FALSE)
       }))
     } else {
@@ -942,9 +1144,13 @@ server <- function(input, output, session) {
     se <- selected_ent()
     if (is.null(se)) return(NULL)
     ctx <- get_entity_context(conn, se$entity_value, limit = 200)
-    reactable(ctx[, c("hearing_date", "speaker", "context_text")],
+    ctx$source_ref <- ifelse(ctx$source_type == "transcript",
+      paste0("Day ", ctx$day_number),
+      paste0(ctx$source_type, " (Day ", ctx$day_number, ")"))
+    reactable(ctx[, c("hearing_date", "source_ref", "speaker", "context_text")],
       columns = list(
-        hearing_date = colDef(name = "Date", width = 100),
+        hearing_date = colDef(name = "Date", width = 90),
+        source_ref   = colDef(name = "Source", width = 85),
         speaker      = colDef(name = "Speaker", width = 180),
         context_text = colDef(name = "Context", minWidth = 350)
       ),
@@ -1243,9 +1449,11 @@ server <- function(input, output, session) {
     df <- ec_wit()
     if (is.null(df) || nrow(df) == 0) return(NULL)
     df$ctx <- substr(df$context_text, 1, 200)
-    reactable(df[, c("hearing_date", "speaker", "speaker_role", "ctx")],
+    df$day_ref <- paste0("Day ", df$day_number)
+    reactable(df[, c("hearing_date", "day_ref", "speaker", "speaker_role", "ctx")],
       columns = list(
-        hearing_date = colDef(name = "Date", width = 100),
+        hearing_date = colDef(name = "Date", width = 90),
+        day_ref      = colDef(name = "Day", width = 60),
         speaker = colDef(name = "Witness", width = 160),
         speaker_role = colDef(name = "Role", width = 100),
         ctx = colDef(name = "Context", minWidth = 200)

@@ -8,10 +8,7 @@ library(jsonlite)
 
 # ── Paths ───────────────────────────────────────────────────────
 APP_DIR  <- getwd()
-DB_PATH  <- normalizePath(file.path(APP_DIR, "..", "data", "commission_research.db"), mustWork = FALSE)
-if (!file.exists(DB_PATH)) {
-  DB_PATH <- normalizePath(file.path(APP_DIR, "data", "commission_research.db"), mustWork = FALSE)
-}
+DB_PATH <- normalizePath(file.path(APP_DIR, "data", "commission_research.db"), mustWork = FALSE)
 NETWORK_PATH   <- file.path(APP_DIR, "www", "network_data.json")
 STORYMAP_PATH  <- file.path(APP_DIR, "www", "story_map_data.json")
 
@@ -115,11 +112,13 @@ get_top_entities <- function(conn, etype = NULL, limit = 30) {
 
 get_entity_context <- function(conn, entity_value, limit = 100) {
   as.data.frame(dbGetQuery(conn,
-    "SELECT e.context_text, h.hearing_date, s.canonical_name AS speaker
+    "SELECT e.context_text, h.hearing_date, h.day_number, s.canonical_name AS speaker,
+            e.source AS source_type
      FROM entities e
      LEFT JOIN hearings h ON h.id = e.hearing_id
      LEFT JOIN speakers s ON s.id = e.speaker_id
      WHERE e.entity_value = ?
+     ORDER BY h.day_number
      LIMIT ?",
     params = list(entity_value, limit)
   ))
@@ -175,4 +174,27 @@ get_entity_snippets <- function(conn, speaker_id, entity_value, limit = 3) {
      LIMIT ?",
     params = list(speaker_id, entity_value, limit)
   ))
+}
+
+get_accusation_stats <- function(conn) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT entity_type, COUNT(*) AS total_mentions,
+            COUNT(DISTINCT entity_value) AS unique_entities
+     FROM entities
+     WHERE entity_type IN ('organization', 'case_reference', 'exhibit')
+     GROUP BY entity_type
+     ORDER BY total_mentions DESC"
+  ))
+}
+
+get_top_accused <- function(conn, limit = 25) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e.entity_value, e.entity_type, COUNT(*) AS mentions,
+            COUNT(DISTINCT e.speaker_id) AS witnesses
+     FROM entities e
+     WHERE e.entity_type IN ('organization', 'case_reference', 'exhibit')
+     GROUP BY e.entity_value, e.entity_type
+     ORDER BY mentions DESC
+     LIMIT ?",
+    params = list(limit)))
 }
