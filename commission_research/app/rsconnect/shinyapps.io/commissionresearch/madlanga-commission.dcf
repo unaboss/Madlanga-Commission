@@ -1,0 +1,10 @@
+name: madlanga-commission
+title:
+username: commissionresearch
+account: commissionresearch
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17638903
+bundleId: 12315612
+url: https://commissionresearch.shinyapps.io/madlanga-commission/
+version: 1

@@ -7,6 +7,7 @@ Edges: Person -> Entity (witness mentioned this entity in testimony).
 import sqlite3
 import json
 import re
+import math
 from pathlib import Path
 from collections import Counter, defaultdict
 
@@ -21,15 +22,15 @@ MAX_EDGES = 400
 
 # Colors by node group
 PERSON_COLORS = {
-    "witness":            {"background": "#90EE90", "border": "#228B22", "highlight": {"background": "#C1FFC1", "border": "#228B22"}},
-    "witness_protected":  {"background": "#FF6347", "border": "#8B0000", "highlight": {"background": "#FF7F50", "border": "#8B0000"}},
+    "witness":            {"background": "#E74C3C", "border": "#C0392B", "highlight": {"background": "#FF6B6B", "border": "#C0392B"}},
+    "witness_protected":  {"background": "#C0392B", "border": "#999999", "highlight": {"background": "#FF6B6B", "border": "#999999"}},
 }
 ENTITY_COLORS = {
-    "organization":      {"background": "#FFD700", "border": "#B8860B", "highlight": {"background": "#FFEC8B", "border": "#B8860B"}},
-    "case_reference":    {"background": "#4FC3F7", "border": "#0288D1", "highlight": {"background": "#81D4FA", "border": "#0288D1"}},
-    "exhibit":           {"background": "#009688", "border": "#004D40", "highlight": {"background": "#4DB6AC", "border": "#004D40"}},
-    "location":          {"background": "#CE93D8", "border": "#7B1FA2", "highlight": {"background": "#E1BEE7", "border": "#7B1FA2"}},
-    "money":             {"background": "#FFB74D", "border": "#E65100", "highlight": {"background": "#FFCC80", "border": "#E65100"}},
+    "organization":      {"background": "#999999", "border": "#666666", "highlight": {"background": "#BBBBBB", "border": "#666666"}},
+    "case_reference":    {"background": "#999999", "border": "#666666", "highlight": {"background": "#BBBBBB", "border": "#666666"}},
+    "exhibit":           {"background": "#999999", "border": "#666666", "highlight": {"background": "#BBBBBB", "border": "#666666"}},
+    "location":          {"background": "#999999", "border": "#666666", "highlight": {"background": "#BBBBBB", "border": "#666666"}},
+    "money":             {"background": "#999999", "border": "#666666", "highlight": {"background": "#BBBBBB", "border": "#666666"}},
 }
 
 
@@ -47,6 +48,15 @@ def extract_title(name):
     if name.startswith("Witness"):
         return "Protected Witness"
     return "Other"
+
+
+def get_search_term(name: str) -> str:
+    """Extract the searchable term from a witness name."""
+    clean = re.sub(r'\s*\(.*?\)\s*', '', name).strip()
+    if clean.startswith("Witness "):
+        return clean.lower()
+    parts = clean.split()
+    return parts[-1].lower() if parts else ""
 
 
 def build_network():
@@ -74,7 +84,7 @@ def build_network():
         sid = r["id"]
         person_ids.append(sid)
         seg_norm = r["segments"] / max_segments
-        size = 10 + seg_norm * 30
+        size = 25  # uniform size for all witnesses
         person_nodes.append({
             "id": sid,
             "label": r["canonical_name"],
@@ -83,15 +93,35 @@ def build_network():
             "nodeType": "person",
             "group": r["role"],
             "value": r["segments"],
-            "size": round(size, 1),
+            "size": size,
             "role": r["role"],
             "rank": extract_title(r["canonical_name"]),
             "segments": r["segments"],
             "days": r["hearing_days"],
             "color": PERSON_COLORS.get(r["role"], PERSON_COLORS["witness"]),
             "shape": "dot",
+            "borderWidth": 3 if r["role"] == "witness_protected" else 1,
             "font": {"size": 10 + seg_norm * 8},
         })
+
+    # ── 1b. Count how many times each witness was named by others
+    print("Computing witness mention counts...")
+    witness_surnames = {r["id"]: get_search_term(r["canonical_name"]) for r in rows}
+    segments_all = conn.execute("""
+        SELECT ts.speaker_id, ts.text
+        FROM transcript_segments ts
+        JOIN speakers s ON s.id = ts.speaker_id
+        WHERE s.role IN ('witness', 'witness_protected')
+    """).fetchall()
+    mentioned_count = Counter()
+    for seg in segments_all:
+        text_lower = seg["text"].lower()
+        speaker_id = seg["speaker_id"]
+        for wid, term in witness_surnames.items():
+            if wid != speaker_id and term in text_lower:
+                mentioned_count[wid] += 1
+    for pn in person_nodes:
+        pn["mentionedCount"] = mentioned_count.get(pn["id"], 0)
 
     # ── 2. Entity nodes ────────────────────────────────────────
     print("Building entity nodes...")
@@ -107,7 +137,6 @@ def build_network():
         LIMIT 200
     """.format(",".join("?" for _ in person_ids)), [*person_ids, MIN_ENTITY_TOTAL]).fetchall()
 
-    max_entity_count = max(r["total_count"] for r in entity_rows) if entity_rows else 1
     entity_nodes = []
     entity_map = {}   # entity_value -> node_id
     entity_id_counter = 1001
@@ -115,8 +144,6 @@ def build_network():
         eid = -entity_id_counter
         entity_id_counter += 1
         entity_map[r["entity_value"]] = eid
-        norm = r["total_count"] / max_entity_count
-        size = 10 + norm * 30
         ec = ENTITY_COLORS.get(r["entity_type"], ENTITY_COLORS["organization"])
         entity_nodes.append({
             "id": eid,
@@ -127,12 +154,12 @@ def build_network():
             "entityType": r["entity_type"],
             "group": r["entity_type"],
             "value": r["total_count"],
-            "size": round(size, 1),
+            "size": 50,
             "mentionCount": r["total_count"],
             "witnessCount": r["witness_count"],
             "color": ec,
             "shape": "dot",
-            "font": {"size": 10 + norm * 8},
+            "font": {"size": 14},
         })
 
     # ── 3. Edges: person -> entity ──────────────────────────────
@@ -174,19 +201,118 @@ def build_network():
             "entityType": r["entity_type"],
         })
 
-    # ── 4. Boost person node sizes by entity diversity ─────────
+    # ── 4a. Entity-to-entity edges (shared witnesses) ──────────
+    print("Building entity-to-entity edges...")
+    ee_rows = conn.execute("""
+        SELECT e1.entity_value AS from_val, e2.entity_value AS to_val,
+               COUNT(DISTINCT e1.speaker_id) AS shared_wits
+        FROM entities e1
+        JOIN entities e2 ON e1.speaker_id = e2.speaker_id
+                        AND e1.entity_value < e2.entity_value
+        WHERE e1.entity_type IN ({})
+          AND e2.entity_type IN ({})
+          AND e1.entity_value IN ({})
+          AND e2.entity_value IN ({})
+        GROUP BY e1.entity_value, e2.entity_value
+        HAVING shared_wits >= 3
+        ORDER BY shared_wits DESC
+        LIMIT 200
+    """.format(
+        ",".join("?" for _ in ENTITY_TYPES),
+        ",".join("?" for _ in ENTITY_TYPES),
+        ",".join("?" for _ in entity_map.keys()),
+        ",".join("?" for _ in entity_map.keys())
+    ), [*ENTITY_TYPES, *ENTITY_TYPES, *entity_map.keys(), *entity_map.keys()]).fetchall()
+
+    for r in ee_rows:
+        from_eid = entity_map.get(r["from_val"])
+        to_eid = entity_map.get(r["to_val"])
+        if from_eid is None or to_eid is None:
+            continue
+        edges.append({
+            "from": from_eid,
+            "to": to_eid,
+            "value": r["shared_wits"],
+            "title": f"Connected by {r['shared_wits']} shared witnesses",
+            "width": 1,
+            "dashes": True,
+            "color": {"color": "#555555", "opacity": 0.5},
+        })
+
+    # ── 4b. Track entity diversity per person ──────────────────
     for pn in person_nodes:
         pid = pn["id"]
         ent_count = len(person_entity_counts.get(pid, {}))
         pn["entityCount"] = ent_count
-        # Boost size slightly for witnesses who named many entities
-        pn["size"] = round(pn["size"] + min(ent_count * 0.3, 5), 1)
         # Update title to include entity naming info
         pn["title"] = pn["title"].replace("</b><br>", "</b><br>"
             f"Entities named: {ent_count}<br>")
 
-    # ── 5. Assemble ─────────────────────────────────────────────
+    # ── 5. Assemble (with barycenter entity ordering) ──────────
     all_nodes = person_nodes + entity_nodes
+
+    # Build entity->witness connectivity map (who connects to this entity)
+    entity_witnesses = defaultdict(set)
+    for e in edges:
+        fid, tid = e["from"], e["to"]
+        if fid > 0 and tid < 0:      # person -> entity edge
+            entity_witnesses[tid].add(fid)
+
+    # Greedy barycenter sort: start with most-connected entity,
+    # then repeatedly pick the entity sharing most witnesses with the last
+    eids_ordered = []
+    if entity_witnesses:
+        remaining = set(entity_witnesses.keys())
+        first = max(remaining, key=lambda eid: len(entity_witnesses[eid]))
+        eids_ordered.append(first); remaining.discard(first)
+        while remaining:
+            last_wits = entity_witnesses[eids_ordered[-1]]
+            next_eid = max(remaining, key=lambda eid: len(last_wits & entity_witnesses.get(eid, set())))
+            eids_ordered.append(next_eid); remaining.discard(next_eid)
+    # Append any entity nodes not in the witness map (no edges, low count)
+    all_eids = {n["id"] for n in entity_nodes}
+    for eid in all_eids - set(eids_ordered):
+        eids_ordered.append(eid)
+    # Reorder entity_nodes to match the barycenter sort
+    eid_to_node = {n["id"]: n for n in entity_nodes}
+    entity_nodes[:] = [eid_to_node[eid] for eid in eids_ordered if eid in eid_to_node]
+    all_nodes = person_nodes + entity_nodes  # rebuild after reorder
+
+    # Compute witness reliability: % of named entities corroborated by other witnesses
+    for pn in person_nodes:
+        pid = pn["id"]
+        named_ents = person_entity_counts.get(pid, {})
+        total_named = len(named_ents)
+        corr_count = 0
+        for ev in named_ents:
+            eid = entity_map.get(ev)
+            if eid is None:
+                continue
+            other_wits = entity_witnesses.get(eid, set()) - {pid}
+            if other_wits:
+                corr_count += 1
+        pn["corroboratedCount"] = corr_count
+        pn["reliability"] = round(corr_count / total_named * 100) if total_named > 0 else 0
+
+    # Mkhwanazi: fixed at center, grey, large
+    for n in all_nodes:
+        if "Mkhwanazi" in n["label"]:
+            n["color"] = {"background": "#777777", "border": "#444444",
+                          "highlight": {"background": "#999999", "border": "#444444"}}
+            n["size"] = 45
+            n["fixed"] = True
+            n["x"] = 0
+            n["y"] = 0
+
+    # Entities: fixed on an outer circle, largest size
+    n_ents = len(entity_nodes)
+    ring_radius = 300
+    for i, n in enumerate(entity_nodes):
+        angle = 2 * math.pi * i / n_ents
+        n["x"] = ring_radius * math.cos(angle)
+        n["y"] = ring_radius * math.sin(angle)
+        n["fixed"] = True
+        n["size"] = 50
 
     # Limit to top N nodes and their edges for the mini network
     sorted_nodes = sorted(all_nodes, key=lambda n: n.get("value", 0), reverse=True)
@@ -210,6 +336,59 @@ def build_network():
 
     # ── 7. Stats ────────────────────────────────────────────────
     total_entities = sum(n.get("nodeType") == "entity" for n in all_nodes)
+
+    # Build snippet lookup: (speaker_id, entity_value) -> context text
+    print("Building accusation snippets...")
+    snippet_rows = conn.execute("""
+        SELECT e.speaker_id, e.entity_value, e.context_text, h.day_number
+        FROM entities e
+        LEFT JOIN hearings h ON h.id = e.hearing_id
+        WHERE e.speaker_id IN (SELECT id FROM speakers WHERE role IN ('witness', 'witness_protected'))
+          AND e.entity_type IN ('organization', 'case_reference', 'exhibit', 'location', 'money')
+        ORDER BY e.speaker_id, e.entity_value
+    """).fetchall()
+    snippet_lookup = {}
+    for sr in snippet_rows:
+        key = (sr["speaker_id"], sr["entity_value"])
+        if key not in snippet_lookup:
+            snippet_lookup[key] = (sr["context_text"], sr["day_number"])
+
+    # Query which entities evidence leaders mentioned (for evidence-backed flag)
+    el_entities = set(r[0] for r in conn.execute(
+        "SELECT DISTINCT e.entity_value FROM entities e "
+        "JOIN speakers s ON s.id = e.speaker_id "
+        "WHERE s.role = 'evidence_leader' "
+        "AND e.entity_type IN ('organization', 'case_reference', 'exhibit', 'location', 'money')"
+    ))
+
+    # Compute accusation strength: mention_count × corroboration × evidence_backing
+    person_lookup = {p["id"]: p for p in person_nodes}
+    entity_lookup = {e["id"]: e for e in entity_nodes}
+    acc_strength = []
+    for e in edges:
+        if e["from"] > 0 and e["to"] < 0:
+            pn = person_lookup.get(e["from"])
+            en = entity_lookup.get(e["to"])
+            if pn and en:
+                corroborators = max(en.get("witnessCount", 1) - 1, 0)
+                ev = e.get("entityValue", en["label"])
+                evidence_backed = ev in el_entities
+                el_weight = 2.0 if evidence_backed else 1.0
+                snip, day_num = snippet_lookup.get((pn["id"], ev), ("", None))
+                acc_strength.append({
+                    "accuser": pn["label"],
+                    "entity": ev,
+                    "entityType": e.get("entityType", en.get("entityType", "")),
+                    "mentions": e["value"],
+                    "corroborators": corroborators,
+                    "score": round(e["value"] * (1 + corroborators) * el_weight),
+                    "source": "evidence_led" if evidence_backed else "witness_only",
+                    "evidenceBacked": evidence_backed,
+                    "snippet": snip[:250] if snip else "",
+                    "day": day_num,
+                })
+    acc_strength.sort(key=lambda x: x["score"], reverse=True)
+
     stats = {
         "total_hearings": conn.execute("SELECT COUNT(*) FROM hearings").fetchone()[0],
         "total_speakers": len(person_nodes),
@@ -220,6 +399,28 @@ def build_network():
         ).fetchone()[0],
         "total_entities": total_entities,
         "total_mentions": conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0],
+        "top_mentioned": sorted(
+            [{"name": pn["label"], "count": pn.get("mentionedCount", 0)} for pn in person_nodes],
+            key=lambda x: x["count"], reverse=True
+        )[:5],
+        "total_accusations": sum(1 for e in edges if e["from"] > 0 and e["to"] < 0),
+        "top_accused": sorted(
+            [{"entity": e["label"], "type": e.get("entityType", ""), "accusers": e.get("witnessCount", 0),
+              "mentions": e.get("mentionCount", 0)} for e in entity_nodes],
+            key=lambda x: x["accusers"], reverse=True
+        )[:10],
+        "top_accusers": sorted(
+            [{"name": p["label"], "entities": p.get("entityCount", 0),
+              "segments": p.get("segments", 0), "days": p.get("days", 0)} for p in person_nodes],
+            key=lambda x: x["entities"], reverse=True
+        )[:10],
+        "top_accusations": acc_strength,
+        "top_reliable": sorted(
+            [{"name": p["label"], "reliability": p.get("reliability", 0),
+              "corroborated": p.get("corroboratedCount", 0),
+              "total_entities": p.get("entityCount", 0)} for p in person_nodes],
+            key=lambda x: x["reliability"], reverse=True
+        )[:10],
         "date_range": {
             "first": conn.execute(
                 "SELECT MIN(h.hearing_date) FROM transcript_segments ts "

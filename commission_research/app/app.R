@@ -310,71 +310,37 @@ ui <- page_navbar(
   # ── Dashboard ─────────────────────────────────────────────────
   nav_panel(
     title = "Dashboard",
-    layout_columns(
-      col_widths = c(2, 2, 2, 2, 2, 2),
-      card(
-        class = "stat-card",
-        style = "border-top: 3px solid #3498db;",
-        card_body(
-          h2(textOutput("dash_hearings", inline = TRUE)),
-          p("Hearings")
-        )
-      ),
-      card(
-        class = "stat-card",
-        style = "border-top: 3px solid #27ae60;",
-        card_body(
-          h2(textOutput("dash_witnesses", inline = TRUE)),
-          p("Witnesses")
-        )
-      ),
-      card(
-        class = "stat-card",
-        style = "border-top: 3px solid #f39c12;",
-        card_body(
-          h2(textOutput("dash_segments", inline = TRUE)),
-          p("Segments")
-        )
-      ),
-      card(
-        class = "stat-card",
-        style = "border-top: 3px solid #8e44ad;",
-        card_body(
-          h2(textOutput("dash_documents", inline = TRUE)),
-          p("Documents")
-        )
-      ),
-      card(
-        class = "stat-card",
-        style = "border-top: 3px solid #e74c3c;",
-        card_body(
-          h2(textOutput("dash_accusations", inline = TRUE)),
-          p("Accusations")
-        )
-      ),
-      card(
-        class = "stat-card",
-        style = "border-top: 3px solid #1abc9c;",
-        card_body(
-          h2(textOutput("dash_corroborated", inline = TRUE)),
-          p("Corroborated")
-        )
+    card(
+    full_screen = TRUE, style = "margin-top:10px;",
+    card_header(
+      div(style = "display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;",
+        span("All Accusations"),
+        selectInput("acc_filter", NULL, width = 280,
+          choices = c("All Accusations" = "all",
+            "Critical (murder, kill, death, threat, violence)" = "critical",
+            "High (bribe, fraud, theft, embezzle, kickback)" = "high",
+            "Medium (leak, cover up, obstruction, conspiracy)" = "medium",
+            "Uncategorized (none of the above)" = "uncategorized"))
       )
     ),
+    card_body(reactableOutput("dash_accusations_table"))
+  ),
+  layout_columns(
+    col_widths = c(6, 6),
     card(
       full_screen = TRUE,
-      style = "min-height: 380px;",
-      card_header(
-        div(style = "display:flex; justify-content:space-between; align-items:center;",
-          span("Top Accused Entities"),
-          span(class = "text-muted", style = "font-size:0.8rem;", textOutput("dash_acc_count"))
-        )
-      ),
-      card_body(reactableOutput("dash_accused_table"))
+      card_header("Top 10 Most Mentioned Witnesses"),
+      card_body(reactableOutput("dash_mentioned_table"))
     ),
     card(
       full_screen = TRUE,
-      card_header("Evidence Corroboration"),
+      card_header("Witness Reliability"),
+      card_body(reactableOutput("dash_reliability_table"))
+    )
+  ),
+  card(
+    full_screen = TRUE,
+    card_header("Evidence Corroboration"),
       card_body(
         layout_columns(
           col_widths = c(4, 8),
@@ -485,6 +451,40 @@ server <- function(input, output, session) {
         borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
   })
 
+  output$dash_mentioned_table <- renderReactable({
+    top <- net$stats$top_mentioned
+    if (is.null(top) || length(top) == 0) return(NULL)
+    df <- do.call(rbind, lapply(top, as.data.frame, stringsAsFactors = FALSE))
+    reactable(df, columns = list(
+      name = colDef(name = "Witness", minWidth = 220),
+      count = colDef(name = "Times Mentioned", width = 140,
+        style = function(value) list(fontWeight = "bold", color = if (value > 500) "#e74c3c" else if (value > 100) "#f39c12" else "#ecf0f1"))
+    ), defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+    theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+      borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
+  output$dash_reliability_table <- renderReactable({
+    top <- net$stats$top_reliable
+    if (is.null(top) || length(top) == 0) return(NULL)
+    df <- do.call(rbind, lapply(top, as.data.frame, stringsAsFactors = FALSE))
+    df$rel <- paste0(df$reliability, "%")
+    df$corr <- paste0(df$corroborated, "/", df$total_entities)
+    reactable(df[, c("name", "rel", "corr")],
+      columns = list(
+        name = colDef(name = "Witness", minWidth = 220),
+        rel = colDef(name = "Reliability", width = 100,
+          style = function(value) {
+            v <- as.numeric(sub("%", "", value))
+            color <- if (v >= 80) "#27ae60" else if (v >= 50) "#f39c12" else "#e74c3c"
+            list(fontWeight = "bold", color = color)
+          }),
+        corr = colDef(name = "Corroborated", width = 130)
+      ), defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
   output$dash_validity_pct <- renderText({
     shared <- sm$stats$total_shared_entities
     acc_stats <- get_accusation_stats(conn)
@@ -522,6 +522,94 @@ server <- function(input, output, session) {
         Rate = colDef(name = "Corroboration Rate", minWidth = 200)
       ),
       defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  })
+
+  output$dash_accusations_table <- renderReactable({
+    acc <- net$stats$top_accusations
+    if (is.null(acc) || length(acc) == 0) return(NULL)
+    df <- do.call(rbind, lapply(acc, as.data.frame, stringsAsFactors = FALSE))
+    df$accused <- paste0(df$accuser, " \u2192 ", df$entity)
+
+    # Severity keywords
+    txt <- tolower(df$snippet %||% df$entity)
+    sev_critical <- grepl("murder|kill|death|threat|violence|assassin|fatal|shoot|killed|died", txt)
+    sev_high <- grepl("bribe|brib|fraud|stolen|theft|embezzle|kickback|payoff|corrupt", txt)
+    sev_medium <- grepl("leak|cover.?up|obstruct|conspiracy|conceal|suppress|hide|secret", txt)
+
+    df$severity <- ifelse(sev_critical, "Critical",
+                    ifelse(sev_high, "High",
+                    ifelse(sev_medium, "Medium", "Low")))
+
+    # Extract the matched keyword per row
+    df$kw <- ""
+    df$kw[sev_critical] <- regmatches(txt[sev_critical],
+      regexpr("murder|kill|death|threat|violence|assassin|fatal|shoot|killed|died", txt[sev_critical]))
+    df$kw[sev_high] <- regmatches(txt[sev_high],
+      regexpr("bribe|brib|fraud|stolen|theft|embezzle|kickback|payoff|corrupt", txt[sev_high]))
+    df$kw[sev_medium] <- regmatches(txt[sev_medium],
+      regexpr("leak|cover.?up|obstruct|conspiracy|conceal|suppress|hide|secret", txt[sev_medium]))
+
+    # Build accusation: keyword prefix + snippet + hover tooltip
+    kw_label <- ifelse(nzchar(df$kw),
+      paste0(toupper(substr(df$kw, 1, 1)), substr(df$kw, 2, nchar(df$kw)), ": "), "")
+    has_snip <- nzchar(df$snippet)
+    acc_text <- ifelse(has_snip,
+      paste0("\"", substr(df$snippet, 1, 100),
+             ifelse(nchar(df$snippet) > 100, "...\"", "\""),
+             " (Day ", df$day, ")"),
+      paste0(df$entity, " (", df$entityType, ")"))
+    src_label <- ifelse(df$evidenceBacked %||% FALSE,
+      "Source: EVIDENCE", "Source: TESTIMONY")
+    hover_detail <- paste0(df$severity, " | Keyword: ", df$kw, " | ", src_label)
+    df$accusation <- paste0(
+      "<span title='", htmltools::htmlEscape(hover_detail), "'>",
+      htmltools::htmlEscape(paste0(kw_label, acc_text)),
+      "</span>"
+    )
+
+    sev_colors <- c(Critical = "#e74c3c", High = "#e67e22", Medium = "#f1c40f", Low = "#95a5a6")
+
+    sev_badge <- paste0(
+      "<span title='", htmltools::htmlEscape(src_label), "' ",
+      "style='display:inline-block;width:10px;height:10px;border-radius:50%;",
+      "background:", sev_colors[df$severity], ";margin-right:4px;'></span>",
+      "<span title='", htmltools::htmlEscape(src_label), "'>",
+      df$severity, "</span>"
+    )
+
+    reactable(cbind(data.frame(sev = sev_badge), df),
+      columns = list(
+        sev = colDef(name = "Severity", width = 100, html = TRUE),
+        accusation = colDef(name = "Accusation", minWidth = 270, html = TRUE),
+        accused = colDef(name = "Accused", minWidth = 210),
+        severity = colDef(show = FALSE),
+        snippet = colDef(show = FALSE),
+        accuser = colDef(show = FALSE),
+        entity = colDef(show = FALSE),
+        entityType = colDef(show = FALSE),
+        mentions = colDef(show = FALSE),
+        day = colDef(show = FALSE),
+                evidenceBacked = colDef(show = FALSE),
+                source = colDef(show = FALSE),
+                kw = colDef(show = FALSE),
+    corroborators = colDef(name = "Corroborations", width = 130,
+          style = function(value) {
+            color <- if (value >= 5) "#27ae60"
+                     else if (value >= 2) "#f39c12"
+                     else "#e74c3c"
+            list(fontWeight = "bold", color = color)
+          }),
+        score = colDef(name = "Strength Score", width = 120,
+          style = function(value) {
+            color <- if (value >= 5000) "#27ae60"
+                     else if (value >= 1000) "#f39c12"
+                     else "#e74c3c"
+            list(fontWeight = "bold", color = color)
+          })
+      ),
+      defaultPageSize = 20, compact = TRUE, bordered = TRUE,
       theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
         borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
   })
@@ -616,6 +704,7 @@ server <- function(input, output, session) {
           font.strokeColor = "#0f0f1a",
           color.background = bg,
           color.border = bd,
+          borderWidth = n$borderWidth %||% 1,
           color.highlight.background = hbg,
           color.highlight.border = hbd,
           stringsAsFactors = FALSE
@@ -764,11 +853,11 @@ server <- function(input, output, session) {
         tags$b("Persons"),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#90EE90; border:2px solid #228B22; border-radius:50%;"),
+            background:#E74C3C; border:2px solid #C0392B; border-radius:50%;"),
           tags$span("Witness")),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#FF6347; border:2px solid #8B0000; border-radius:50%;"),
+            background:#C0392B; border:2px solid #999999; border-radius:50%;"),
           tags$span("Protected Witness")),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:16px; height:16px;
