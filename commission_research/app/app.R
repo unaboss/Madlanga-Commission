@@ -415,6 +415,7 @@ server <- function(input, output, session) {
           from = e$from, to = e$to, value = e$value,
           width = e$width %||% 1,
           title = e$title %||% "",
+          arrows = "to",
           stringsAsFactors = FALSE
         )
       }))
@@ -424,7 +425,7 @@ server <- function(input, output, session) {
                edges = build_edges_df(top_edges)) |>
       visNodes(font = list(size = 14, color = "#FFFFFF", face = "Arial",
                strokeWidth = 3, strokeColor = "#0f0f1a")) |>
-      visEdges(smooth = FALSE,
+      visEdges(smooth = list(type = "curvedCW", roundness = 0.2),
                color = list(color = "#3498db", opacity = 1)) |>
       visInteraction(dragNodes = FALSE, dragView = TRUE, zoomView = TRUE) |>
       visPhysics(solver = "barnesHut", stabilization = list(enabled = TRUE, iterations = 500),
@@ -583,6 +584,7 @@ server <- function(input, output, session) {
       do.call(rbind, lapply(fe, function(e) {
         data.frame(from = e$from, to = e$to, value = e$value,
                    width = e$width, title = e$title,
+                   arrows = "to",
                    stringsAsFactors = FALSE)
       }))
     } else {

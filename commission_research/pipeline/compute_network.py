@@ -5,58 +5,29 @@ Computes nodes (speakers) and edges (relationships) from the database.
 
 import sqlite3
 import json
+import re
 from pathlib import Path
-from collections import Counter
+from collections import Counter, defaultdict
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "commission_research.db"
 OUT_DIR = Path(__file__).resolve().parent.parent / "app" / "www"
+
+
+def get_search_term(name: str) -> str:
+    """Extract the searchable term from a witness name.
+    For protected witnesses: 'witness b', 'witness c', etc.
+    For others: just the surname (last word)."""
+    clean = re.sub(r'\s*\(.*?\)\s*', '', name).strip()
+    if clean.startswith("Witness "):
+        return clean.lower()
+    parts = clean.split()
+    return parts[-1].lower() if parts else ""
 
 
 def build_network():
     """Build network graph data and save as JSON."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
-
-    # ── Edges first (needed for centrality) ──────────────────────
-    print("Building edges...")
-    edge_rows = conn.execute("""
-        SELECT a.speaker_id AS from_id, b.speaker_id AS to_id,
-               COUNT(*) AS weight,
-               GROUP_CONCAT(DISTINCT a.hearing_id) AS shared_days
-        FROM transcript_segments a
-        JOIN transcript_segments b ON a.hearing_id = b.hearing_id
-                                   AND a.speaker_id < b.speaker_id
-        JOIN speakers sa ON sa.id = a.speaker_id
-                         AND sa.role IN ('witness', 'witness_protected')
-        JOIN speakers sb ON sb.id = b.speaker_id
-                         AND sb.role IN ('witness', 'witness_protected')
-        WHERE a.speaker_id != b.speaker_id
-        GROUP BY a.speaker_id, b.speaker_id
-        HAVING weight >= 3
-        ORDER BY weight DESC
-        LIMIT 3000
-    """).fetchall()
-
-    # Compute degree centrality (unique connections per node)
-    degree_counts = Counter()
-    for e in edge_rows:
-        degree_counts[e["from_id"]] += 1
-        degree_counts[e["to_id"]] += 1
-
-    edges = []
-    max_weight = max(r["weight"] for r in edge_rows) if edge_rows else 1
-    for r in edge_rows:
-        thickness = 1 + (r["weight"] / max_weight) * 5
-        edges.append({
-            "from": r["from_id"],
-            "to": r["to_id"],
-            "value": r["weight"],
-            "title": f"Co-occur on {r['shared_days']} hearing days<br>"
-                     f"{r['weight']} shared segments",
-            "width": thickness,
-            "color": {"opacity": 0.3 + (r["weight"] / max_weight) * 0.5},
-        })
-
 
     # ── Nodes ───────────────────────────────────────────────────
     print("Building nodes...")
@@ -70,16 +41,64 @@ def build_network():
         JOIN hearings h ON h.id = ts.hearing_id
         WHERE s.role IN ('witness', 'witness_protected')
         GROUP BY s.id
-        ORDER BY segments DESC
     """).fetchall()
+
+    # Build witness lookup: search_term -> (name, id)
+    witness_terms = {}
+    for r in rows:
+        term = get_search_term(r["canonical_name"])
+        witness_terms[term] = (r["canonical_name"], r["id"])
+
+    # ── Edges: who-mentions-whom in testimony ──────────────────
+    print("Building edges from name mentions...")
+    segments = conn.execute("""
+        SELECT ts.speaker_id, ts.text
+        FROM transcript_segments ts
+        JOIN speakers s ON s.id = ts.speaker_id
+        WHERE s.role IN ('witness', 'witness_protected')
+    """).fetchall()
+
+    mention_counts = defaultdict(int)
+    for seg in segments:
+        text = seg["text"].lower()
+        speaker_id = seg["speaker_id"]
+        for term, (name, w_id) in witness_terms.items():
+            if speaker_id == w_id:
+                continue
+            if term in text:
+                mention_counts[(speaker_id, w_id)] += 1
+
+    edges = []
+    max_weight = max(mention_counts.values()) if mention_counts else 1
+    for (from_id, to_id), count in mention_counts.items():
+        if count < 3:
+            continue
+        thickness = 1 + (count / max_weight) * 5
+        edges.append({
+            "from": from_id,
+            "to": to_id,
+            "value": count,
+            "title": f"Mentioned {count} times in testimony",
+            "width": thickness,
+            "arrows": {"to": {"enabled": True, "scaleFactor": 0.5}},
+            "color": {"opacity": 0.3 + (count / max_weight) * 0.5},
+        })
+
+    # Compute degree centrality from mentions
+    in_degree = Counter()
+    out_degree = Counter()
+    for (from_id, to_id), count in mention_counts.items():
+        out_degree[from_id] += 1
+        in_degree[to_id] += 1
 
     role_colors = {
         "witness":            {"bg": "#90EE90", "border": "#228B22", "highlight": "#C1FFC1"},
         "witness_protected":  {"bg": "#FF6347", "border": "#8B0000", "highlight": "#FF7F50"},
     }
 
-    max_segments = max(r["segments"] for r in rows)
-    max_degree = max(degree_counts.values()) if degree_counts else 1
+    max_segments = max(r["segments"] for r in rows) or 1
+    max_in = max(in_degree.values()) if in_degree else 1
+    max_out = max(out_degree.values()) if out_degree else 1
 
     nodes = []
     for r in rows:
@@ -88,8 +107,14 @@ def build_network():
         title = extract_title(name)
         sid = r["id"]
         seg_norm = r["segments"] / max_segments
-        deg_norm = degree_counts.get(sid, 0) / max_degree
-        size = 10 + (seg_norm * 0.4 + deg_norm * 0.6) * 50
+        in_norm = in_degree.get(sid, 0) / max_in
+        out_norm = out_degree.get(sid, 0) / max_out
+        # Size: 30% segments, 30% how many people they name, 40% how many people name them
+        size = 10 + (seg_norm * 0.3 + out_norm * 0.3 + in_norm * 0.4) * 50
+        total_mentions = out_degree.get(sid, 0) + in_degree.get(sid, 0)
+
+        m_in = in_degree.get(sid, 0)
+        m_out = out_degree.get(sid, 0)
 
         nodes.append({
             "id": sid,
@@ -97,7 +122,8 @@ def build_network():
             "title": f"<b>{name}</b><br>Role: {r['role']}<br>"
                      f"Segments: {r['segments']:,}<br>"
                      f"Days: {r['hearing_days']}<br>"
-                     f"First: {r['first_date']}<br>Last: {r['last_date']}",
+                     f"Mentions others: {m_out}<br>"
+                     f"Mentioned by others: {m_in}",
             "group": r["role"],
             "value": r["segments"],
             "size": round(size, 1),
@@ -105,7 +131,7 @@ def build_network():
             "rank": title,
             "segments": r["segments"],
             "days": r["hearing_days"],
-            "centrality": degree_counts.get(sid, 0),
+            "centrality": total_mentions,
             "color": {
                 "background": rc["bg"],
                 "border": rc["border"],
@@ -114,6 +140,7 @@ def build_network():
             "shape": "dot",
             "font": {"size": 10 + (r["segments"] / max_segments) * 8},
         })
+
 
     # ── Role groupings ──────────────────────────────────────────
     print("Building role groupings...")
@@ -146,8 +173,18 @@ def build_network():
         "total_documents": conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
         "total_entities": conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0],
         "date_range": {
-            "first": rows[-1]["first_date"] if rows else "",
-            "last": rows[0]["first_date"] if rows else "",
+            "first": conn.execute(
+                "SELECT MIN(h.hearing_date) FROM transcript_segments ts "
+                "JOIN speakers s ON s.id = ts.speaker_id "
+                "JOIN hearings h ON h.id = ts.hearing_id "
+                "WHERE s.role IN ('witness', 'witness_protected')"
+            ).fetchone()[0] or "",
+            "last": conn.execute(
+                "SELECT MAX(h.hearing_date) FROM transcript_segments ts "
+                "JOIN speakers s ON s.id = ts.speaker_id "
+                "JOIN hearings h ON h.id = ts.hearing_id "
+                "WHERE s.role IN ('witness', 'witness_protected')"
+            ).fetchone()[0] or "",
         },
     }
 
