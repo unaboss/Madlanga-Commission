@@ -250,7 +250,7 @@ def build_network():
         pn["title"] = pn["title"].replace("</b><br>", "</b><br>"
             f"Entities named: {ent_count}<br>")
 
-    # ── 5. Assemble (with barycenter entity ordering) ──────────
+    # ── 5. Assemble (round-table entity ordering) ──────────────
     all_nodes = person_nodes + entity_nodes
 
     # Build entity->witness connectivity map (who connects to this entity)
@@ -260,8 +260,7 @@ def build_network():
         if fid > 0 and tid < 0:      # person -> entity edge
             entity_witnesses[tid].add(fid)
 
-    # Greedy barycenter sort: start with most-connected entity,
-    # then repeatedly pick the entity sharing most witnesses with the last
+    # Initial barycenter sort based on witness connections
     eids_ordered = []
     if entity_witnesses:
         remaining = set(entity_witnesses.keys())
@@ -271,14 +270,51 @@ def build_network():
             last_wits = entity_witnesses[eids_ordered[-1]]
             next_eid = max(remaining, key=lambda eid: len(last_wits & entity_witnesses.get(eid, set())))
             eids_ordered.append(next_eid); remaining.discard(next_eid)
-    # Append any entity nodes not in the witness map (no edges, low count)
     all_eids = {n["id"] for n in entity_nodes}
     for eid in all_eids - set(eids_ordered):
         eids_ordered.append(eid)
-    # Reorder entity_nodes to match the barycenter sort
+
+    # Round-table optimization: re-order so entity-to-entity connections
+    # are adjacent (minimizes chords cutting through the center)
+    ee_adj = defaultdict(lambda: defaultdict(int))
+    for e in edges:
+        if e.get("dashes"):
+            ee_adj[e["from"]][e["to"]] = e["value"]
+            ee_adj[e["to"]][e["from"]] = e["value"]
+
+    if ee_adj:
+        ee_strength = {eid: sum(adj.values()) for eid, adj in ee_adj.items()}
+        # Start with strongest-connected entity, then greedily place
+        # each remaining entity at the position that maximizes adjacency
+        ordered_ee = sorted([e for e in eids_ordered if e in ee_strength],
+                            key=lambda x: -ee_strength[x])
+        new_order = [ordered_ee[0]]
+        remaining_ee = set(ordered_ee[1:])
+        while remaining_ee:
+            best = None; best_pos = -1; best_score = -1
+            for eid in list(remaining_ee):
+                for pos in range(len(new_order) + 1):
+                    left = new_order[pos - 1] if pos > 0 else new_order[-1]
+                    right = new_order[pos] if pos < len(new_order) else new_order[0]
+                    score = ee_adj[eid][left] + ee_adj[eid][right]
+                    if score > best_score:
+                        best_score, best, best_pos = score, eid, pos
+            if best is not None:
+                new_order.insert(best_pos, best)
+                remaining_ee.discard(best)
+            else:
+                break
+        # Preserve original order for entities with no ee connections
+        seen = set(new_order)
+        for eid in eids_ordered:
+            if eid not in seen:
+                new_order.append(eid)
+        eids_ordered = new_order
+
+    # Reorder entity_nodes to match
     eid_to_node = {n["id"]: n for n in entity_nodes}
     entity_nodes[:] = [eid_to_node[eid] for eid in eids_ordered if eid in eid_to_node]
-    all_nodes = person_nodes + entity_nodes  # rebuild after reorder
+    all_nodes = person_nodes + entity_nodes
 
     # Compute witness reliability: % of named entities corroborated by other witnesses
     for pn in person_nodes:
