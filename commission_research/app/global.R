@@ -18,6 +18,7 @@ if (LICENSE$status == "expired") {
 APP_DIR  <- getwd()
 DB_PATH <- normalizePath(file.path(APP_DIR, "data", "commission_research.db"), mustWork = FALSE)
 NETWORK_PATH   <- file.path(APP_DIR, "www", "network_data.json")
+ATTENTION_PATH <- file.path(APP_DIR, "www", "attention_matrix.json")
 STORYMAP_PATH  <- file.path(APP_DIR, "www", "story_map_data.json")
 
 # ── Helpers ──────────────────────────────────────────────────────
@@ -45,6 +46,14 @@ load_network <- function() {
     network_cache <<- fromJSON(NETWORK_PATH, simplifyDataFrame = FALSE)
   }
   network_cache
+}
+
+attention_cache <- NULL
+load_attention <- function() {
+  if (is.null(attention_cache)) {
+    attention_cache <<- fromJSON(ATTENTION_PATH, simplifyVector = TRUE)
+  }
+  attention_cache
 }
 
 storymap_cache <- NULL

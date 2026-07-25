@@ -56,8 +56,9 @@ ui <- page_navbar(
       .stat-card { text-align: center; padding: 20px 10px; border-radius: 8px; }
       .stat-card h2 { font-size: 2rem; margin: 5px 0; font-weight: 700; }
       .stat-card p { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin: 0; }
-      .role-card { border-left: 4px solid; padding: 12px; margin-bottom: 8px; border-radius: 4px; font-size: 0.85rem; }
-      .role-card strong { font-size: 1rem; }
+      .role-card { border-left: 4px solid; padding: 12px; margin-bottom: 8px; border-radius: 4px; font-size: 0.85rem; color: #ecf0f1; }
+      .role-card strong { font-size: 1rem; color: #ecf0f1; }
+      .role-card small { color: #bdc3c7; }
       .entity-tag { display: inline-block; padding: 2px 10px; margin: 3px; border-radius: 12px;
                     font-size: 0.75rem; background: #1a3a5c; color: #3498db; cursor: pointer; }
       .entity-tag:hover { background: #3498db; color: white; }
@@ -470,6 +471,7 @@ server <- function(input, output, session) {
   onStop(function() { dbDisconnect(conn) })
 
   net <- load_network()
+  att <- load_attention()
 
   # ── License status ────────────────────────────────────────────
   output$license_status <- renderUI({
@@ -816,9 +818,10 @@ server <- function(input, output, session) {
         is_mkhwanazi <- grepl("Mkhwanazi", n$label)
         data.frame(
           id = n$id,
-          label = if (is_mkhwanazi) n$label else "",
+          label = n$label,
           origLabel = n$label,
           startLabel = if (is_mkhwanazi) n$label else "",
+          labelSize = (n$font$size %||% 10) * 1.1,
           group = n$group,
           value = n$value, size = n$size * 0.7,
           baseSize = n$size * 0.7,
@@ -826,7 +829,7 @@ server <- function(input, output, session) {
           x = n$x %||% NA,
           y = n$y %||% NA,
           shape = "dot",
-          font.size = (n$font$size %||% 10) * 1.1,
+          font.size = if (is_mkhwanazi) (n$font$size %||% 10) * 1.1 else 0,
           font.color = "#FFFFFF",
           font.face = "Arial",
           font.strokeWidth = 3,
@@ -865,7 +868,7 @@ server <- function(input, output, session) {
                                   springConstant = 0.0008, damping = 0.12)) |>
       visEvents(selectNode = "function(params) {
         var net = this;
-        var selId = params.nodes[0];
+        var selId = String(params.nodes[0]);
         var connNodeIds = net.getConnectedNodes(selId).map(String);
         var connEdgeIds = net.getConnectedEdges(selId).map(String);
 
@@ -892,7 +895,7 @@ server <- function(input, output, session) {
             id: allNodeIds[i],
             size: connNodeIds.indexOf(allNodeIds[i]) !== -1
               ? d.baseSize * 1.5 : d.baseSize,
-            label: allNodeIds[i] === selId ? d.origLabel : ''
+            'font.size': allNodeIds[i] === selId ? d.labelSize : 0
           });
         }
         net.body.data.nodes.update(nBatch);
@@ -911,7 +914,11 @@ server <- function(input, output, session) {
         var nBatch = [];
         for (var i = 0; i < allNodeIds.length; i++) {
           var d = net.body.data.nodes.get(allNodeIds[i]);
-          nBatch.push({id: allNodeIds[i], size: d.baseSize, label: d.startLabel});
+          nBatch.push({
+            id: allNodeIds[i],
+            size: d.baseSize,
+            'font.size': d.startLabel ? d.labelSize : 0
+          });
         }
         net.body.data.nodes.update(nBatch);
       }",
@@ -930,7 +937,8 @@ server <- function(input, output, session) {
           var nBatch = [];
           for (var i = 0; i < allNodeIds.length; i++) {
             var d = net.body.data.nodes.get(allNodeIds[i]);
-            nBatch.push({id: allNodeIds[i], size: d.baseSize, label: d.startLabel});
+            nBatch.push({id: allNodeIds[i], size: d.baseSize,
+              'font.size': d.startLabel ? d.labelSize : 0});
           }
           net.body.data.nodes.update(nBatch);
           Shiny.setInputValue('overview_selected', null, {priority: 'event'});
@@ -997,7 +1005,7 @@ server <- function(input, output, session) {
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:16px; height:16px;
             background:#999999; border:2px solid #666666; border-radius:50%;"),
-          tags$span("Organization, Case, Exhibit, Location, Money")),
+                  tags$span("Organizations (SAPS, SSA, Carnilinx, Hawks...)")),
         tags$hr(),
         tags$p(class = "text-muted", style = "font-size:0.8rem;",
           "Darker shade = more frequent. Bigger node = more mentions.")
@@ -1240,49 +1248,53 @@ server <- function(input, output, session) {
 
   # ── Attention Map ────────────────────────────────────────────
   att_n <- reactive({
-    min(input$att_top_n %||% 10, length(net$attention_matrix$questioners %||% list()))
+    min(input$att_top_n %||% 10, length(att[["questioners"]] %||% c()))
   })
 
   output$attention_heatmap <- renderPlotly({
-    am <- net$attention_matrix
-    if (is.null(am) || length(am$questioners) == 0) {
+    am <- att
+    if (is.null(am) || length(am[["questioners"]]) == 0) {
       return(plotly_empty(type = "heatmap") |>
                layout(title = "No attention data available"))
     }
 
-    n <- att_n()
-    qs <- am$questioners[1:min(n, length(am$questioners))]
-    ws <- am$witnesses
-    mat <- am$matrix[1:min(n, length(am$matrix)), , drop = FALSE]
+    n <- min(att_n(), am[["nrow"]] %||% 0)
+    qs <- am[["questioners"]][1:n]
+
+    # Reconstruct matrix from flat data
+    mat <- matrix(am[["data"]], nrow = am[["nrow"]], ncol = am[["ncol"]], byrow = TRUE)
+    mat <- mat[1:n, , drop = FALSE]
+    ws <- am[["witnesses"]]
 
     # Only keep witnesses with at least one interaction
     col_sums <- colSums(mat)
     keep <- col_sums > 0
     ws <- ws[keep]
     mat <- mat[, keep, drop = FALSE]
-    if (ncol(mat) == 0) {
+    if (ncol(mat) == 0 || nrow(mat) == 0) {
       return(plotly_empty(type = "heatmap") |>
                layout(title = "No questioning interactions found"))
     }
 
-    # Transpose: x = questioners, y = witnesses (cleaner x-axis layout)
+    attention_mat <<- mat
+    attention_qs <<- qs
+    attention_ws <<- ws
+
     plot_ly(
-      x = qs,
-      y = ws,
-      z = t(mat),
+      x = ws,
+      y = qs,
+      z = mat,
       type = "heatmap",
       colorscale = list(c(0, 0.3, 0.7, 1), c("#1a1a2e", "#3498db", "#f39c12", "#e74c3c")),
-      hovertemplate = "<b>%{x}</b> questioned <b>%{y}</b><br>%{z} interactions<extra></extra>"
+      hovertemplate = "<b>%{y}</b> questioned <b>%{x}</b><br>%{z} interactions<extra></extra>"
     ) |>
       layout(
         xaxis = list(title = "", tickangle = -45, tickfont = list(size = 9)),
         yaxis = list(title = "", tickfont = list(size = 9)),
-        xaxis_title = "",
-        yaxis_title = "",
         plot_bgcolor = "#16213e",
         paper_bgcolor = "#16213e",
         font = list(color = "#ecf0f1"),
-        margin = list(l = 120, b = 80)
+        margin = list(l = 120, b = 120)
       ) |>
       event_register("plotly_click")
   })
@@ -1291,13 +1303,12 @@ server <- function(input, output, session) {
     click <- event_data("plotly_click", source = "attention_heatmap")
     if (is.null(click)) return()
     output$att_detail <- renderUI({
-      am <- net$attention_matrix
-      q_idx <- click$x + 1  # x is now questioner (after transpose)
-      w_idx <- click$y + 1  # y is now witness
-      if (q_idx > length(am$questioners) || w_idx > length(am$witnesses)) return(NULL)
-      q_name <- am$questioners[q_idx]
-      w_name <- am$witnesses[w_idx]
-      val <- am$matrix[q_idx, w_idx]
+      w_idx <- click$x + 1
+      q_idx <- click$y + 1
+      if (q_idx > length(attention_qs) || w_idx > length(attention_ws)) return(NULL)
+      q_name <- attention_qs[q_idx]
+      w_name <- attention_ws[w_idx]
+      val <- attention_mat[q_idx, w_idx]
       tagList(
         h6(paste0(q_name, " \u2192 ", w_name)),
         p(paste0(val, " direct questioning interactions"), class = "text-muted")

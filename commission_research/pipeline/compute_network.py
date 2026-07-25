@@ -14,7 +14,8 @@ from collections import Counter, defaultdict
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "commission_research.db"
 OUT_DIR = Path(__file__).resolve().parent.parent / "app" / "www"
 
-ENTITY_TYPES = ("organization", "case_reference", "exhibit", "location", "money")
+ENTITY_TYPES = ("organization",)
+ENTITY_TYPES_STR = "'organization'"
 MIN_EDGE_WEIGHT = 3
 MIN_ENTITY_TOTAL = 5
 MAX_NODES = 120
@@ -129,13 +130,13 @@ def build_network():
         SELECT entity_value, entity_type, COUNT(*) AS total_count,
                COUNT(DISTINCT speaker_id) AS witness_count
         FROM entities
-        WHERE entity_type IN ('organization', 'case_reference', 'exhibit', 'location', 'money')
+        WHERE entity_type IN ({})
           AND speaker_id IN ({})
         GROUP BY entity_value
         HAVING total_count >= ?
         ORDER BY total_count DESC
         LIMIT 200
-    """.format(",".join("?" for _ in person_ids)), [*person_ids, MIN_ENTITY_TOTAL]).fetchall()
+    """.format(ENTITY_TYPES_STR, ",".join("?" for _ in person_ids)), [*person_ids, MIN_ENTITY_TOTAL]).fetchall()
 
     entity_nodes = []
     entity_map = {}   # entity_value -> node_id
@@ -167,16 +168,17 @@ def build_network():
     edge_rows = conn.execute("""
         SELECT e.speaker_id, e.entity_value, e.entity_type, COUNT(*) AS cnt
         FROM entities e
-        WHERE e.speaker_id IN ({})
-          AND e.entity_type IN ('organization', 'case_reference', 'exhibit', 'location', 'money')
-          AND e.entity_value IN ({})
+        WHERE e.speaker_id IN ({spk})
+          AND e.entity_type IN ({typ})
+          AND e.entity_value IN ({val})
         GROUP BY e.speaker_id, e.entity_value
         HAVING cnt >= ?
         ORDER BY cnt DESC
         LIMIT 600
     """.format(
-        ",".join("?" for _ in person_ids),
-        ",".join("?" for _ in entity_map.keys())
+        spk = ",".join("?" for _ in person_ids),
+        typ = ENTITY_TYPES_STR,
+        val = ",".join("?" for _ in entity_map.keys())
     ), [*person_ids, *entity_map.keys(), MIN_EDGE_WEIGHT]).fetchall()
 
     # Build lookup: person_id -> {entity_value -> count} for edge detail
@@ -344,9 +346,9 @@ def build_network():
         FROM entities e
         LEFT JOIN hearings h ON h.id = e.hearing_id
         WHERE e.speaker_id IN (SELECT id FROM speakers WHERE role IN ('witness', 'witness_protected'))
-          AND e.entity_type IN ('organization', 'case_reference', 'exhibit', 'location', 'money')
+          AND e.entity_type IN ({})
         ORDER BY e.speaker_id, e.entity_value
-    """).fetchall()
+    """.format(ENTITY_TYPES_STR)).fetchall()
     snippet_lookup = {}
     for sr in snippet_rows:
         key = (sr["speaker_id"], sr["entity_value"])
@@ -358,7 +360,7 @@ def build_network():
         "SELECT DISTINCT e.entity_value FROM entities e "
         "JOIN speakers s ON s.id = e.speaker_id "
         "WHERE s.role = 'evidence_leader' "
-        "AND e.entity_type IN ('organization', 'case_reference', 'exhibit', 'location', 'money')"
+        "AND e.entity_type IN ({})".format(ENTITY_TYPES_STR)
     ))
 
     # Compute accusation strength: mention_count × corroboration × evidence_backing
@@ -510,11 +512,11 @@ def build_network():
         SELECT e.speaker_id, e.entity_value, e.entity_type, COUNT(*) AS weight
         FROM entities e
         WHERE e.speaker_id IN ({})
-          AND e.entity_type IN ('organization', 'case_reference')
+          AND e.entity_type IN ({})
         GROUP BY e.speaker_id, e.entity_value
         HAVING weight >= 3
         LIMIT 800
-    """.format(",".join("?" for _ in all_speakers_with_entities)),
+    """.format(ENTITY_TYPES_STR, ",".join("?" for _ in all_speakers_with_entities)),
     [*all_speakers_with_entities]).fetchall():
         val = r["entity_value"].lower().strip()
         for surname, target_ids in witness_surname_map.items():
@@ -533,7 +535,6 @@ def build_network():
                         })
                 break
 
-    # ── 8b. Attention matrix (questioning heatmap) ──────────────
     print("Building attention matrix...")
     # Get all evidence leaders (questioners) with segment counts, and witnesses
     questioners = conn.execute("""
@@ -578,6 +579,24 @@ def build_network():
             row.append(questioning_counts.get((qi, wi), 0))
         att_matrix.append(row)
 
+    # Flatten matrix for R compatibility (jsonlite doesn't handle nested lists well)
+    flat_data = [item for row in att_matrix for item in row]
+    att_nrow = len(att_matrix)
+    att_ncol = len(att_matrix[0]) if att_matrix else 0
+
+    # Write attention matrix as separate file (avoids R jsonlite nested-list issues)
+    print("Writing attention matrix...")
+    att_out = {
+        "questioners": q_labels,
+        "witnesses": w_labels,
+        "data": flat_data,
+        "nrow": att_nrow,
+        "ncol": att_ncol,
+    }
+    att_path = OUT_DIR / "attention_matrix.json"
+    att_path.write_text(json.dumps(att_out, ensure_ascii=False), encoding="utf-8")
+    print(f"  Saved: {att_path}")
+
     # ── 8c. Speaker entity profiles ─────────────────────────────
     print("Building speaker entity profiles...")
     profile_rows = conn.execute("""
@@ -612,11 +631,6 @@ def build_network():
         "stats": stats,
         "top_entities": top_entities_data,
         "person_edges": person_to_person_edges,
-        "attention_matrix": {
-            "questioners": q_labels,
-            "witnesses": w_labels,
-            "matrix": att_matrix,
-        },
         "speaker_profiles": speaker_profiles,
     }
 
