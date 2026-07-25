@@ -205,6 +205,51 @@ get_entity_snippets <- function(conn, speaker_id, entity_value, limit = 3) {
   ))
 }
 
+get_org_detail_witnesses <- function(conn, org_value) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT
+       (SELECT COUNT(DISTINCT e1.speaker_id) FROM entities e1
+        WHERE e1.entity_type = 'organization' AND e1.entity_value = ?) AS witness_count,
+       (SELECT COUNT(DISTINCT e2.entity_value) FROM entities e1
+        JOIN entities e2 ON e1.speaker_id = e2.speaker_id AND e1.hearing_id = e2.hearing_id
+        WHERE e1.entity_type = 'organization' AND e1.entity_value = ?
+          AND e2.entity_type = 'case_reference') AS case_count,
+       (SELECT COUNT(DISTINCT e2.entity_value) FROM entities e1
+        JOIN entities e2 ON e1.speaker_id = e2.speaker_id AND e1.hearing_id = e2.hearing_id
+        WHERE e1.entity_type = 'organization' AND e1.entity_value = ?
+          AND e2.entity_type = 'location') AS location_count",
+    params = list(org_value, org_value, org_value)
+  ))
+}
+
+get_org_locations <- function(conn, org_value, limit = 20) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e2.entity_value AS location, COUNT(DISTINCT e1.speaker_id) AS witnesses
+     FROM entities e1
+     JOIN entities e2 ON e1.speaker_id = e2.speaker_id AND e1.hearing_id = e2.hearing_id
+     WHERE e1.entity_type = 'organization' AND e1.entity_value = ?
+       AND e2.entity_type = 'location'
+     GROUP BY e2.entity_value
+     ORDER BY witnesses DESC
+     LIMIT ?",
+    params = list(org_value, limit)
+  ))
+}
+
+get_org_cases <- function(conn, org_value, limit = 20) {
+  as.data.frame(dbGetQuery(conn,
+    "SELECT e2.entity_value AS case_ref, COUNT(DISTINCT e1.speaker_id) AS witnesses
+     FROM entities e1
+     JOIN entities e2 ON e1.speaker_id = e2.speaker_id AND e1.hearing_id = e2.hearing_id
+     WHERE e1.entity_type = 'organization' AND e1.entity_value = ?
+       AND e2.entity_type = 'case_reference'
+     GROUP BY e2.entity_value
+     ORDER BY witnesses DESC
+     LIMIT ?",
+    params = list(org_value, limit)
+  ))
+}
+
 get_speaker_profiles <- function(conn) {
   as.data.frame(dbGetQuery(conn,
     "SELECT e.speaker_id, s.canonical_name, s.role,

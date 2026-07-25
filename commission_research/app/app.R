@@ -239,18 +239,13 @@ ui <- page_navbar(
     layout_sidebar(
       sidebar = sidebar(
         width = 280,
-        selectInput("ent_type", "Entity Type",
-          choices = c("All", "organization", "case_reference", "exhibit",
-                      "date", "location", "money", "vehicle"),
-          selected = "All"),
-        hr(),
-        h6("Top Entities"),
+        h6("Organizations"),
         reactableOutput("ent_list")
       ),
       card(
         full_screen = TRUE,
         card_header(textOutput("ent_header")),
-        card_body(reactableOutput("ent_detail"))
+        card_body(uiOutput("ent_detail"))
       )
     )
   ),
@@ -1562,18 +1557,16 @@ server <- function(input, output, session) {
 
   # ── Entities ─────────────────────────────────────────────────
   ent_data <- reactive({
-    et <- if (input$ent_type == "All") NULL else input$ent_type
-    get_top_entities(conn, etype = et, limit = 30)
+    get_top_entities(conn, etype = "organization", limit = 50)
   })
 
   output$ent_list <- renderReactable({
     reactable(ent_data(),
       columns = list(
-        entity_type  = colDef(name = "Type", width = 110),
-        entity_value = colDef(name = "Entity", minWidth = 140),
-        cnt          = colDef(name = "Count", width = 70)
+        entity_value = colDef(name = "Organization", minWidth = 180),
+        cnt          = colDef(name = "Mentions", width = 90)
       ),
-      defaultPageSize = 15, compact = TRUE, bordered = TRUE,
+      defaultPageSize = 20, compact = TRUE, bordered = TRUE,
       selection = "single", onClick = "select",
       theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
         borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"))
@@ -1583,32 +1576,55 @@ server <- function(input, output, session) {
   selected_ent <- reactive({
     sel <- getReactableState("ent_list", "selected")
     if (is.null(sel)) return(NULL)
-    ent_data()[sel, ]
+    ent_data()[sel, "entity_value"]
   })
 
   output$ent_header <- renderText({
-    se <- selected_ent()
-    if (is.null(se)) return("Select an entity from the list")
-    paste0("Entity: ", se$entity_value, " (", se$cnt, " mentions)")
+    org <- selected_ent()
+    if (is.null(org)) return("Select an organization from the list")
+    paste0("Organization: ", org)
   })
 
-  output$ent_detail <- renderReactable({
-    se <- selected_ent()
-    if (is.null(se)) return(NULL)
-    ctx <- get_entity_context(conn, se$entity_value, limit = 200)
-    ctx$source_ref <- ifelse(ctx$source_type == "transcript",
-      paste0("Day ", ctx$day_number),
-      paste0(ctx$source_type, " (Day ", ctx$day_number, ")"))
-    reactable(ctx[, c("hearing_date", "source_ref", "speaker", "context_text")],
-      columns = list(
-        hearing_date = colDef(name = "Date", width = 90),
-        source_ref   = colDef(name = "Source", width = 85),
-        speaker      = colDef(name = "Speaker", width = 180),
-        context_text = colDef(name = "Context", minWidth = 350)
+  output$ent_detail <- renderUI({
+    org <- selected_ent()
+    if (is.null(org)) return(p("Select an organization to see details", class = "text-muted"))
+
+    wits <- get_org_detail_witnesses(conn, org)
+    locs <- get_org_locations(conn, org, limit = 20)
+    cases <- get_org_cases(conn, org, limit = 20)
+
+    tagList(
+      layout_columns(
+        col_widths = c(4, 4, 4),
+        value_box(title = "Witnesses", value = wits$witness_count, showcase = icon("users"),
+          theme = "primary"),
+        value_box(title = "Case References", value = wits$case_count, showcase = icon("book"),
+          theme = "info"),
+        value_box(title = "Locations", value = wits$location_count, showcase = icon("map-marker"),
+          theme = "secondary")
       ),
-      defaultPageSize = 25, compact = TRUE, bordered = TRUE,
-      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
-        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"))
+      hr(),
+      h6("Associated Locations"),
+      reactable(locs,
+        columns = list(
+          location = colDef(name = "Location", minWidth = 160),
+          witnesses = colDef(name = "Witnesses", width = 100)
+        ),
+        defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+        theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+          borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"))
+      ),
+      hr(),
+      h6("Associated Cases"),
+      reactable(cases,
+        columns = list(
+          case_ref = colDef(name = "Case Reference", minWidth = 200),
+          witnesses = colDef(name = "Witnesses", width = 100)
+        ),
+        defaultPageSize = 10, compact = TRUE, bordered = TRUE,
+        theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+          borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"))
+      )
     )
   })
 
