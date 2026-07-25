@@ -38,6 +38,53 @@ ROLE_ICONS <- c(
   witness_protected = "user-secret"
 )
 
+# ── Concentric Bipartite Layout ────────────────────────────────
+layout_concentric <- function(nodes_df, edges_df,
+                               inner_radius = 130,
+                               outer_radius = 350) {
+  is_person <- nodes_df$group %in% c("witness", "witness_protected")
+  person_ids <- nodes_df$id[is_person]
+  entity_ids <- nodes_df$id[!is_person]
+  n_persons <- sum(is_person)
+  if (n_persons == 0 || length(entity_ids) == 0) return(nodes_df)
+
+  conn_count <- sapply(person_ids, function(pid)
+    sum(edges_df$from == pid | edges_df$to == pid, na.rm = TRUE))
+  order_by_conn <- order(conn_count, decreasing = TRUE)
+  angles <- 2 * pi * (seq_len(n_persons) - 1) / n_persons
+  angles <- angles[order_by_conn]
+  nodes_df$x[is_person] <- inner_radius * cos(angles)
+  nodes_df$y[is_person] <- inner_radius * sin(angles)
+
+  p_angle_map <- setNames(angles, person_ids)
+  ent_angles <- sapply(entity_ids, function(eid) {
+    conn <- edges_df$from[edges_df$to == eid]
+    conn <- c(conn, edges_df$to[edges_df$from == eid])
+    conn <- conn[conn %in% person_ids]
+    a <- p_angle_map[as.character(conn)]
+    a <- a[!is.na(a)]
+    if (length(a) < 2) return(if (length(a) == 1) a else NA)
+    atan2(mean(sin(a)), mean(cos(a)))
+  })
+  na_idx <- is.na(ent_angles)
+  if (any(na_idx))
+    ent_angles[na_idx] <- seq(-pi, pi, length.out = sum(na_idx) + 2)[-c(1, sum(na_idx) + 2)]
+  if (length(ent_angles) > 1) {
+    o <- order(ent_angles)
+    min_gap <- 2 * pi / length(ent_angles) * 0.7
+    for (i in seq_along(ent_angles)[-1]) {
+      gap <- ent_angles[o[i]] - ent_angles[o[i - 1]]
+      if (gap < min_gap) ent_angles[o[i]] <- ent_angles[o[i - 1]] + min_gap
+    }
+  }
+  nodes_df$x[!is_person] <- outer_radius * cos(ent_angles)
+  nodes_df$y[!is_person] <- outer_radius * sin(ent_angles)
+
+  ci <- grep("Mkhwanazi", nodes_df$label, ignore.case = TRUE)
+  if (length(ci)) { nodes_df$x[ci] <- 0; nodes_df$y[ci] <- 0 }
+  nodes_df
+}
+
 # ── UI ──────────────────────────────────────────────────────────
 ui <- page_navbar(
   title = tags$span(
@@ -851,16 +898,19 @@ server <- function(input, output, session) {
       }))
     }
 
-    visNetwork(nodes = build_nodes_df(top_nodes),
+    nodes_pos <- layout_concentric(build_nodes_df(top_nodes), build_edges_df(top_edges))
+    visNetwork(nodes = nodes_pos,
                edges = build_edges_df(top_edges)) |>
       visNodes(font = list(size = 14, color = "#FFFFFF", face = "Arial",
                strokeWidth = 3, strokeColor = "#0f0f1a")) |>
-      visEdges(smooth = list(type = "curvedCW", roundness = 0.2),
+      visEdges(smooth = FALSE,
                color = list(color = "#3498db", opacity = 1)) |>
       visInteraction(dragNodes = FALSE, dragView = TRUE, zoomView = TRUE) |>
-      visPhysics(solver = "barnesHut", stabilization = list(enabled = TRUE, iterations = 80),
-                 barnesHut = list(gravitationalConstant = -1000, springLength = 300,
-                                  springConstant = 0.0008, damping = 0.12)) |>
+      # TODO: Re-enable animated physics for interactive feel:
+      # visPhysics(solver = "barnesHut", barnesHut = list(gravitationalConstant = -500,
+      #   springLength = 250, springConstant = 0.005, damping = 0.5),
+      #   stabilization = list(iterations = 50))
+      visPhysics(enabled = FALSE) |>
       visEvents(selectNode = "function(params) {
         var net = this;
         var selId = String(params.nodes[0]);
@@ -1210,9 +1260,10 @@ server <- function(input, output, session) {
       data.frame(from = integer(), to = integer())
     }
 
+    nodes_df <- layout_concentric(nodes_df, edges_df)
     visNetwork(nodes_df, edges_df) |>
       visNodes(font = list(color = "#ecf0f1")) |>
-      visEdges(smooth = list(type = "continuous"), color = list(opacity = 0.4)) |>
+      visEdges(smooth = FALSE, color = list(opacity = 0.4)) |>
       visOptions(
         highlightNearest = list(enabled = TRUE, degree = 2, hover = TRUE),
         selectedBy = list(variable = "group", multiple = TRUE)
@@ -1221,12 +1272,11 @@ server <- function(input, output, session) {
         dragNodes = TRUE, dragView = TRUE, zoomView = TRUE,
         navigationButtons = TRUE
       ) |>
-      visPhysics(
-        solver = "barnesHut",
-        barnesHut = list(gravitationalConstant = -3000, springLength = 180,
-                         springConstant = 0.01, damping = 0.2),
-        stabilization = list(iterations = 300)
-      ) |>
+      # TODO: Re-enable animated physics for interactive feel:
+      # visPhysics(solver = "barnesHut", barnesHut = list(gravitationalConstant = -500,
+      #   springLength = 250, springConstant = 0.005, damping = 0.5),
+      #   stabilization = list(iterations = 50))
+      visPhysics(enabled = FALSE) |>
       visLayout(randomSeed = 42) |>
       visEvents(click = "function(data) {
         if (data.nodes.length > 0) {
@@ -1569,7 +1619,8 @@ server <- function(input, output, session) {
       defaultPageSize = 20, compact = TRUE, bordered = TRUE,
       selection = "single", onClick = "select",
       theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
-        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"))
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"),
+        rowSelectedStyle = list(backgroundColor = "#3498db", color = "#ffffff"))
     )
   })
 
@@ -1588,6 +1639,9 @@ server <- function(input, output, session) {
   output$ent_detail <- renderUI({
     org <- selected_ent()
     if (is.null(org)) return(p("Select an organization to see details", class = "text-muted"))
+
+    showNotification("Loading organization details...", id = "org_loading", type = "message", duration = NULL)
+    on.exit(removeNotification("org_loading"), add = TRUE)
 
     wits <- get_org_detail_witnesses(conn, org)
     locs <- get_org_locations(conn, org, limit = 20)
