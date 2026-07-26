@@ -929,27 +929,28 @@ server <- function(input, output, session) {
           var allNodeIds = net.body.data.nodes.getIds().map(String);
           var allEdgeIds = net.body.data.edges.getIds().map(String);
 
-          // Edges: connected yellow, others dimmed
+          // Edges: connected yellow, others nearly invisible
           var eBatch = [];
           for (var i = 0; i < allEdgeIds.length; i++) {
             eBatch.push({
               id: allEdgeIds[i],
               color: connEdgeIds.indexOf(allEdgeIds[i]) !== -1
-                ? '#f1c40f' : {color: '#3498db', opacity: 0.12},
+                ? '#f1c40f' : {color: '#3498db', opacity: 0.03},
               width: connEdgeIds.indexOf(allEdgeIds[i]) !== -1 ? 3 : 1
             });
           }
           net.body.data.edges.update(eBatch);
 
-          // Nodes: connected enlarge 1.5x, labels only for clicked node
+          // Nodes: connected keep size + show labels, others dim to near-invisible
           var nBatch = [];
           for (var i = 0; i < allNodeIds.length; i++) {
             var d = net.body.data.nodes.get(allNodeIds[i]);
+            var isConnected = connNodeIds.indexOf(allNodeIds[i]) !== -1;
+            var isClicked = allNodeIds[i] === selId;
             nBatch.push({
               id: allNodeIds[i],
-              size: connNodeIds.indexOf(allNodeIds[i]) !== -1
-                ? d.baseSize * 1.5 : d.baseSize,
-              'font.size': allNodeIds[i] === selId ? d.labelSize : 0
+              size: isConnected || isClicked ? d.baseSize : d.baseSize * 0.08,
+              'font.size': isConnected || isClicked ? d.labelSize : 0
             });
           }
           net.body.data.nodes.update(nBatch);
