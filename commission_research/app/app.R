@@ -893,12 +893,14 @@ server <- function(input, output, session) {
             width = e$width %||% 1,
             title = e$title %||% "",
             dashes = isTRUE(e$dashes %||% FALSE),
+            entityValue = e$entityValue %||% "",
+            entityType = e$entityType %||% "",
             stringsAsFactors = FALSE
           )
       }))
     }
 
-    nodes_pos <- layout_concentric(build_nodes_df(top_nodes), build_edges_df(top_edges))
+    nodes_pos <- build_nodes_df(top_nodes)
     visNetwork(nodes = nodes_pos,
                edges = build_edges_df(top_edges)) |>
       visNodes(font = list(size = 14, color = "#FFFFFF", face = "Arial",
@@ -914,6 +916,7 @@ server <- function(input, output, session) {
       visEvents(selectNode = "function(params) {
         var net = this;
         var selId = String(params.nodes[0]);
+        Shiny.setInputValue('overview_selected', selId, {priority: 'event'});
         var connNodeIds = net.getConnectedNodes(selId).map(String);
         var connEdgeIds = net.getConnectedEdges(selId).map(String);
 
@@ -946,6 +949,7 @@ server <- function(input, output, session) {
         net.body.data.nodes.update(nBatch);
       }",
       deselectNode = "function() {
+        Shiny.setInputValue('overview_selected', null, {priority: 'event'});
         var net = this;
         var allNodeIds = net.body.data.nodes.getIds().map(String);
         var allEdgeIds = net.body.data.edges.getIds().map(String);
@@ -1259,8 +1263,6 @@ server <- function(input, output, session) {
     } else {
       data.frame(from = integer(), to = integer())
     }
-
-    nodes_df <- layout_concentric(nodes_df, edges_df)
     visNetwork(nodes_df, edges_df) |>
       visNodes(font = list(color = "#ecf0f1")) |>
       visEdges(smooth = FALSE, color = list(opacity = 0.4)) |>

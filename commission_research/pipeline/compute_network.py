@@ -372,15 +372,25 @@ def build_network():
             n["x"] = 0
             n["y"] = 0
 
-    # Entities: fixed on an outer circle, largest size
+    # Witnesses (person nodes): fixed on outer circle
+    person_nodes_ordered = [n for n in all_nodes if n.get("nodeType") == "person" and "Mkhwanazi" not in n["label"]]
+    n_persons = len(person_nodes_ordered)
+    outer_radius = 280
+    for i, n in enumerate(person_nodes_ordered):
+        angle = 2 * math.pi * i / n_persons
+        n["x"] = outer_radius * math.cos(angle)
+        n["y"] = outer_radius * math.sin(angle)
+        n["fixed"] = True
+
+    # Entities: fixed on inner circle (smaller radius)
     n_ents = len(entity_nodes)
-    ring_radius = 300
+    inner_radius = 120
     for i, n in enumerate(entity_nodes):
         angle = 2 * math.pi * i / n_ents
-        n["x"] = ring_radius * math.cos(angle)
-        n["y"] = ring_radius * math.sin(angle)
+        n["x"] = inner_radius * math.cos(angle)
+        n["y"] = inner_radius * math.sin(angle)
         n["fixed"] = True
-        n["size"] = 50
+        n["size"] = 35
 
     # Limit to top N nodes and their edges for the mini network
     sorted_nodes = sorted(all_nodes, key=lambda n: n.get("value", 0), reverse=True)
