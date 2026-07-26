@@ -858,15 +858,15 @@ server <- function(input, output, session) {
           }
         }
         is_mkhwanazi <- grepl("Mkhwanazi", n$label)
-        data.frame(
-          id = n$id,
-          label = n$label,
-          origLabel = n$label,
-          startLabel = if (is_mkhwanazi) n$label else "",
-          labelSize = (n$font$size %||% 10) * 1.1,
-          group = n$group,
-          value = n$value, size = n$size * 0.7,
-          baseSize = n$size * 0.7,
+          data.frame(
+            id = n$id,
+            label = n$label,
+            origLabel = n$label,
+            startLabel = if (is_mkhwanazi) n$label else "",
+            labelSize = (n$font$size %||% 10) * 1.1,
+            group = n$group,
+            size = n$size * 0.7,
+            baseSize = n$size * 0.7,
           fixed = n$fixed %||% FALSE,
           x = n$x %||% NA,
           y = n$y %||% NA,
@@ -887,17 +887,22 @@ server <- function(input, output, session) {
     }
     build_edges_df <- function(edges) {
       if (length(edges) == 0) return(data.frame(from = integer(), to = integer()))
-      do.call(rbind, lapply(edges, function(e) {
+      ef <- do.call(rbind, lapply(edges, function(e) {
           data.frame(
             from = e$from, to = e$to, value = e$value,
             width = e$width %||% 1,
             title = e$title %||% "",
             dashes = isTRUE(e$dashes %||% FALSE),
+            color.color = e$color$color %||% "#3498db",
+            color.opacity = e$color$opacity %||% 1,
             entityValue = e$entityValue %||% "",
             entityType = e$entityType %||% "",
             stringsAsFactors = FALSE
           )
       }))
+      # Sort: entity-to-entity edges (both IDs negative) last so they render on top
+      ef$is_ee <- ef$from < 0 & ef$to < 0
+      ef[order(ef$is_ee), !names(ef) %in% "is_ee"]
     }
 
     nodes_pos <- build_nodes_df(top_nodes)
@@ -905,8 +910,7 @@ server <- function(input, output, session) {
                edges = build_edges_df(top_edges)) |>
       visNodes(font = list(size = 14, color = "#FFFFFF", face = "Arial",
                strokeWidth = 3, strokeColor = "#0f0f1a")) |>
-      visEdges(smooth = FALSE,
-               color = list(color = "#3498db", opacity = 1)) |>
+      visEdges(smooth = FALSE) |>
       visInteraction(dragNodes = FALSE, dragView = TRUE, zoomView = TRUE) |>
       # TODO: Re-enable animated physics for interactive feel:
       # visPhysics(solver = "barnesHut", barnesHut = list(gravitationalConstant = -500,

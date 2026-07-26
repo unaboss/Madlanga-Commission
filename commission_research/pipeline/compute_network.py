@@ -239,7 +239,7 @@ def build_network():
             "title": f"Connected by {r['shared_wits']} shared witnesses",
             "width": 1,
             "dashes": True,
-            "color": {"color": "#555555", "opacity": 0.5},
+            "color": {"color": "#555555", "opacity": 1},
         })
 
     # ── 4b. Track entity diversity per person ──────────────────
