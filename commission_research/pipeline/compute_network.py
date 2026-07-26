@@ -186,6 +186,33 @@ def build_network():
     person_entity_counts = defaultdict(dict)
     edges = []
     max_edge_weight = max(r["cnt"] for r in edge_rows) if edge_rows else 1
+
+    # Colors for shading: heatmap-style blue gradient from pale to deep navy
+    HEAT_COLORS = [
+        (212, 230, 241),  # #D4E6F1 — very light (ice blue)
+        (133, 193, 233),  # #85C1E9 — light 
+        (52, 152, 219),   # #3498DB — medium (standard blue)
+        (41, 128, 185),   # #2980B9 — strong
+        (31, 97, 141),    # #1F618D — deep
+        (21, 67, 96),     # #154360 — very deep
+        (13, 71, 161),    # #0D47A1 — navy
+    ]
+
+    def mention_color(norm):
+        # Map 0..1 across the heatmap palette
+        if norm <= 0:
+            return f"#{HEAT_COLORS[0][0]:02x}{HEAT_COLORS[0][1]:02x}{HEAT_COLORS[0][2]:02x}"
+        n_steps = len(HEAT_COLORS) - 1
+        scaled = norm * n_steps
+        idx = min(int(scaled), n_steps - 1)
+        frac = scaled - idx
+        r1, g1, b1 = HEAT_COLORS[idx]
+        r2, g2, b2 = HEAT_COLORS[min(idx + 1, n_steps)]
+        r = int(r1 + (r2 - r1) * frac)
+        g = int(g1 + (g2 - g1) * frac)
+        b = int(b1 + (b2 - b1) * frac)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
     for r in edge_rows:
         pid = r["speaker_id"]
         eid = entity_map.get(r["entity_value"])
@@ -193,13 +220,14 @@ def build_network():
             continue
         cnt = r["cnt"]
         person_entity_counts[pid][r["entity_value"]] = cnt
-        thickness = 1 + (cnt / max_edge_weight) * 4
+        norm = cnt / max_edge_weight
         edges.append({
             "from": pid,
             "to": eid,
             "value": cnt,
             "title": f"Mentioned '{r['entity_value']}' {cnt} times",
-            "width": round(thickness, 1),
+            "width": 1.5,
+            "color": {"color": mention_color(norm), "opacity": 1},
             "entityValue": r["entity_value"],
             "entityType": r["entity_type"],
         })
@@ -428,20 +456,46 @@ def build_network():
             entity_angle_pairs[i] = (entity_angle_pairs[i][0], prev + min_gap)
 
     # Normalize angles to [-pi, pi]
-    max_angle = max(a for _, a in entity_angle_pairs)
-    if max_angle > math.pi:
-        excess = max_angle - math.pi
-        for i in range(len(entity_angle_pairs)):
-            entity_angle_pairs[i] = (entity_angle_pairs[i][0], entity_angle_pairs[i][1] - excess)
+    raw_angles = [a for _, a in entity_angle_pairs]
+    max_raw = max(raw_angles)
+    if max_raw > math.pi:
+        excess = max_raw - math.pi
+        entity_angle_pairs = [(eid, a - excess) for eid, a in entity_angle_pairs]
+
+    # Re-sort after normalization
+    entity_angle_pairs.sort(key=lambda x: x[1])
+
+    # Blend toward evenly-spaced positions to reduce clustering
+    n_ents = len(entity_angle_pairs)
+    blend = 0.25  # 25% toward even spacing
+    equal_angles = [2 * math.pi * i / n_ents for i in range(n_ents)]
+    # Rotate equal_angles to match the barycenter cluster center
+    cluster_center = sum(a for _, a in entity_angle_pairs) / n_ents
+    equal_offset = cluster_center - sum(equal_angles) / n_ents
+    equal_angles = [(a + equal_offset) for a in equal_angles]
+
+    blended = []
+    for i, (eid, angle) in enumerate(entity_angle_pairs):
+        new_angle = (1 - blend) * angle + blend * equal_angles[i]
+        blended.append((eid, new_angle))
+
+    # Enforce minimum gap again after blend (slightly tighter)
+    blended.sort(key=lambda x: x[1])
+    min_gap = math.radians(7)
+    for i in range(1, len(blended)):
+        prev = blended[i - 1][1]
+        curr = blended[i][1]
+        if curr - prev < min_gap:
+            blended[i] = (blended[i][0], prev + min_gap)
 
     # Write positions back
-    angle_map = {eid: angle for eid, angle in entity_angle_pairs}
+    angle_map = {eid: angle for eid, angle in blended}
     for n in entity_nodes:
         angle = angle_map.get(n["id"], 0)
         n["x"] = inner_radius * math.cos(angle)
         n["y"] = inner_radius * math.sin(angle)
         n["fixed"] = True
-        n["size"] = 35
+        n["size"] = 22
 
     # Limit to top N nodes and their edges for the mini network
     sorted_nodes = sorted(all_nodes, key=lambda n: n.get("value", 0), reverse=True)
