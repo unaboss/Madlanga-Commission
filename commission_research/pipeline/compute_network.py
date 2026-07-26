@@ -8,6 +8,7 @@ import sqlite3
 import json
 import re
 import math
+import random
 from pathlib import Path
 from collections import Counter, defaultdict
 
@@ -234,7 +235,7 @@ def build_network():
         edges.append({
             "from": from_eid,
             "to": to_eid,
-            "value": r["shared_wits"],
+            "value": max(1, int(math.sqrt(r["shared_wits"]))),  # thin, but still scales with count
             "title": f"Connected by {r['shared_wits']} shared witnesses",
             "width": 1,
             "dashes": True,
@@ -274,42 +275,71 @@ def build_network():
     for eid in all_eids - set(eids_ordered):
         eids_ordered.append(eid)
 
-    # Round-table optimization: re-order so entity-to-entity connections
-    # are adjacent (minimizes chords cutting through the center)
+    # Build entity-to-entity adjacency (shared-witness connections)
     ee_adj = defaultdict(lambda: defaultdict(int))
     for e in edges:
         if e.get("dashes"):
             ee_adj[e["from"]][e["to"]] = e["value"]
             ee_adj[e["to"]][e["from"]] = e["value"]
 
+    # Round-table optimization via simulated annealing:
+    # minimize total weighted circular distance between connected entities
+    def _circ_dist(i, j, n):
+        return min(abs(i - j), n - abs(i - j))
+
+    def _order_energy(order, adj):
+        n = len(order)
+        idx = {eid: i for i, eid in enumerate(order)}
+        total = 0
+        for eid, neighbors in adj.items():
+            i = idx[eid]
+            for neighbor, weight in neighbors.items():
+                j = idx.get(neighbor)
+                if j is not None:
+                    total += weight * _circ_dist(i, j, n)
+        return total
+
     if ee_adj:
-        ee_strength = {eid: sum(adj.values()) for eid, adj in ee_adj.items()}
-        # Start with strongest-connected entity, then greedily place
-        # each remaining entity at the position that maximizes adjacency
-        ordered_ee = sorted([e for e in eids_ordered if e in ee_strength],
-                            key=lambda x: -ee_strength[x])
-        new_order = [ordered_ee[0]]
-        remaining_ee = set(ordered_ee[1:])
-        while remaining_ee:
-            best = None; best_pos = -1; best_score = -1
-            for eid in list(remaining_ee):
-                for pos in range(len(new_order) + 1):
-                    left = new_order[pos - 1] if pos > 0 else new_order[-1]
-                    right = new_order[pos] if pos < len(new_order) else new_order[0]
-                    score = ee_adj[eid][left] + ee_adj[eid][right]
-                    if score > best_score:
-                        best_score, best, best_pos = score, eid, pos
-            if best is not None:
-                new_order.insert(best_pos, best)
-                remaining_ee.discard(best)
-            else:
-                break
-        # Preserve original order for entities with no ee connections
-        seen = set(new_order)
-        for eid in eids_ordered:
-            if eid not in seen:
-                new_order.append(eid)
-        eids_ordered = new_order
+        initial_energy = _order_energy(eids_ordered, ee_adj)
+        best_global_order = list(eids_ordered)
+        best_global_energy = initial_energy
+        n_ents = len(eids_ordered)
+
+        for restart in range(5):
+            order = list(eids_ordered)
+            random.shuffle(order)
+            cur_energy = _order_energy(order, ee_adj)
+            best_energy = cur_energy
+            best_order = list(order)
+            temp = cur_energy * 0.05
+            for _ in range(50000):
+                if temp < 1: break
+                if random.random() < 0.5:
+                    i, j = random.sample(range(n_ents), 2)
+                    order[i], order[j] = order[j], order[i]
+                else:
+                    i, j = sorted(random.sample(range(n_ents), 2))
+                    order[i:j] = reversed(order[i:j])
+                new_energy = _order_energy(order, ee_adj)
+                delta = new_energy - cur_energy
+                if delta < 0 or random.random() < math.exp(-delta / temp):
+                    cur_energy = new_energy
+                    if cur_energy < best_energy:
+                        best_energy = cur_energy
+                        best_order = list(order)
+                else:
+                    if random.random() < 0.5:
+                        order[i], order[j] = order[j], order[i]
+                    else:
+                        order[i:j] = reversed(order[i:j])
+                temp *= 0.9995
+            if best_energy < best_global_energy:
+                best_global_energy = best_energy
+                best_global_order = best_order
+
+        eids_ordered = best_global_order
+        if initial_energy > 0:
+            print(f"  Annealing (5 restarts): energy {initial_energy:.0f} -> {best_global_energy:.0f}  ({100 - best_global_energy/initial_energy*100:.1f}% reduction)")
 
     # Reorder entity_nodes to match
     eid_to_node = {n["id"]: n for n in entity_nodes}
