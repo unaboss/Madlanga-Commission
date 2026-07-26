@@ -871,7 +871,7 @@ server <- function(input, output, session) {
           x = n$x %||% NA,
           y = n$y %||% NA,
           shape = "dot",
-          font.size = if (is_mkhwanazi) (n$font$size %||% 10) * 1.1 else 0,
+          font.size = if (is_mkhwanazi) (n$font$size %||% 10) * 1.1 else 7,
           font.color = "#FFFFFF",
           font.face = "Arial",
           font.strokeWidth = 3,
@@ -1042,6 +1042,27 @@ server <- function(input, output, session) {
     ))
   })
 
+  # ── Department inference ────────────────────────────────────────
+  infer_department <- function(name, role) {
+    if (role == "commissioner") return("Commission Panel")
+    if (role == "evidence_leader") return("National Prosecuting Authority / Legal Counsel")
+    if (role == "witness_protected") return("Protected Witness")
+
+    if (grepl("Lt Gen|Maj Gen|Brigadier|Brig|Colonel|Lt Col|Captain|Major|Sergeant|Warrant|WO|General", name))
+      return("South African Police Service (SAPS)")
+    if (grepl("Adv\\b", name))
+      return("National Prosecuting Authority / Legal Counsel")
+    if (grepl("Minister", name))
+      return("Government / Cabinet")
+    if (grepl("Chief|Director|Deputy Chief|Assistant Director|Asst Dir", name))
+      return("Government Administration")
+    if (grepl("Dr\\.", name))
+      return("Medical / Forensics")
+    if (grepl("Mr\\.|Ms\\.|Mrs\\.", name))
+      return("Civilian / Private Sector")
+    return("Unknown")
+  }
+
   # ── Overview Detail Panel ───────────────────────────────────
   overview_detail_data <- reactive({
     sel <- input$overview_selected
@@ -1103,23 +1124,26 @@ server <- function(input, output, session) {
       )
     } else if (!is.null(nd)) {
       if (nd$nodeType == "person") {
-        # Show entities this person named
         ents <- NULL
         tryCatch({
           ents <- get_person_entities(conn, nd$id)
         }, error = function(e) {})
+        dept <- infer_department(nd$label, nd$role)
         tagList(
-          tags$p(tags$b("Role: "), nd$role, " | ",
-                 tags$b("Segments: "), format(nd$segments, big.mark = ","), " | ",
-                 tags$b("Days: "), nd$days),
-          tags$p(tags$b("Entities named in testimony:")),
+          h5(nd$label, style = "margin-bottom:2px;"),
+          p(tags$b("Department: "), dept, tags$br(),
+            tags$b("Role: "), nd$role, " | ",
+            tags$b("Rank: "), (nd$rank %||% ""), " | ",
+            tags$b("Days: "), nd$days),
+          tags$hr(style = "margin:8px 0;"),
+          p(tags$b("Entities accused of intervening in:"), style = "margin-bottom:4px;"),
           if (!is.null(ents) && nrow(ents) > 0)
-            tags$div(style = "display:flex; flex-wrap:wrap; gap:8px;",
-              lapply(seq_len(min(nrow(ents), 15)), function(i) {
+            tags$div(style = "display:flex; flex-wrap:wrap; gap:6px;",
+              lapply(seq_len(min(nrow(ents), 20)), function(i) {
                 tags$span(class = "entity-tag",
-                  paste0(ents[i,"entity_value"], " (", ents[i,"cnt"], "x, ", ents[i,"entity_type"], ")"))
+                  paste0(ents[i,"entity_value"], " (", ents[i,"cnt"], "x)"))
               }))
-          else tags$p("No entity data found", class = "text-muted")
+          else p("No entity data found", class = "text-muted")
         )
       } else {
         # Entity node — show witnesses who named it
@@ -1128,21 +1152,24 @@ server <- function(input, output, session) {
           wits <- get_entity_witnesses(conn, nd$label)
         }, error = function(e) {})
         tagList(
-          tags$p(tags$b("Type: "), nd$entityType, " | ",
-                 tags$b("Total mentions: "), nd$mentionCount, " | ",
-                 tags$b("Witnesses: "), nd$witnessCount),
-          tags$p(tags$b("Witnesses who named this:")),
+          h5(nd$label, style = "margin-bottom:2px;"),
+          p(tags$b("Type: "), nd$entityType, " | ",
+            tags$b("Total mentions: "), nd$mentionCount, " | ",
+            tags$b("Witnesses: "), nd$witnessCount),
+          tags$hr(style = "margin:8px 0;"),
+          p(tags$b("Witnesses who named this:"), style = "margin-bottom:4px;"),
           if (!is.null(wits) && nrow(wits) > 0)
-            tags$div(style = "display:flex; flex-wrap:wrap; gap:8px;",
-              lapply(seq_len(min(nrow(wits), 15)), function(i) {
+            tags$div(style = "display:flex; flex-wrap:wrap; gap:6px;",
+              lapply(seq_len(min(nrow(wits), 20)), function(i) {
+                dept <- infer_department(wits[i,"canonical_name"], wits[i,"role"])
                 tags$span(class = "entity-tag",
-                  paste0(wits[i,"canonical_name"], " (", wits[i,"cnt"], "x, ", wits[i,"role"], ")"))
+                  paste0(wits[i,"canonical_name"], " [", dept, "]"))
               }))
-          else tags$p("No witness data found", class = "text-muted")
+          else p("No witness data found", class = "text-muted")
         )
       }
     } else {
-      p("Click any person (green/red) to see what entities they named, or any entity (gold/blue/purple) to see who named it. Click an edge to see evidence.", class = "text-muted")
+      p("Click a witness (outer ring) to see their department and the entities they named. Click an entity (inner ring) to see which witnesses named it. Edges represent a witness mentioning an entity in their testimony — thickness is uniform, blue shade shows mention frequency.", class = "text-muted")
     }
   })
 
