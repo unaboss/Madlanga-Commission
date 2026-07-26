@@ -950,7 +950,7 @@ server <- function(input, output, session) {
             nBatch.push({
               id: allNodeIds[i],
               size: isConnected || isClicked ? d.baseSize : d.baseSize * 0.08,
-              'font.size': isConnected || isClicked ? d.labelSize : 0
+              'font.size': isConnected || isClicked ? 12 : 0
             });
           }
           net.body.data.nodes.update(nBatch);
@@ -978,8 +978,10 @@ server <- function(input, output, session) {
           var nBatch = [];
           for (var i = 0; i < allNodeIds.length; i++) {
             var d = net.body.data.nodes.get(allNodeIds[i]);
+            // Only Mkhwanazi gets a label by default (check label text)
+            var isMkhwanazi = d.label && d.label.indexOf('Mkhwanazi') !== -1;
             nBatch.push({id: allNodeIds[i], size: d.baseSize,
-              'font.size': d.startLabel ? d.labelSize : 0});
+              'font.size': isMkhwanazi ? 12 : 0});
           }
           net.body.data.nodes.update(nBatch);
 
