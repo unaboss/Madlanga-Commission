@@ -382,11 +382,62 @@ def build_network():
         n["y"] = outer_radius * math.sin(angle)
         n["fixed"] = True
 
-    # Entities: fixed on inner circle (smaller radius)
+    # Entities: barycenter placement — weighted by each connected witness's angle and mention count
     n_ents = len(entity_nodes)
     inner_radius = 120
-    for i, n in enumerate(entity_nodes):
-        angle = 2 * math.pi * i / n_ents
+
+    # Build a lookup: witness_id -> angle (from their outer-ring position)
+    witness_angles = {}
+    for n in all_nodes:
+        if n.get("nodeType") == "person" and n.get("x") is not None:
+            witness_angles[n["id"]] = math.atan2(n["y"], n["x"])
+
+    # Build a lookup: entity_id -> list of (witness_id, weight, angle)
+    entity_connections = {n["id"]: [] for n in entity_nodes}
+    for e in edges:
+        fid, tid = e.get("from"), e.get("to")
+        weight = e.get("value", 1)
+        # person -> entity edge
+        if fid > 0 and tid < 0 and tid in entity_connections:
+            angle = witness_angles.get(fid)
+            if angle is not None:
+                entity_connections[tid].append((fid, weight, angle))
+
+    # Compute barycenter angle for each entity
+    entity_angle_pairs = []
+    for n in entity_nodes:
+        eid = n["id"]
+        conns = entity_connections[eid]
+        if conns:
+            total_weight = sum(w for _, w, _ in conns)
+            avg_x = sum(w * math.cos(a) for _, w, a in conns) / total_weight
+            avg_y = sum(w * math.sin(a) for _, w, a in conns) / total_weight
+            angle = math.atan2(avg_y, avg_x)
+        else:
+            # No connections — keep original evenly-spaced angle
+            angle = 2 * math.pi * entity_nodes.index(n) / n_ents
+        entity_angle_pairs.append((eid, angle))
+
+    # Sort by angle and enforce minimum gap (8 degrees = ~0.14 rad)
+    entity_angle_pairs.sort(key=lambda x: x[1])
+    min_gap = math.radians(8)
+    for i in range(1, len(entity_angle_pairs)):
+        prev = entity_angle_pairs[i - 1][1]
+        curr = entity_angle_pairs[i][1]
+        if curr - prev < min_gap:
+            entity_angle_pairs[i] = (entity_angle_pairs[i][0], prev + min_gap)
+
+    # Normalize angles to [-pi, pi]
+    max_angle = max(a for _, a in entity_angle_pairs)
+    if max_angle > math.pi:
+        excess = max_angle - math.pi
+        for i in range(len(entity_angle_pairs)):
+            entity_angle_pairs[i] = (entity_angle_pairs[i][0], entity_angle_pairs[i][1] - excess)
+
+    # Write positions back
+    angle_map = {eid: angle for eid, angle in entity_angle_pairs}
+    for n in entity_nodes:
+        angle = angle_map.get(n["id"], 0)
         n["x"] = inner_radius * math.cos(angle)
         n["y"] = inner_radius * math.sin(angle)
         n["fixed"] = True
