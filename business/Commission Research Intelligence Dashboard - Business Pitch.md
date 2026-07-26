@@ -12,6 +12,8 @@ Its core purpose is to improve the **quality** of the investigation. By making e
 
 **This is not a replacement tool.** It does not reduce headcount, replace any evidence leader, or automate any judgment call. Every finding, every question, every legal conclusion still comes from the advocates. The dashboard simply eliminates the manual labour of finding, cross-referencing, and recalling information — giving each team member the equivalent of a research assistant with perfect memory of every word spoken across 147 hearing days. It makes a good team extraordinary by removing the administrative friction that slows them down.
 
+**The commission doesn't need more time — the value of the existing time needs to be improved.** Every hour spent reading PDFs is an hour not spent on investigative thinking. Every hearing day lost to late evidence bundles is a day the commission cannot recover. The dashboard compresses the document-processing friction that slows the investigation down — not by adding more people to the problem, but by making the research instant.
+
 The tool is already built, tested, and populated with all commission data to date. It requires no development lead time, no IT procurement, and no integration with government systems. It is ready to deploy immediately.
 
 ---
@@ -113,6 +115,18 @@ The dashboard's ability to instantly surface every reference to any entity acros
 
 In all of these cases, the dashboard **does not make a single legal or investigative decision.** Every question, every conclusion, every recommendation remains with the evidence leaders. The dashboard simply removes the friction of finding information — giving the team more time to think, question, and build a stronger case.
 
+### Journalist Workflow — The Dashboard as an Investigative Research Tool
+
+The same capabilities that serve the legal team also serve journalists covering the commission. The dashboard functions as an **investigative research platform** for beat reporters, investigative journalists, and data-driven newsrooms:
+
+- **Entity tracing across time:** A journalist following the "Big Five" cartel story can search once and see every witness who named it, every context in which it was mentioned, and every document that references it — across all 147 hearing days. What would take a researcher weeks of reading transcripts happens in seconds.
+- **Network graph as story map:** The interactive network graph visualises connections between witnesses and entities. A journalist spots patterns no single hearing covers: Witness A in March and Witness B in June both named the same entity, but their testimony was months apart. The connection exists only in the data — the graph surfaces it as a story lead.
+- **Contradiction detection as investigative angle:** When two witnesses give conflicting accounts about the same entity, the dashboard flags it. The journalist has a sourced story with Day:Line citations for both versions — no tip-off needed, just data.
+- **Data-backed reporting:** Every search result includes the hearing day, page number, and speaker. Every story point is verifiable against the public record. No anonymous sources, no off-the-record briefings — just the transcript.
+- **Beat advantage:** A journalist covering the commission full-time needs to track 100+ witnesses across 147 days across 23.8 million characters of transcript text. No human can hold that in memory. The dashboard makes it searchable, cross-referenced, and visual — giving the beat reporter investigative depth that would otherwise require a team of researchers.
+
+The dashboard does not replace the journalist's judgment. It replaces the weeks of manual transcript-reading that stands between a journalist and a story. What a data journalist can do with a team of researchers and months of preparation, a single journalist can do with the dashboard and an afternoon.
+
 ### Technical Architecture
 
 - **Language**: R/Shiny (fully portable)
@@ -162,45 +176,107 @@ The biggest cost is not billable hours. It is the investigative connections that
 
 > **NOTE TO SELF (not for client):** These are internal pricing notes. The pitch to the commission should focus on value delivered and budget fit. Pricing is discussed after demo.
 
-### Pricing Notes
+### Pricing Strategy
 
 The R100.7m "goods & services" budget line is the target. Within that, the sub-line for **consultants** and **legal services** is where this fits.
 
-The commission has already spent R123m of R147m as of April 2026, and additional funding has been requested for the extension to November 2026. The timing is favorable — they need tools to accelerate the remaining work.
+The commission has already spent R123m of R147m as of April 2026, and additional funding has been requested for the extension to November 2026.
 
-### Proposed Engagement Options
+**Pricing philosophy:** Low barrier during the commission (easy budget sign-off) → get them dependent on premium features → exponential growth post-commission.
 
-**Option A: Fixed-Price Deliverable**
-- The complete dashboard, deployed and configured with all data
-- 1-day training session for the legal team
-- Documentation and handover
-- Price range: R250,000 – R500,000
-- Invoice under "consulting services" or "legal research support"
+### The Incentive Ladder: Why They Pay More
 
-**Option B: Monthly Retainer (for the extension period, Aug–Nov 2026)**
-- Dashboard deployment + weekly data updates as new hearings are published
-- On-call support for evidence leaders
-- Custom entity/query development on request
-- Price range: R40,000 – R80,000/month
+The dashboard is designed so that each tier unlocks tools that directly **save hours of billable time** and **improve the quality of the investigation**. The more they use it, the more they need the premium features.
 
-**Option C: Daily Rate (if embedded with the legal team)**
-- On-site or remote as a research analyst / data specialist
-- Price range: R15,000 – R30,000/day
+| Pain Point | Starter | Professional (+R15k) | Enterprise (+R35k) |
+|---|---|---|---|
+| *"I need to compile this evidence into a printable brief for tomorrow"* | ❌ Manual copy-paste | ✅ **Evidence Bundle Export** — one-click HTML report | ✅ Same |
+| *"Which witnesses contradicted each other?"* | ❌ Manual cross-referencing | ❌ Manual | ✅ **Contradiction Engine** — auto-flagged, side-by-side |
+| *"Prep me for this witness — who are they, what did they say, who questioned them?"* | ❌ Manual research | ✅ **Witness Prep Pack** — one-click summary card | ✅ Same |
+| *"I need to find every mention of Medicare 24 across 147 days"* | ✅ Entity search | ✅ Same + exportable bundle | ✅ Same |
+| *"Show me all connections in the case"* | ✅ Network graph | ✅ Same | ✅ Same |
+| *"Compare what documents say vs what witnesses say"* | ✅ Evidence Compare | ✅ Same + printable bundle | ✅ Same |
 
-### Pricing Justification Notes (for negotiations)
+### The "Super Dictionary for Prosecutors" Vision
+
+Every practitioner (evidence leader, junior researcher, commissioner) should have the dashboard open as their **default research tool** — like a dictionary on a lawyer's desk, but for the entire commission record:
+
+- **Before a hearing:** Open the Witness Prep Pack → know everything about tomorrow's witness in 30 seconds
+- **During a hearing:** Spot a contradiction → open the Contradiction Engine → follow up immediately
+- **After a hearing:** Generate an Evidence Bundle → hand it to the final report team
+- **For the final report:** Every citation, every excerpt, every connection is one click away
+
+When the tool is embedded in every workflow, downgrading becomes unthinkable — it would mean going back to hours of manual PDF searching.
+
+### Subscription Tiers
+
+| Feature | Starter (R20k/mo) | Professional (R35k/mo) | Enterprise (R55k/mo) |
+|---|---|---|---|
+| Entity extraction & cross-referencing | ✅ | ✅ | ✅ |
+| Full-text search across all records | ✅ | ✅ | ✅ |
+| Network graph (witness-entity connections) | ✅ | ✅ | ✅ |
+| Timeline of hearings | ✅ | ✅ | ✅ |
+| Entity browser (16,000+ entities) | ✅ | ✅ | ✅ |
+| Story Map (parallel timelines) | ✅ | ✅ | ✅ |
+| Evidence Compare (documents vs testimony) | ✅ | ✅ | ✅ |
+| Dashboard (accusations, statistics) | ✅ | ✅ | ✅ |
+| Weekly data updates (new hearings) | ✅ | ✅ | ✅ |
+| **Evidence Bundle Export** (printable HTML reports) | ❌ | ✅ | ✅ |
+| **Witness Preparation Pack** (one-click witness summary) | ❌ | ✅ | ✅ |
+| **Contradiction Engine** (auto-flagged conflicts) | ❌ | ❌ | ✅ |
+| Priority support | ❌ | ✅ | ✅ |
+| Dedicated analyst / custom queries | ❌ | ❌ | ✅ |
+| Multi-user annotations | ❌ | ❌ | ✅ |
+
+### License & Payment Mechanics
+
+1. **Deployment:** Dashboard is installed on a commission machine (24-hour turnaround)
+2. **License key:** A `license.key` file in the app directory enables the software
+3. **Monthly renewal:** Each month, a new license key is emailed upon payment
+4. **Tier upgrades:** Upgrade anytime — new license key unlocks features immediately
+5. **Expiry:** If payment lapses, the app shows a blocking screen — no data is accessible
+6. **No internet required:** The app works fully offline. License validation is file-based.
+
+### Comparison Points for Negotiation
+
+| Metric | Starter | Professional | Enterprise |
+|---|---|---|---|
+| Monthly fee | **R20,000** | **R35,000** | **R55,000** |
+| Full legal team daily cost | R212k–R432k | R212k–R432k | R212k–R432k |
+| % of daily team cost | 5–9% | 8–17% | 13–26% |
+| Days of Chaskalson SC's time | ~1/3 day | ~1/2 day | ~1 day |
+| ROI | **200:1 – 530:1** | **115:1 – 305:1** | **75:1 – 195:1** |
+
+Every tier delivers **massive ROI**. The question is not whether they can afford it — it's which workflow bottlenecks they want to eliminate first.
+
+### The Upsell Path: Get Them Hooked on Starter, Sell Them Up
+
+| Phase | Action | Outcome |
+|---|---|---|
+| **Month 1** | Deploy Starter (R20k). They get entity search, network graph, evidence compare. | They see value immediately. |
+| **Month 2** | An evidence leader needs to compile a brief. They can't export — they copy-paste manually. | Pain point created. |
+| **Month 3** | Offer a free 2-week Professional trial. "Try the Evidence Bundle Export and Witness Prep Pack." | They see the time savings. |
+| **Month 4** | Convert to Professional (R35k). | Revenue +75%. |
+| **Month 5+** | The legal team starts using the tool for everything. They need contradiction detection for cross-examinations. | Upsell Enterprise (R55k). Revenue +175% from original. |
+
+### Post-Commission Continuity
+
+After the commission's mandate ends (November 2026), the data remains a valuable historical record. Continued access is available for:
+- **Final report drafting team:** Professional or Enterprise subscription (R35k–R55k/month)
+- **Media organizations:** Media research license (R10,000/month)
+- **Academic institutions:** Research access (R5,000/month)
+- **NPA / prosecutions:** Data handover package (one-off R75k + license)
+
+### Pricing Justification Notes
 
 **Comparison points:**
-- A single evidence leader at R40,000–R64,000/day costs more in 4–5 days than the entire dashboard
+- A single evidence leader at R40,000–R64,000/day costs more in 1 day than the dashboard costs for 2–3 months
 - The dashboard does work equivalent to 2–3 junior researchers full-time
 - The tool is already built — no development risk for the commission
 - Data pipeline is automated — new hearing days are ingested as they publish
 
-**Walk-away point:** R150,000 minimum for deployment. Below that, the value of the time spent negotiating exceeds the contract value.
-
-**Upsells after initial engagement:**
-- Ongoing data updates through November 2026
-- Custom network analysis reports for specific case files
-- Integration with the commission's final report drafting
+**Walk-away point:** R150,000 minimum total engagement. Below that, the value of the time spent negotiating exceeds the contract value.
+- Post-commission data hosting and archival access
 
 ---
 

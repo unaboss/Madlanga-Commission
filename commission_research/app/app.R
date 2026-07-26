@@ -889,7 +889,7 @@ server <- function(input, output, session) {
       if (length(edges) == 0) return(data.frame(from = integer(), to = integer()))
       ef <- do.call(rbind, lapply(edges, function(e) {
           data.frame(
-            from = e$from, to = e$to, value = e$value,
+            from = e$from, to = e$to,
             width = e$width %||% 1,
             title = e$title %||% "",
             dashes = isTRUE(e$dashes %||% FALSE),
@@ -917,67 +917,54 @@ server <- function(input, output, session) {
       #   springLength = 250, springConstant = 0.005, damping = 0.5),
       #   stabilization = list(iterations = 50))
       visPhysics(enabled = FALSE) |>
-      visEvents(selectNode = "function(params) {
+      visEvents(click = "function(params) {
         var net = this;
-        var selId = String(params.nodes[0]);
-        Shiny.setInputValue('overview_selected', selId, {priority: 'event'});
-        var connNodeIds = net.getConnectedNodes(selId).map(String);
-        var connEdgeIds = net.getConnectedEdges(selId).map(String);
+        if (params.nodes.length > 0) {
+          // ── Node clicked ──
+          var selId = String(params.nodes[0]);
+          Shiny.setInputValue('overview_selected', selId, {priority: 'event'});
+          var connNodeIds = net.getConnectedNodes(selId).map(String);
+          var connEdgeIds = net.getConnectedEdges(selId).map(String);
 
-        var allNodeIds = net.body.data.nodes.getIds().map(String);
-        var allEdgeIds = net.body.data.edges.getIds().map(String);
+          var allNodeIds = net.body.data.nodes.getIds().map(String);
+          var allEdgeIds = net.body.data.edges.getIds().map(String);
 
-        // Edges: connected yellow, others dimmed
-        var eBatch = [];
-        for (var i = 0; i < allEdgeIds.length; i++) {
-          eBatch.push({
-            id: allEdgeIds[i],
-            color: connEdgeIds.indexOf(allEdgeIds[i]) !== -1
-              ? '#f1c40f' : {color: '#3498db', opacity: 0.12},
-            width: connEdgeIds.indexOf(allEdgeIds[i]) !== -1 ? 3 : 1
-          });
-        }
-        net.body.data.edges.update(eBatch);
+          // Edges: connected yellow, others dimmed
+          var eBatch = [];
+          for (var i = 0; i < allEdgeIds.length; i++) {
+            eBatch.push({
+              id: allEdgeIds[i],
+              color: connEdgeIds.indexOf(allEdgeIds[i]) !== -1
+                ? '#f1c40f' : {color: '#3498db', opacity: 0.12},
+              width: connEdgeIds.indexOf(allEdgeIds[i]) !== -1 ? 3 : 1
+            });
+          }
+          net.body.data.edges.update(eBatch);
 
-        // Nodes: connected enlarge 1.5x, labels only for clicked node
-        var nBatch = [];
-        for (var i = 0; i < allNodeIds.length; i++) {
-          var d = net.body.data.nodes.get(allNodeIds[i]);
-          nBatch.push({
-            id: allNodeIds[i],
-            size: connNodeIds.indexOf(allNodeIds[i]) !== -1
-              ? d.baseSize * 1.5 : d.baseSize,
-            'font.size': allNodeIds[i] === selId ? d.labelSize : 0
-          });
-        }
-        net.body.data.nodes.update(nBatch);
-      }",
-      deselectNode = "function() {
-        Shiny.setInputValue('overview_selected', null, {priority: 'event'});
-        var net = this;
-        var allNodeIds = net.body.data.nodes.getIds().map(String);
-        var allEdgeIds = net.body.data.edges.getIds().map(String);
+          // Nodes: connected enlarge 1.5x, labels only for clicked node
+          var nBatch = [];
+          for (var i = 0; i < allNodeIds.length; i++) {
+            var d = net.body.data.nodes.get(allNodeIds[i]);
+            nBatch.push({
+              id: allNodeIds[i],
+              size: connNodeIds.indexOf(allNodeIds[i]) !== -1
+                ? d.baseSize * 1.5 : d.baseSize,
+              'font.size': allNodeIds[i] === selId ? d.labelSize : 0
+            });
+          }
+          net.body.data.nodes.update(nBatch);
 
-        var eBatch = [];
-        for (var i = 0; i < allEdgeIds.length; i++) {
-          eBatch.push({id: allEdgeIds[i], color: '#3498db', width: 1});
-        }
-        net.body.data.edges.update(eBatch);
+        } else if (params.edges.length > 0) {
+          // ── Edge clicked ──
+          var d = net.body.data.edges.get(params.edges[0]);
+          Shiny.setInputValue('overview_edge', {
+            from: String(d.from), to: String(d.to),
+            entityValue: d.entityValue || '',
+            entityType: d.entityType || ''
+          }, {priority: 'event'});
 
-        var nBatch = [];
-        for (var i = 0; i < allNodeIds.length; i++) {
-          var d = net.body.data.nodes.get(allNodeIds[i]);
-          nBatch.push({
-            id: allNodeIds[i],
-            size: d.baseSize,
-            'font.size': d.startLabel ? d.labelSize : 0
-          });
-        }
-        net.body.data.nodes.update(nBatch);
-      }",
-      click = "function(params) {
-        if (params.nodes.length === 0 && params.edges.length === 0) {
-          var net = this;
+        } else {
+          // ── Empty click (background) ── reset all
           var allNodeIds = net.body.data.nodes.getIds().map(String);
           var allEdgeIds = net.body.data.edges.getIds().map(String);
 
@@ -994,23 +981,9 @@ server <- function(input, output, session) {
               'font.size': d.startLabel ? d.labelSize : 0});
           }
           net.body.data.nodes.update(nBatch);
+
           Shiny.setInputValue('overview_selected', null, {priority: 'event'});
           Shiny.setInputValue('overview_edge', null, {priority: 'event'});
-        }
-      }",
-      select = "function(params) {
-        if (params.nodes.length > 0) {
-          Shiny.setInputValue('overview_selected', params.nodes[0], {priority: 'event'});
-        }
-      }",
-      selectEdge = "function(params) {
-        if (params.edges.length > 0) {
-          var d = this.body.data.edges.get(params.edges[0]);
-          Shiny.setInputValue('overview_edge', {
-            from: String(d.from), to: String(d.to),
-            entityValue: d.entityValue || '',
-            entityType: d.entityType || ''
-          }, {priority: 'event'});
         }
       }")
   })
@@ -1252,7 +1225,7 @@ server <- function(input, output, session) {
     edges_df <- if (length(fe) > 0) {
       do.call(rbind, lapply(fe, function(e) {
         if (edge_type == "all") {
-          data.frame(from = e$from, to = e$to, value = e$value,
+          data.frame(from = e$from, to = e$to,
                      width = e$width %||% 1, title = e$title %||% "",
                      dashes = isTRUE(e$dashes %||% FALSE),
                      stringsAsFactors = FALSE)

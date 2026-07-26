@@ -192,4 +192,44 @@ A **weekly story package** delivered every Monday. Each package gives a journali
 
 ---
 
+## 9. How the Dashboard Works as an Investigative Research Tool
+
+Beyond delivering story packages, the dashboard itself functions as a **full investigative research platform** for journalists. Here is how a beat reporter or investigations journalist uses it to find stories that would otherwise require weeks of transcript-reading:
+
+### Entity Tracing — Following a Lead Across 147 Days
+
+A journalist hears "Medicare 24" mentioned in a hearing. Instead of manually searching individual PDF transcripts, they type the name into the Entity Browser. The dashboard returns **every mention across all 147 hearing days** — who said it, when, and the exact context. The journalist sees patterns no single day of testimony reveals: Medicare 24 was named by Witness A in October, Witness B in January, and Witness C in April. None of these witnesses appeared on the same day, but the dashboard connects them through the entity they all named.
+
+**Story lead:** A single entity connected across months of testimony by different witnesses — none of whom knew what the others said. The dashboard surfaces the connection; the journalist writes the story.
+
+### Network Graph — Visual Investigation
+
+The interactive network graph maps every witness against every entity they named. Bigger nodes = more mentions. Closer nodes = more connections. A journalist exploring the graph sees:
+
+- Which witnesses named the most entities (potential key sources)
+- Which entities appear across the widest range of testimony (potential systemic issues)
+- Which witnesses are isolated from the main network (potential outliers with unique information)
+
+**Story lead:** A witness who named entities no one else mentioned — they have information no other witness corroborated. That is either a unique lead or a potential contradiction worth investigating.
+
+### Contradiction Detection — Sourced Investigative Angles
+
+When two witnesses give conflicting accounts of the same entity, the dashboard flags it — with Day:Line citations for both versions. The journalist does not need a whistleblower or a leaked document. The contradiction is in the public record; the dashboard just makes it findable.
+
+**Story lead:** *"Witness A told the commission X in March. Witness B told the commission Y in June. The commission's documents say Z. Who is telling the truth?"* Every claim sourced, every citation verifiable.
+
+### Speed — From Question to Story
+
+| Research Task | Manual Time | With Dashboard |
+|--------------|-------------|----------------|
+| Find every mention of an entity across 147 days | 4–8 hours of PDF searching | 10 seconds |
+| Cross-reference a witness's testimony against documents | 3–6 hours | 2 minutes |
+| Find potential contradictions between witnesses | 2–4 hours per pair | Instant |
+| Map the network of who said what about whom | 8–16 hours one-off | Built automatically |
+| Compile a sourced brief on a topic | 4–8 hours | 5 minutes |
+
+The journalist who covers the commission with the dashboard does not just work faster — they **find stories that would otherwise remain hidden** in the 23.8 million characters of transcript text that no single person can read and remember.
+
+---
+
 *Internal pitch document. Pricing is negotiated per outlet; these are guideline figures based on the data intelligence value provided.*

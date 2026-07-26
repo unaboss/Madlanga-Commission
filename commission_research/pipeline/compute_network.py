@@ -187,31 +187,30 @@ def build_network():
     edges = []
     max_edge_weight = max(r["cnt"] for r in edge_rows) if edge_rows else 1
 
-    # Colors for shading: heatmap-style blue gradient from pale to deep navy
+    # Colors for shading: 4 distinct blue bands (crisp, not smooth gradient)
     HEAT_COLORS = [
-        (212, 230, 241),  # #D4E6F1 — very light (ice blue)
-        (133, 193, 233),  # #85C1E9 — light 
-        (52, 152, 219),   # #3498DB — medium (standard blue)
-        (41, 128, 185),   # #2980B9 — strong
-        (31, 97, 141),    # #1F618D — deep
-        (21, 67, 96),     # #154360 — very deep
-        (13, 71, 161),    # #0D47A1 — navy
+        (100, 181, 246),   # #64B5F6 — light
+        (66, 165, 245),    # #42A5F5 — medium-light
+        (30, 136, 229),    # #1E88E5 — strong
+        (13, 71, 161),     # #0D47A1 — navy
     ]
 
-    def mention_color(norm):
-        # Map 0..1 across the heatmap palette
-        if norm <= 0:
+    # Compute quartile thresholds from the actual mention count distribution
+    counts = sorted([r["cnt"] for r in edge_rows])
+    n = len(counts)
+    q25 = counts[n // 4]
+    q50 = counts[n // 2]
+    q75 = counts[3 * n // 4]
+
+    def mention_color(cnt):
+        if cnt <= q25:
             return f"#{HEAT_COLORS[0][0]:02x}{HEAT_COLORS[0][1]:02x}{HEAT_COLORS[0][2]:02x}"
-        n_steps = len(HEAT_COLORS) - 1
-        scaled = norm * n_steps
-        idx = min(int(scaled), n_steps - 1)
-        frac = scaled - idx
-        r1, g1, b1 = HEAT_COLORS[idx]
-        r2, g2, b2 = HEAT_COLORS[min(idx + 1, n_steps)]
-        r = int(r1 + (r2 - r1) * frac)
-        g = int(g1 + (g2 - g1) * frac)
-        b = int(b1 + (b2 - b1) * frac)
-        return f"#{r:02x}{g:02x}{b:02x}"
+        elif cnt <= q50:
+            return f"#{HEAT_COLORS[1][0]:02x}{HEAT_COLORS[1][1]:02x}{HEAT_COLORS[1][2]:02x}"
+        elif cnt <= q75:
+            return f"#{HEAT_COLORS[2][0]:02x}{HEAT_COLORS[2][1]:02x}{HEAT_COLORS[2][2]:02x}"
+        else:
+            return f"#{HEAT_COLORS[3][0]:02x}{HEAT_COLORS[3][1]:02x}{HEAT_COLORS[3][2]:02x}"
 
     for r in edge_rows:
         pid = r["speaker_id"]
@@ -220,14 +219,13 @@ def build_network():
             continue
         cnt = r["cnt"]
         person_entity_counts[pid][r["entity_value"]] = cnt
-        norm = cnt / max_edge_weight
         edges.append({
             "from": pid,
             "to": eid,
             "value": cnt,
             "title": f"Mentioned '{r['entity_value']}' {cnt} times",
-            "width": 1.5,
-            "color": {"color": mention_color(norm), "opacity": 1},
+            "width": 2,
+            "color": {"color": mention_color(cnt), "opacity": 1},
             "entityValue": r["entity_value"],
             "entityType": r["entity_type"],
         })
@@ -265,7 +263,7 @@ def build_network():
             "to": to_eid,
             "value": max(1, int(math.sqrt(r["shared_wits"]))),  # thin, but still scales with count
             "title": f"Connected by {r['shared_wits']} shared witnesses",
-            "width": 1,
+            "width": 3,
             "dashes": True,
             "color": {"color": "#555555", "opacity": 1},
         })
