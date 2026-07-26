@@ -871,7 +871,7 @@ server <- function(input, output, session) {
           x = n$x %||% NA,
           y = n$y %||% NA,
           shape = "dot",
-          font.size = if (is_mkhwanazi) (n$font$size %||% 10) * 1.1 else 7,
+          font.size = if (is_mkhwanazi) (n$font$size %||% 10) * 1.1 else 0,
           font.color = "#FFFFFF",
           font.face = "Arial",
           font.strokeWidth = 3,
