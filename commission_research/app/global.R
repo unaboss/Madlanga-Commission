@@ -43,7 +43,8 @@ get_db <- function() {
 network_cache <- NULL
 load_network <- function() {
   if (is.null(network_cache)) {
-    network_cache <<- fromJSON(NETWORK_PATH, simplifyDataFrame = FALSE)
+    txt <- paste(readLines(NETWORK_PATH, warn = FALSE), collapse = "\n")
+    network_cache <<- parse_json(txt)
   }
   network_cache
 }
@@ -51,7 +52,8 @@ load_network <- function() {
 attention_cache <- NULL
 load_attention <- function() {
   if (is.null(attention_cache)) {
-    attention_cache <<- fromJSON(ATTENTION_PATH, simplifyVector = TRUE)
+    txt <- paste(readLines(ATTENTION_PATH, warn = FALSE), collapse = "\n")
+    attention_cache <<- parse_json(txt)
   }
   attention_cache
 }
@@ -60,7 +62,8 @@ storymap_cache <- NULL
 load_story_map <- function() {
   if (is.null(storymap_cache)) {
     if (file.exists(STORYMAP_PATH)) {
-      storymap_cache <<- fromJSON(STORYMAP_PATH, simplifyDataFrame = FALSE)
+      txt <- paste(readLines(STORYMAP_PATH, warn = FALSE), collapse = "\n")
+      storymap_cache <<- parse_json(txt)
     } else {
       storymap_cache <<- list(
         commission_timeline = list(),
