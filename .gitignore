@@ -53,3 +53,7 @@ AR/
 
 # Working analysis of witnesses (kept out of the public repo)
 transcript_research/
+
+# Private business/pitch documents - kept local, not in the public repo
+business/
+

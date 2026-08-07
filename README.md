@@ -67,9 +67,16 @@ Rscript -e "shiny::runApp('app', launch.browser=TRUE)"
 
 ## Licensing
 
-The dashboard ships with a signed license system (`tools/generate_license.py`, `tools/license_check.r`). The HMAC signing secret is read from the `MADLANGA_LICENSE_SECRET` environment variable or a gitignored `.license_secret` file — never hardcoded.
+**Copyright (c) 2026 Unarine Masiavhula. All rights reserved.** This software is
+the exclusive property of Unarine Masiavhula and is licensed under a proprietary
+license — see [`LICENSE`](LICENSE). Use, modification, or redistribution requires
+a separate Commercial License from the copyright holder.
+
+The dashboard also ships with a signed license system (`tools/generate_license.py`,
+`tools/license_check.r`). The HMAC signing secret is read from the
+`MADLANGA_LICENSE_SECRET` environment variable or a gitignored `.license_secret`
+file — never hardcoded.
 
 ## Repository notes
 
 - Raw transcripts, statements and the SQLite databases are **not** committed (see `.gitignore`); run the downloader and pipeline to regenerate them.
-- The `business/` folder contains the business pitch, value analysis and media collaboration documents for the OpenEyeDataAnalyst offering.
