@@ -1,6 +1,6 @@
-# OpenEye Data Analyst — Business Setup Roadmap
+﻿# OpenEye Data Analyst â€” Business Setup Roadmap
 
-**Status: 🔴 Not started | 🟡 In progress | ✅ Complete**
+**Status: ðŸ”´ Not started | ðŸŸ¡ In progress | âœ… Complete**
 
 ---
 
@@ -10,10 +10,10 @@ Without these, no government payment can reach you.
 
 | # | Step | Where | Cost | Est. Time | Status |
 |---|---|---|---|---|---|
-| 1 | CIPC company registration | bzportal.cipc.co.za | ~R175 (sole prop) or R500+ (Pty) Ltd | 1–3 days | 🔴 |
-| 2 | SARS Tax Clearance Certificate | SARS eFiling | Free | 1–7 days | 🔴 |
-| 3 | CSD registration (supplier number) | csd.gov.za | Free | 1 day | 🔴 |
-| 4 | Business bank account | FNB / Capitec / Bank Zero | Free | 1–2 days | 🔴 |
+| 1 | CIPC company registration | bzportal.cipc.co.za | ~R175 (sole prop) or R500+ (Pty) Ltd | 1â€“3 days | ðŸ”´ |
+| 2 | SARS Tax Clearance Certificate | SARS eFiling | Free | 1â€“7 days | ðŸ”´ |
+| 3 | CSD registration (supplier number) | csd.gov.za | Free | 1 day | ðŸ”´ |
+| 4 | Business bank account | FNB / Capitec / Bank Zero | Free | 1â€“2 days | ðŸ”´ |
 
 ### Notes
 
@@ -29,16 +29,16 @@ Needed for RFQs, RFPs, and scoring points.
 
 | # | Step | Where | Cost | Est. Time | Status |
 |---|---|---|---|---|---|
-| 5 | B-BBEE certificate (Level 1) | Any SANAS-accredited agency | R1,500–R3,000 | 1–2 weeks | 🔴 |
-| 6 | Professional Indemnity insurance | Outsurance / Old Mutual / AON | R2k–R5k/year | 1–3 days | 🔴 |
-| 7 | POPIA compliance — register Info Officer | inforegulator.org.za | Free | 1 day | 🔴 |
-| 8 | Privacy policy + consent form | Draft yourself | Free | 1 day | 🔴 |
+| 5 | B-BBEE certificate (Level 1) | Any SANAS-accredited agency | R1,500â€“R3,000 | 1â€“2 weeks | ðŸ”´ |
+| 6 | Professional Indemnity insurance | Outsurance / Old Mutual / AON | R2kâ€“R5k/year | 1â€“3 days | ðŸ”´ |
+| 7 | POPIA compliance â€” register Info Officer | inforegulator.org.za | Free | 1 day | ðŸ”´ |
+| 8 | Privacy policy + consent form | Draft yourself | Free | 1 day | ðŸ”´ |
 
 ### Notes
 
 - **B-BBEE Level 1** (young black South African = 135% recognition) gives you maximum scoring points on government evaluations.
 - **PI insurance** is listed as a requirement in many government tender documents. Get a basic policy.
-- **POPIA**: You handle legal/procurement data → you need to be registered as an Information Officer. Also have a simple privacy policy on your website.
+- **POPIA**: You handle legal/procurement data â†’ you need to be registered as an Information Officer. Also have a simple privacy policy on your website.
 
 ---
 
@@ -48,10 +48,10 @@ Makes you look established before meetings.
 
 | # | Step | Where | Cost | Status |
 |---|---|---|---|---|
-| 9 | Write Service Level Agreement template | Draft yourself or adapt | Free | 🔴 |
-| 10 | Write NDA template | Draft yourself or adapt | Free | 🔴 |
-| 11 | Update LinkedIn — "Founder, OpenEye Data Analyst" | linkedin.com | Free | 🔴 |
-| 12 | Capability statement (1-pager PDF) | Canva / Google Docs | Free | 🔴 |
+| 9 | Write Service Level Agreement template | Draft yourself or adapt | Free | ðŸ”´ |
+| 10 | Write NDA template | Draft yourself or adapt | Free | ðŸ”´ |
+| 11 | Update LinkedIn â€” "Founder, OpenEye Data Analyst" | linkedin.com | Free | ðŸ”´ |
+| 12 | Capability statement (1-pager PDF) | Canva / Google Docs | Free | ðŸ”´ |
 
 ---
 
@@ -61,8 +61,8 @@ Makes you look established before meetings.
 |---|---|---|---|
 | 13 | Email Adv. Chaskalson SC (Chief Evidence Leader) | [contact via commission] | Outreach Tracker.md |
 | 14 | Email commission general enquiries (fallback) | enquiries@criminaljusticecommission.org.za | Outreach Tracker.md |
-| 15 | Media trial — Daily Maverick journalists | Caryn Dolley, Rebecca Davis, etc. | Daily Maverick Story Package Pitch.md |
-| 16 | Media partnership — SABC documentary | Commissioning Editor | Media Collaboration.md |
+| 15 | Media trial â€” Daily Maverick journalists | Caryn Dolley, Rebecca Davis, etc. | Daily Maverick Story Package Pitch.md |
+| 16 | Media partnership â€” SABC documentary | Commissioning Editor | Media Collaboration.md |
 
 ---
 

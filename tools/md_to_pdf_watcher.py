@@ -33,21 +33,14 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STYLE_PATH = PROJECT_ROOT / "tools" / "pdf_style.css"
 
 EXCLUDE_DIRS = {".git", "__pycache__", "node_modules", ".opencode", "dist",
-                ".oxlint", "madlanga_downloads", ".~lock.", "openeye-analyst"}
+                ".oxlint", "madlanga_downloads", ".~lock."}
 
 INCLUDE_GLOBS = ("*.md",)
 
-# Extra copy destinations: source (relative to root) -> list of dest dirs
-EXTRA_COPIES = {
-    "commission_research/research/Student Research Brief - Commission Workflow.md": ["."],
-    "business/Business Setup Roadmap.md": ["."],
-    "business/Daily Maverick Story Package Pitch.md": ["."],
-    "business/Media Collaboration - Video Series & News Partnerships.md": ["."],
-    "business/Outreach Tracker - Commission Research Dashboard.md": ["."],
-    "business/Commission Research Intelligence Dashboard - Business Pitch.md": ["."],
-    "business/Value Analysis - Utility vs Current Cost.md": ["."],
-    "business/Investigative Story Package - How It Works.md": ["."],
-}
+# Extra copy destinations: source (relative to root) -> list of dest dirs.
+# PDFs are generated next to their .md source; root-level copies are no
+# longer created (canonical docs live in business/ and research/).
+EXTRA_COPIES = {}
 
 # ── ToC placement marker ────────────────────────────────────
 # Pandoc can insert a table of contents via --toc. For docs that

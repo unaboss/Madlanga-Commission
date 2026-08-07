@@ -21,14 +21,15 @@ commission_research/data/commission_research.db
 commission_research/data/commission_research.db-shm
 commission_research/data/commission_research.db-wal
 commission_research/data/parsed/
+commission_research/data/institutional_analysis.db
+
+# Downloaded research documents
+commission_research/research/documents/
 commission_research/app/data/commission_research.db*
 commission_research/app/data/parsed/
 
 # RStudio connect
 rsconnect/
-
-# Embedded repo
-openeye-analyst/
 
 # OS
 Thumbs.db
@@ -37,3 +38,18 @@ Thumbs.db
 # Environment
 .env
 *.token
+.license_secret
+revoked_keys.json
+
+# Private session exports & conversation logs (contain API keys/tokens)
+session_exports/
+
+# Large third-party source PDFs (SAPS annual reports & performance plans)
+APP/
+AR/
+
+# Private backups of stripped personal-data files
+.private/
+
+# Working analysis of witnesses (kept out of the public repo)
+transcript_research/

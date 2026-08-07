@@ -214,6 +214,24 @@ def build_db():
     # ── Load entities ───────────────────────────────────────────
     print("Loading entities...")
     if INPUT_ENTITIES.exists():
+        # First pass: collect all statement author names that aren't yet in speaker_map
+        with open(INPUT_ENTITIES, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                e = json.loads(line)
+                if e.get("source") == "statement":
+                    spk = e.get("speaker", "")
+                    if spk and spk not in speaker_map:
+                        speaker_map[spk] = speaker_id_counter
+                        conn.execute(
+                            "INSERT INTO speakers (id, canonical_name, role) VALUES (?, ?, ?)",
+                            (speaker_id_counter, spk, "witness")
+                        )
+                        speaker_id_counter += 1
+
+        # Second pass: load entities with correct speaker mapping
         ent_batch = []
         with open(INPUT_ENTITIES, encoding="utf-8") as f:
             for line in f:

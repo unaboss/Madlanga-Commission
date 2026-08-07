@@ -871,7 +871,8 @@ server <- function(input, output, session) {
           x = n$x %||% NA,
           y = n$y %||% NA,
           shape = "dot",
-          font.size = if (is_mkhwanazi) (n$font$size %||% 10) * 1.1 else 0,
+          font.size = 12,
+          font.opacity = if (is_mkhwanazi) 1 else 0,
           font.color = "#FFFFFF",
           font.face = "Arial",
           font.strokeWidth = 3,
@@ -950,7 +951,7 @@ server <- function(input, output, session) {
             nBatch.push({
               id: allNodeIds[i],
               size: isConnected || isClicked ? d.baseSize : d.baseSize * 0.08,
-              'font.size': isConnected || isClicked ? 12 : 0
+              'font.opacity': isConnected || isClicked ? 1 : 0
             });
           }
           net.body.data.nodes.update(nBatch);
@@ -981,7 +982,7 @@ server <- function(input, output, session) {
             // Only Mkhwanazi gets a label by default (check label text)
             var isMkhwanazi = d.label && d.label.indexOf('Mkhwanazi') !== -1;
             nBatch.push({id: allNodeIds[i], size: d.baseSize,
-              'font.size': isMkhwanazi ? 12 : 0});
+              'font.opacity': isMkhwanazi ? 1 : 0});
           }
           net.body.data.nodes.update(nBatch);
 

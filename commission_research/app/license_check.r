@@ -10,8 +10,27 @@ LICENSE_FILE <- normalizePath(file.path(getwd(), "license.key"), mustWork = FALS
 # Set DEV_MODE = TRUE to skip license checks while prototyping
 DEV_MODE <- TRUE
 
-# Secret key for HMAC signatures (MUST match tools/generate_license.py)
-SECRET_KEY <- "[rotated-secret-removed]"
+# Secret key for HMAC signatures (MUST match tools/generate_license.py).
+# Read from env var, else from the gitignored .license_secret file at the project root.
+load_license_secret <- function() {
+  env_secret <- Sys.getenv("MADLANGA_LICENSE_SECRET", unset = "")
+  if (nzchar(env_secret)) {
+    return(env_secret)
+  }
+  candidates <- c(
+    file.path(getwd(), ".license_secret"),
+    file.path(getwd(), "..", ".license_secret"),
+    file.path(getwd(), "..", "..", ".license_secret")
+  )
+  for (p in candidates) {
+    if (file.exists(p)) {
+      return(trimws(readLines(p, n = 1, warn = FALSE)))
+    }
+  }
+  stop("License secret not configured. Set MADLANGA_LICENSE_SECRET or create .license_secret at the project root.")
+}
+
+SECRET_KEY <- load_license_secret()
 
 # Grace period in days after expiry before hard block
 GRACE_DAYS <- 14
