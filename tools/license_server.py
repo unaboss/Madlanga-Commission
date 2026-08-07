@@ -10,31 +10,14 @@ The app phones home to this endpoint for additional validation.
 import json
 import hmac
 import hashlib
-import os
 from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, request, jsonify
 
+from license_secret import load_secret
+
 app = Flask(__name__)
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-
-def load_secret() -> bytes:
-    env_secret = os.environ.get("MADLANGA_LICENSE_SECRET")
-    if env_secret:
-        return env_secret.encode()
-
-    secret_file = PROJECT_ROOT / ".license_secret"
-    if secret_file.exists():
-        return secret_file.read_text().strip().encode()
-
-    raise RuntimeError(
-        "License secret not configured. Set MADLANGA_LICENSE_SECRET or "
-        "create .license_secret at the project root."
-    )
-
 
 # MUST match SECRET_KEY in license_check.r
 SECRET_KEY = load_secret()
