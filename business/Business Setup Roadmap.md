@@ -59,8 +59,8 @@ Makes you look established before meetings.
 
 | # | Step | Who | Reference |
 |---|---|---|---|
-| 13 | Email Adv. Chaskalson SC (Chief Evidence Leader) | [contact via commission] | Outreach Tracker.md |
-| 14 | Email commission general enquiries (fallback) | enquiries@criminaljusticecommission.org.za | Outreach Tracker.md |
+| 13 | Email Adv. Chaskalson SC (Chief Evidence Leader) | [contact via commission] | _internal outreach plan_ |
+| 14 | Email commission general enquiries (fallback) | enquiries@criminaljusticecommission.org.za | _internal outreach plan_ |
 | 15 | Media trial â€” Daily Maverick journalists | Caryn Dolley, Rebecca Davis, etc. | Daily Maverick Story Package Pitch.md |
 | 16 | Media partnership â€” SABC documentary | Commissioning Editor | Media Collaboration.md |
 
