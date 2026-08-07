@@ -9,17 +9,36 @@ Usage:
 import json
 import hmac
 import hashlib
+import os
 import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# MUST match SECRET_KEY in commission_research/app/license_check.r
-SECRET_KEY = b"[rotated-secret-removed]"
+# MUST match SECRET_KEY in commission_research/app/license_check.r.
+# Read from env var, else from the gitignored .license_secret file at the project root.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def load_secret() -> bytes:
+    env_secret = os.environ.get("MADLANGA_LICENSE_SECRET")
+    if env_secret:
+        return env_secret.encode()
+
+    secret_file = PROJECT_ROOT / ".license_secret"
+    if secret_file.exists():
+        return secret_file.read_text().strip().encode()
+
+    raise RuntimeError(
+        "License secret not configured. Set MADLANGA_LICENSE_SECRET or "
+        "create .license_secret at the project root."
+    )
+
+
+SECRET_KEY = load_secret()
 
 # Paths relative to project root
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PIPELINE_DIR = PROJECT_ROOT / "commission_research" / "pipeline"
 DOWNLOADER = PROJECT_ROOT / "madlanga_downloader.py"
 APP_DATA_DIR = PROJECT_ROOT / "commission_research" / "app" / "data"
