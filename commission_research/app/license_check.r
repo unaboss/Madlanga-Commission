@@ -7,11 +7,14 @@ library(jsonlite)
 LICENSE_FILE <- normalizePath(file.path(getwd(), "license.key"), mustWork = FALSE)
 
 # ── CONFIGURATION ─────────────────────────────────────────────────────
-# Set DEV_MODE = TRUE to skip license checks while prototyping
-DEV_MODE <- TRUE
+# License checks are ON by default. Set MADLANGA_DEV_MODE=true (env var or
+# .Renviron) to skip them while prototyping locally. Never set it on a
+# customer deployment.
+DEV_MODE <- tolower(Sys.getenv("MADLANGA_DEV_MODE", unset = "false")) %in% c("1", "true", "yes")
 
 # Secret key for HMAC signatures (MUST match tools/generate_license.py).
-# Read from env var, else from the gitignored .license_secret file at the project root.
+# Read from env var, else from a gitignored .license_secret file in the app
+# directory or the project root. Returns "" when it is not configured.
 load_license_secret <- function() {
   env_secret <- Sys.getenv("MADLANGA_LICENSE_SECRET", unset = "")
   if (nzchar(env_secret)) {
@@ -27,42 +30,69 @@ load_license_secret <- function() {
       return(trimws(readLines(p, n = 1, warn = FALSE)))
     }
   }
-  stop("License secret not configured. Set MADLANGA_LICENSE_SECRET or create .license_secret at the project root.")
+  ""
 }
-
-SECRET_KEY <- load_license_secret()
 
 # Grace period in days after expiry before hard block
 GRACE_DAYS <- 14
 
-# Optional online validation server (set to "" to disable)
-VALIDATION_URL <- ""
+# Optional online validation server (tools/license_server.py), e.g.
+# https://licenses.example.com/api/check-license. Empty disables it.
+VALIDATION_URL <- Sys.getenv("MADLANGA_LICENSE_URL", unset = "")
+
+# Statuses that block access to the dashboard
+BLOCKING_STATUSES <- c("expired", "invalid", "revoked")
 # ─────────────────────────────────────────────────────────────────────
 
-validate_license <- function() {
+license_blocks_access <- function(lic) {
+  isTRUE(lic$status %in% BLOCKING_STATUSES)
+}
+
+license_signature <- function(secret, customer, tier, expiry, issued) {
+  hmac(key = secret, object = paste(customer, tier, expiry, issued, sep = "|"),
+       algo = "sha256")
+}
+
+validate_license <- function(license_file = LICENSE_FILE,
+                             secret = load_license_secret(),
+                             dev_mode = DEV_MODE,
+                             validation_url = VALIDATION_URL,
+                             today = Sys.Date()) {
+  if (isTRUE(dev_mode)) {
+    return(list(
+      status = "valid",
+      message = "Development mode — license check skipped",
+      customer = "Development",
+      tier = "enterprise",
+      expiry = NULL,
+      days_left = 365,
+      grace_left = GRACE_DAYS
+    ))
+  }
+
+  # Anything that fails below leaves the dashboard locked on the lowest tier
   result <- list(
-    status = "valid",
-    message = "Development mode — license check skipped",
-    customer = "Development",
-    tier = "enterprise",
+    status = "invalid",
+    message = "",
+    customer = "",
+    tier = "starter",
     expiry = NULL,
-    days_left = 365,
-    grace_left = GRACE_DAYS
+    days_left = 0,
+    grace_left = 0
   )
 
-  if (isTRUE(DEV_MODE)) {
+  if (!nzchar(secret)) {
+    result$message <- "License secret is not configured on this server."
     return(result)
   }
 
-  if (!file.exists(LICENSE_FILE)) {
-    result$status <- "invalid"
+  if (!file.exists(license_file)) {
     result$message <- "License file not found. Please activate your license."
     return(result)
   }
 
-  lic <- tryCatch(fromJSON(LICENSE_FILE), error = function(e) NULL)
+  lic <- tryCatch(fromJSON(license_file), error = function(e) NULL)
   if (is.null(lic) || is.null(lic$expiry) || is.null(lic$sig)) {
-    result$status <- "invalid"
     result$message <- "Invalid license file."
     return(result)
   }
@@ -72,13 +102,9 @@ validate_license <- function() {
     lic$tier <- "starter"
   }
 
-  expected <- hmac(
-    key = SECRET_KEY,
-    object = paste(lic$customer, lic$tier, lic$expiry, lic$issued %||% lic$expiry, sep = "|"),
-    algo = "sha256"
-  )
-  if (lic$sig != expected) {
-    result$status <- "invalid"
+  expected <- license_signature(secret, lic$customer, lic$tier, lic$expiry,
+                                lic$issued %||% lic$expiry)
+  if (!identical(lic$sig, expected)) {
     result$message <- "License signature invalid."
     return(result)
   }
@@ -86,7 +112,7 @@ validate_license <- function() {
   result$customer <- lic$customer
   result$tier <- lic$tier
   result$expiry <- as.Date(lic$expiry)
-  days_left <- as.numeric(result$expiry - Sys.Date())
+  days_left <- as.numeric(result$expiry - as.Date(today))
   result$days_left <- days_left
 
   if (days_left >= 0) {
@@ -105,15 +131,16 @@ validate_license <- function() {
     result$message <- "License expired. Contact mabek@madlangaresearch.co.za to renew."
   }
 
-  # Online phone-home check (fire-and-forget, doesn't block on network failure)
-  if (nzchar(VALIDATION_URL)) {
+  # Online revocation check. A network failure never blocks the dashboard;
+  # only an explicit 403 from the license server does.
+  if (nzchar(validation_url) && !license_blocks_access(result)) {
     tryCatch({
-      resp <- GET(VALIDATION_URL, query = list(
+      resp <- httr::GET(validation_url, query = list(
         key = lic$sig,
-        customer = URLencode(lic$customer)
-      ), timeout(3))
-      if (resp$status_code == 403) {
-        result$status <- "expired"
+        customer = lic$customer
+      ), httr::timeout(3))
+      if (httr::status_code(resp) == 403) {
+        result$status <- "revoked"
         result$message <- "License revoked. Please contact support."
       }
     }, error = function(e) {})
