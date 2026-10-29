@@ -18,8 +18,31 @@ from pathlib import Path
 
 from license_secret import load_secret
 
-SECRET_KEY = load_secret()
 VALID_TIERS = ("starter", "professional", "enterprise")
+
+
+def sign_license(secret: bytes, customer: str, tier: str, expiry: str, issued: str) -> str:
+    """HMAC-SHA256 over the payload app/license_check.r verifies."""
+    payload = f"{customer}|{tier}|{expiry}|{issued}"
+    return hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()
+
+
+def build_license(customer: str, tier: str = "starter", months: int = 1,
+                  secret: bytes | None = None, now: datetime | None = None) -> dict:
+    """Return a signed license dict for `customer`."""
+    if tier not in VALID_TIERS:
+        raise ValueError(f"Invalid tier '{tier}'. Choose from: {', '.join(VALID_TIERS)}")
+    secret = load_secret() if secret is None else secret
+    now = now or datetime.now()
+    issued = now.strftime("%Y-%m-%d")
+    expiry = (now + timedelta(days=30 * months)).strftime("%Y-%m-%d")
+    return {
+        "customer": customer,
+        "tier": tier,
+        "expiry": expiry,
+        "issued": issued,
+        "sig": sign_license(secret, customer, tier, expiry, issued),
+    }
 
 
 def generate_license(customer: str, tier: str = "starter", months: int = 1, output: str = "license.key"):
@@ -27,19 +50,8 @@ def generate_license(customer: str, tier: str = "starter", months: int = 1, outp
         print(f"ERROR: Invalid tier '{tier}'. Choose from: {', '.join(VALID_TIERS)}")
         return None
 
-    issued = datetime.now().strftime("%Y-%m-%d")
-    expiry = (datetime.now() + timedelta(days=30 * months)).strftime("%Y-%m-%d")
-
-    payload = f"{customer}|{tier}|{expiry}|{issued}"
-    sig = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()
-
-    license_data = {
-        "customer": customer,
-        "tier": tier,
-        "expiry": expiry,
-        "issued": issued,
-        "sig": sig,
-    }
+    license_data = build_license(customer, tier, months)
+    issued, expiry = license_data["issued"], license_data["expiry"]
 
     path = Path(output)
     path.write_text(json.dumps(license_data, indent=2))

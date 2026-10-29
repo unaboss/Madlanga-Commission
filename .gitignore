@@ -21,11 +21,13 @@ commission_research/data/commission_research.db
 commission_research/data/commission_research.db-shm
 commission_research/data/commission_research.db-wal
 commission_research/data/parsed/
-commission_research/data/institutional_analysis.db
+commission_research/data/institutional_analysis.db*
 
 # Downloaded research documents
 commission_research/research/documents/
 commission_research/app/data/commission_research.db*
+commission_research/app/data/institutional_analysis.db*
+commission_research/app/data/annotations.db*
 commission_research/app/data/parsed/
 
 # RStudio connect
@@ -37,9 +39,14 @@ Thumbs.db
 
 # Environment
 .env
+.Renviron
 *.token
 .license_secret
 revoked_keys.json
+
+# Customer license files are issued per deployment, never committed
+license.key
+update_package/
 
 # Private session exports & conversation logs (contain API keys/tokens)
 session_exports/

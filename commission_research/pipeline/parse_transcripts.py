@@ -2,7 +2,8 @@
 parse_transcripts.py — Parse all transcript .txt files into structured speaker-tagged segments.
 
 Produces: data/parsed/transcripts.jsonl
-  Each line: {"day": 2, "date": "2025-09-18", "speaker": "ADV SELLO SC", "text": "...", "page": 3, "line": 50}
+  Each line: {"day": 2, "date": "2025-09-18", "speaker": "ADV SELLO SC", "text": "...",
+               "page": 3, "line": 50, "line_start": 10, "page_end": 3, "line_end": 15}
 """
 
 import re
@@ -40,8 +41,29 @@ SKIP_PATTERNS = [
 ]
 
 
+def _page_markers_are_footers(lines: list[str]) -> bool:
+    """True when "Page X of Y" lines close a page (footer) rather than open it.
+
+    If any speaker text appears before the first page marker, the marker
+    must be a footer, so the lines after "Page X" belong to page X+1.
+    """
+    for raw_line in lines:
+        line = raw_line.strip()
+        if PAGE_PATTERN.match(line):
+            return False
+        if SPEAKER_PATTERN.match(line):
+            return True
+    return False
+
+
 def parse_transcript(filepath: Path) -> list[dict]:
-    """Parse a single transcript .txt file into structured segments."""
+    """Parse a single transcript .txt file into structured segments.
+
+    Each segment carries citation data: the page it starts on ("page"),
+    the page it ends on ("page_end"), and the line numbers within those
+    pages ("line_start", "line_end"), so it can be cited as
+    "Day 47, p.23, lines 10-15". "line" keeps the raw file line number.
+    """
     text = filepath.read_text(encoding="utf-8")
     lines = text.split("\n")
 
@@ -54,19 +76,41 @@ def parse_transcript(filepath: Path) -> list[dict]:
         day = int(m.group(1))
         date_str = m.group(2)
 
+    footers = _page_markers_are_footers(lines)
     segments = []
-    current_page = 0
+    current_page = 1 if footers else 0
+    page_line = 0          # content lines seen so far on the current page
     current_speaker = None
     speaker_buffer = []
+    seg_start = None       # (file_line, page, page_line) of the buffer's first line
+    seg_end = None         # (page, page_line) of the buffer's last line
+
+    def flush():
+        nonlocal speaker_buffer, seg_start, seg_end
+        if current_speaker and speaker_buffer:
+            segments.append({
+                "day": day,
+                "date": date_str,
+                "speaker": current_speaker,
+                "text": " ".join(speaker_buffer),
+                "page": seg_start[1],
+                "line": seg_start[0],
+                "line_start": seg_start[2],
+                "page_end": seg_end[0],
+                "line_end": seg_end[1],
+            })
+        speaker_buffer = []
+        seg_start = None
+        seg_end = None
 
     for line_num, raw_line in enumerate(lines, 1):
         line = raw_line.strip()
 
         # Track page numbers
-        pm = PAGE_PATTERN.match(line)
-        if pm:
-            parts = line.split()
-            current_page = int(parts[1])
+        if PAGE_PATTERN.match(line):
+            number = int(line.split()[1])
+            current_page = number + 1 if footers else number
+            page_line = 0
             continue
 
         # Skip header/footer lines
@@ -78,53 +122,28 @@ def parse_transcript(filepath: Path) -> list[dict]:
 
         if not line:
             # Empty line: flush speaker buffer
-            if current_speaker and speaker_buffer:
-                full_text = " ".join(speaker_buffer)
-                segments.append({
-                    "day": day,
-                    "date": date_str,
-                    "speaker": current_speaker,
-                    "text": full_text,
-                    "page": current_page,
-                    "line": line_num - len(speaker_buffer),
-                })
-                speaker_buffer = []
+            flush()
             continue
 
-        # Check for speaker label
+        page_line += 1
         sm = SPEAKER_PATTERN.match(line)
         if sm:
             # Flush previous speaker's buffer
-            if current_speaker and speaker_buffer:
-                full_text = " ".join(speaker_buffer)
-                segments.append({
-                    "day": day,
-                    "date": date_str,
-                    "speaker": current_speaker,
-                    "text": full_text,
-                    "page": current_page,
-                    "line": line_num - len(speaker_buffer),
-                })
-                speaker_buffer = []
-
+            flush()
             current_speaker = sm.group("speaker").strip()
             speaker_buffer.append(sm.group("text"))
-        else:
+        elif current_speaker:
             # Continuation line for current speaker
-            if current_speaker:
-                speaker_buffer.append(line)
+            speaker_buffer.append(line)
+        else:
+            continue
+
+        if seg_start is None:
+            seg_start = (line_num, current_page, page_line)
+        seg_end = (current_page, page_line)
 
     # Flush final buffer
-    if current_speaker and speaker_buffer:
-        full_text = " ".join(speaker_buffer)
-        segments.append({
-            "day": day,
-            "date": date_str,
-            "speaker": current_speaker,
-            "text": full_text,
-            "page": current_page,
-            "line": len(lines) - len(speaker_buffer),
-        })
+    flush()
 
     return segments
 

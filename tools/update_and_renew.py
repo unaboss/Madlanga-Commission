@@ -7,17 +7,12 @@ Usage:
 """
 
 import json
-import hmac
-import hashlib
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
 
-from license_secret import load_secret
-
-SECRET_KEY = load_secret()
+from generate_license import VALID_TIERS, build_license
 
 # Paths relative to project root
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -31,7 +26,9 @@ PIPELINE_SCRIPTS = [
     "build_db.py",
     "compute_network.py",
     "build_story_map.py",
+    "build_institutional_db.py",
 ]
+APP_DB_FILES = ["commission_research.db", "institutional_analysis.db"]
 
 
 def run_pipeline():
@@ -73,10 +70,11 @@ def run_pipeline():
     APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
     APP_WWW_DIR.mkdir(parents=True, exist_ok=True)
 
-    db_src = PROJECT_ROOT / "commission_research" / "data" / "commission_research.db"
-    if db_src.exists():
-        shutil.copy(str(db_src), str(APP_DATA_DIR / "commission_research.db"))
-        print(f"  Copied: commission_research.db")
+    for db_name in APP_DB_FILES:
+        db_src = PROJECT_ROOT / "commission_research" / "data" / db_name
+        if db_src.exists():
+            shutil.copy(str(db_src), str(APP_DATA_DIR / db_name))
+            print(f"  Copied: {db_name}")
 
     for fname in ["network_data.json", "story_map_data.json"]:
         src = PARSED_DIR / fname
@@ -87,42 +85,31 @@ def run_pipeline():
     print("  Pipeline complete.\n")
 
 
-def generate_license(customer: str, months: int = 1):
-    """Generate a signed license dict."""
-    issued = datetime.now().strftime("%Y-%m-%d")
-    expiry = (datetime.now() + timedelta(days=30 * months)).strftime("%Y-%m-%d")
-    payload = f"{customer}|{expiry}|{issued}"
-    sig = hmac.new(SECRET_KEY, payload.encode(), hashlib.sha256).hexdigest()
-    return {
-        "customer": customer,
-        "expiry": expiry,
-        "issued": issued,
-        "sig": sig,
-    }
-
-
-def package_update(output_dir: str = "update_package", customer: str = "Madlanga Commission", months: int = 1):
+def package_update(output_dir: str = "update_package", customer: str = "Madlanga Commission",
+                   months: int = 1, tier: str = "starter"):
     """Copy data files and generate a new license into a clean package."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
     # Copy data files
-    db_file = APP_DATA_DIR / "commission_research.db"
-    if db_file.exists():
-        shutil.copy(str(db_file), str(out / "commission_research.db"))
+    for db_name in APP_DB_FILES:
+        db_file = APP_DATA_DIR / db_name
+        if db_file.exists():
+            shutil.copy(str(db_file), str(out / db_name))
     for fname in ["network_data.json", "story_map_data.json"]:
         src = APP_WWW_DIR / fname
         if src.exists():
             shutil.copy(str(src), str(out / fname))
 
     # Generate and write license
-    lic = generate_license(customer, months)
+    lic = build_license(customer, tier, months)
     (out / "license.key").write_text(json.dumps(lic, indent=2))
 
     print("=" * 60)
     print("  UPDATE PACKAGE READY")
     print("=" * 60)
     print(f"  Customer: {customer}")
+    print(f"  Tier: {tier}")
     print(f"  License expires: {lic['expiry']}")
     print(f"  Package path: {out.resolve()}")
     print()
@@ -148,6 +135,12 @@ if __name__ == "__main__":
         help="Customer name for the license",
     )
     parser.add_argument(
+        "--tier",
+        choices=VALID_TIERS,
+        default="starter",
+        help="License tier (default: starter)",
+    )
+    parser.add_argument(
         "--months",
         type=int,
         default=1,
@@ -163,4 +156,4 @@ if __name__ == "__main__":
     if not args.skip_pipeline:
         run_pipeline()
 
-    package_update(args.output, args.customer, args.months)
+    package_update(args.output, args.customer, args.months, args.tier)

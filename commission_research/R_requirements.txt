@@ -10,3 +10,6 @@ stringr>=1.5
 visNetwork>=2.1
 reactable>=0.4
 dplyr>=1.1
+digest>=0.6
+jsonlite>=1.8
+httr>=1.4

@@ -85,6 +85,74 @@ layout_concentric <- function(nodes_df, edges_df,
   nodes_df
 }
 
+# ── Notes & flags form (module) ─────────────────────────────────
+# Attaches a shared note, or an "incorrect" flag, to whatever row the
+# user has selected. Everyone using this deployment sees the same notes.
+annotation_form_ui <- function(id) {
+  ns <- NS(id)
+  div(class = "annotation-form",
+    tags$b("Team notes"),
+    uiOutput(ns("existing")),
+    uiOutput(ns("author_field")),
+    textAreaInput(ns("note"), NULL, rows = 2, width = "100%",
+      placeholder = "Add a note for the team, or say what is wrong with this excerpt..."),
+    div(style = "display:flex; gap:8px; flex-wrap:wrap;",
+      actionButton(ns("save_note"), "Save note", icon = icon("sticky-note"),
+                   class = "btn-sm btn-primary"),
+      actionButton(ns("save_flag"), "Flag as incorrect", icon = icon("flag"),
+                   class = "btn-sm btn-outline-danger"))
+  )
+}
+
+annotation_form_server <- function(id, target, author, ann_con, annotations, ann_bump) {
+  moduleServer(id, function(input, output, session) {
+    output$author_field <- renderUI({
+      if (!is.null(session$user)) return(NULL)
+      textInput(session$ns("author"), NULL, value = isolate(author()),
+                placeholder = "Your name", width = "100%")
+    })
+    observeEvent(input$author, author(input$author), ignoreInit = TRUE)
+
+    save <- function(kind) {
+      t <- target()
+      req(t)
+      ok <- tryCatch({
+        add_annotation(ann_con, session$user %||% author(), kind, t$source,
+                       t$source_id, t$citation, t$speaker, t$excerpt, input$note)
+        TRUE
+      }, error = function(e) {
+        showNotification(conditionMessage(e), type = "error")
+        FALSE
+      })
+      if (ok) {
+        updateTextAreaInput(session, "note", value = "")
+        ann_bump(ann_bump() + 1)
+        showNotification(if (kind == "flag") "Flag saved. The whole team can see it on the Notes tab."
+                         else "Note saved.", type = "message")
+      }
+    }
+    observeEvent(input$save_note, save("note"))
+    observeEvent(input$save_flag, save("flag"))
+
+    output$existing <- renderUI({
+      t <- target()
+      req(t)
+      df <- annotations()
+      df <- df[df$source == t$source & !is.na(df$source_id) &
+               df$source_id == as.integer(t$source_id %||% NA), , drop = FALSE]
+      if (nrow(df) == 0) return(p("No notes yet.", class = "text-muted", style = "font-size:0.8rem;"))
+      tagList(lapply(seq_len(nrow(df)), function(i) {
+        r <- df[i, ]
+        div(class = paste0("annotation ", r$kind),
+          tags$small(class = "text-muted",
+            if (r$kind == "flag") tagList(icon("flag"), " Flagged incorrect") else icon("sticky-note"),
+            " \u2014 ", r$author, ", ", r$created_at),
+          div(r$note))
+      }))
+    })
+  })
+}
+
 # ── UI ──────────────────────────────────────────────────────────
 ui <- page_navbar(
   title = tags$span(
@@ -119,6 +187,13 @@ ui <- page_navbar(
       .navbar .dropdown-item { color: #ccc !important; }
       .navbar .dropdown-item:hover { background: #333 !important; color: #fff !important; }
       .navbar .dropdown-divider { border-color: #444 !important; }
+      mark.deny { background: #e74c3c; color: #fff; padding: 0 2px; }
+      mark.affirm { background: #27ae60; color: #fff; padding: 0 2px; }
+      .annotation-form { margin-top: 12px; padding-top: 10px; border-top: 1px solid #333; }
+      .annotation { font-size: 0.85rem; padding: 6px 8px; margin: 6px 0; border-radius: 4px;
+                    border-left: 3px solid #3498db; background: rgba(255,255,255,0.03); }
+      .annotation.flag { border-left-color: #e74c3c; }
+      .stance-col h6 { margin-bottom: 8px; }
     "))
   )),
 
@@ -135,7 +210,8 @@ ui <- page_navbar(
           div(style = "display:flex; justify-content:space-between; align-items:center;",
             actionButton("legend_btn", "Show Legend",
               class = "btn-sm btn-outline-secondary"),
-            tags$small(class = "text-muted", "Click a node or edge for details")
+            input_switch("overview_physics", "Live physics", value = FALSE),
+            tags$small(class = "text-muted", "Click a node or edge for details. Drag nodes to rearrange.")
           )
         )
       ),
@@ -179,6 +255,7 @@ ui <- page_navbar(
           selected = names(ROLE_COLORS)
         ),
         sliderInput("net_min_edges", "Min connections:", 0, 100, 0, step = 5),
+        input_switch("net_physics", "Live physics", value = TRUE),
         hr(),
         h6("Selected Node"),
         textOutput("net_debug"),
@@ -259,8 +336,10 @@ ui <- page_navbar(
       sidebar = sidebar(
         width = 300,
         textInput("search_q", NULL, placeholder = "Type search query..."),
-        dateInput("search_from", "From", value = NULL),
-        dateInput("search_to", "To", value = NULL),
+        # "From" must not default to today (value = NULL), which hid every earlier
+        # result; the server moves it to the first hearing date on load
+        dateInput("search_from", "From", value = "2025-08-15"),
+        dateInput("search_to", "To"),
         selectizeInput("search_spk", "Speaker", choices = NULL, multiple = TRUE,
                        options = list(placeholder = "Filter by speaker")),
         hr(),
@@ -274,8 +353,17 @@ ui <- page_navbar(
       ),
       card(
         full_screen = TRUE,
-        card_header(textOutput("search_header")),
+        card_header(
+          div(style = "display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;",
+            textOutput("search_header"),
+            downloadButton("search_citations", "Export citations (CSV)",
+                           class = "btn-sm btn-outline-secondary"))
+        ),
         card_body(reactableOutput("search_results"))
+      ),
+      card(
+        card_header(textOutput("search_detail_header")),
+        card_body(uiOutput("search_detail"), annotation_form_ui("search_notes"))
       )
     )
   ),
@@ -388,7 +476,7 @@ ui <- page_navbar(
       ),
       card(
         card_header(textOutput("ec_detail_header")),
-        card_body(uiOutput("ec_detail_panel"))
+        card_body(uiOutput("ec_detail_panel"), uiOutput("ec_notes_slot"))
       )
     )
   ),
@@ -400,12 +488,17 @@ ui <- page_navbar(
       sidebar = sidebar(
         width = 300,
         h6("Contradiction Detection"),
-        p("Entities mentioned by multiple witnesses. Review statements side by side to find contradictions.",
+        p("Flags entities where one witness affirms something and another denies it. ",
+          "Stance comes from wording such as \"I confirm\" or \"I deny\", so treat each flag as a lead to check against the transcript.",
           class = "text-muted", style = "font-size:0.85rem;"),
         hr(),
         h6("Filter"),
+        radioButtons("contradiction_show", NULL,
+          choices = c("Potential contradictions" = "conflicts",
+                      "All entities with 2+ witnesses" = "all"),
+          selected = "conflicts"),
         selectInput("contradiction_type", "Entity Type",
-          choices = c("All", "organization", "person", "location", "case_reference", "exhibit", "money", "date", "vehicle"),
+          choices = c("All", "organization", "location", "case_reference", "exhibit", "money", "date", "vehicle"),
           selected = "All"),
         sliderInput("contradiction_min_wit", "Min witnesses", 2, 20, 2, step = 1),
         hr(),
@@ -424,6 +517,51 @@ ui <- page_navbar(
           card_header(textOutput("contradiction_detail_header")),
           card_body(uiOutput("contradiction_detail"))
         )
+      )
+    )
+  ),
+
+  # ── Institutions ──────────────────────────────────────────────
+  nav_panel(
+    title = "Institutions",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 320,
+        h6("Institution"),
+        selectInput("inst_id", NULL, choices = NULL),
+        uiOutput("inst_summary"),
+        hr(),
+        h6("Research gaps"),
+        uiOutput("inst_gaps")
+      ),
+      uiOutput("inst_body")
+    )
+  ),
+
+  # ── Notes ─────────────────────────────────────────────────────
+  nav_panel(
+    title = "Notes",
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 280,
+        h6("Show"),
+        radioButtons("notes_kind", NULL,
+          choices = c("Everything" = "all", "Notes" = "note", "Flagged as incorrect" = "flag"),
+          selected = "all"),
+        hr(),
+        downloadButton("notes_download", "Download (CSV)", class = "btn-sm btn-outline-secondary"),
+        hr(),
+        actionButton("notes_delete", "Delete selected", icon = icon("trash"),
+                     class = "btn-sm btn-outline-danger", width = "100%"),
+        tags$small(class = "text-muted", "You can delete only notes you wrote."),
+        hr(),
+        tags$small(class = "text-muted",
+          "Add notes or flags from the Search and Evidence Compare tabs by selecting a row.")
+      ),
+      card(
+        full_screen = TRUE,
+        card_header(textOutput("notes_header")),
+        card_body(reactableOutput("notes_table"))
       )
     )
   ),
@@ -509,60 +647,82 @@ ui <- page_navbar(
 # ── Server ──────────────────────────────────────────────────────
 server <- function(input, output, session) {
 
+  # ── License ───────────────────────────────────────────────────
+  # Validated per session, so dropping in a renewed license.key and
+  # reloading is enough. A blocked license serves nothing but the notice.
+  LICENSE <- validate_license()
+
+  output$license_status <- renderUI({
+    if (LICENSE$status == "valid") {
+      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#27ae60;",
+        icon("check-circle"), " Licensed \u2014 ", LICENSE$expiry %||% "development")
+    } else if (LICENSE$status == "grace_period") {
+      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#f39c12;",
+        icon("exclamation-triangle"), " License expires in ", LICENSE$grace_left, " days")
+    } else {
+      label <- switch(LICENSE$status, expired = " License expired",
+                      revoked = " License revoked", " Unlicensed")
+      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#e74c3c;",
+        icon("lock"), label)
+    }
+  })
+
+  observeEvent(input$renew_check, {
+    lic <- validate_license()
+    if (!license_blocks_access(lic)) {
+      removeModal()
+      session$reload()
+    } else {
+      showNotification(
+        paste("Still locked:", lic$message,
+              "Ensure the new license.key file is in the app directory."),
+        type = "error", duration = 8
+      )
+    }
+  })
+
+  if (license_blocks_access(LICENSE)) {
+    title <- switch(LICENSE$status, expired = "License Expired",
+                    revoked = "License Revoked", "License Required")
+    showModal(modalDialog(
+      title = div(style = "color:#e74c3c;", icon("lock"), " ", title),
+      h4("Access to the Commission Research Dashboard has been blocked."),
+      p(LICENSE$message),
+      p(
+        "Contact ", tags$b("Mabek"),
+        " at ", tags$a(href = "mailto:mabek@madlangaresearch.co.za", "mabek@madlangaresearch.co.za"),
+        " to activate or renew."
+      ),
+      tags$hr(),
+      p("After renewing, place the new license.key file in the app directory and click below.",
+        class = "text-muted", style = "font-size:0.85rem;"),
+      footer = actionButton("renew_check", "Check for Updated License",
+        class = "btn-primary", icon = icon("refresh"),
+        style = "width:100%;"),
+      size = "m", easyClose = FALSE, fade = FALSE
+    ))
+    return(invisible())
+  }
+
   conn <- get_db()
   onStop(function() { dbDisconnect(conn) })
 
   net <- load_network()
   att <- load_attention()
 
-  # ── License status ────────────────────────────────────────────
-  output$license_status <- renderUI({
-    if (LICENSE$status == "valid") {
-      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#27ae60;",
-        icon("check-circle"), " Licensed — ", LICENSE$expiry)
-    } else if (LICENSE$status == "grace_period") {
-      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#f39c12;",
-        icon("exclamation-triangle"), " License expires in ", LICENSE$grace_left, " days")
-    } else {
-      div(style = "padding:4px 12px; font-size:0.75rem; white-space:nowrap; color:#e74c3c;",
-        icon("lock"), " License expired")
-    }
+  # ── Shared notes & flags ──────────────────────────────────────
+  ann_con <- get_annotations_db()
+  onStop(function() { dbDisconnect(ann_con) })
+  ann_bump <- reactiveVal(0)
+  ann_polled <- reactivePoll(5000, session,
+    checkFunc = function() annotations_version(ann_con),
+    valueFunc = function() TRUE)
+  annotations_all <- reactive({
+    ann_bump()
+    ann_polled()
+    get_annotations(ann_con)
   })
-
-  observe({
-    if (LICENSE$status == "expired") {
-      showModal(modalDialog(
-        title = div(style = "color:#e74c3c;", icon("lock"), " License Expired"),
-        h4("Access to the Commission Research Dashboard has been blocked."),
-        p("Your license has expired. To continue using the dashboard, please renew your subscription."),
-        p(
-          "Contact ", tags$b("Mabek"),
-          " at ", tags$a(href = "mailto:mabek@madlangaresearch.co.za", "mabek@madlangaresearch.co.za"),
-          " to renew."
-        ),
-        tags$hr(),
-        p("After renewing, place the new license.key file in the app directory and click below.",
-          class = "text-muted", style = "font-size:0.85rem;"),
-        footer = actionButton("renew_check", "Check for Updated License",
-          class = "btn-primary", icon = icon("refresh"),
-          style = "width:100%;"),
-        size = "m", easyClose = FALSE, fade = FALSE
-      ))
-    }
-  })
-
-  observeEvent(input$renew_check, {
-    lic <- validate_license()
-    if (lic$status != "expired") {
-      removeModal()
-      session$reload()
-    } else {
-      showNotification(
-        "License still expired. Ensure the new license.key file is in the app directory.",
-        type = "error", duration = 8
-      )
-    }
-  })
+  note_author <- reactiveVal("")
 
   # ── Overview Stats ───────────────────────────────────────────
   output$stat_hearings <- renderText({ net$stats$total_hearings })
@@ -867,7 +1027,8 @@ server <- function(input, output, session) {
             group = n$group,
             size = n$size * 0.7,
             baseSize = n$size * 0.7,
-          fixed = n$fixed %||% FALSE,
+          # Only the centre node stays pinned; the rest can be dragged
+          fixed = is_mkhwanazi,
           x = n$x %||% NA,
           y = n$y %||% NA,
           shape = "dot",
@@ -912,12 +1073,12 @@ server <- function(input, output, session) {
       visNodes(font = list(size = 14, color = "#FFFFFF", face = "Arial",
                strokeWidth = 3, strokeColor = "#0f0f1a")) |>
       visEdges(smooth = FALSE) |>
-      visInteraction(dragNodes = FALSE, dragView = TRUE, zoomView = TRUE) |>
-      # TODO: Re-enable animated physics for interactive feel:
-      # visPhysics(solver = "barnesHut", barnesHut = list(gravitationalConstant = -500,
-      #   springLength = 250, springConstant = 0.005, damping = 0.5),
-      #   stabilization = list(iterations = 50))
-      visPhysics(enabled = FALSE) |>
+      visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = TRUE) |>
+      # Starts static to keep the concentric layout; "Live physics" turns it on
+      visPhysics(enabled = isolate(isTRUE(input$overview_physics)), solver = "barnesHut",
+        barnesHut = list(gravitationalConstant = -500, springLength = 250,
+                         springConstant = 0.005, damping = 0.5),
+        stabilization = FALSE) |>
       visEvents(click = "function(params) {
         var net = this;
         if (params.nodes.length > 0) {
@@ -991,6 +1152,11 @@ server <- function(input, output, session) {
         }
       }")
   })
+
+  observeEvent(input$overview_physics, {
+    visNetworkProxy("overview_network") |>
+      visPhysics(enabled = isTRUE(input$overview_physics))
+  }, ignoreInit = TRUE)
 
   ent_expanded <- reactiveVal(FALSE)
 
@@ -1282,11 +1448,11 @@ server <- function(input, output, session) {
         dragNodes = TRUE, dragView = TRUE, zoomView = TRUE,
         navigationButtons = TRUE
       ) |>
-      # TODO: Re-enable animated physics for interactive feel:
-      # visPhysics(solver = "barnesHut", barnesHut = list(gravitationalConstant = -500,
-      #   springLength = 250, springConstant = 0.005, damping = 0.5),
-      #   stabilization = list(iterations = 50))
-      visPhysics(enabled = FALSE) |>
+      # Physics always lays the graph out; it then stays live unless the
+      # "Live physics" switch is off, in which case it freezes once stable.
+      visPhysics(solver = "barnesHut", barnesHut = list(gravitationalConstant = -500,
+        springLength = 250, springConstant = 0.005, damping = 0.5),
+        stabilization = list(iterations = 150)) |>
       visLayout(randomSeed = 42) |>
       visEvents(click = "function(data) {
         if (data.nodes.length > 0) {
@@ -1294,8 +1460,16 @@ server <- function(input, output, session) {
         } else {
           Shiny.setInputValue('net_selected', null, {priority: 'event'});
         }
+      }", stabilizationIterationsDone = "function() {
+        var live = document.getElementById('net_physics');
+        if (live && !live.checked) this.setOptions({physics: {enabled: false}});
       }")
   })
+
+  observeEvent(input$net_physics, {
+    visNetworkProxy("network_graph") |>
+      visPhysics(enabled = isTRUE(input$net_physics))
+  }, ignoreInit = TRUE)
 
   observeEvent(input$net_reset, {
     session$sendCustomMessage("reset_network", list())
@@ -1314,12 +1488,13 @@ server <- function(input, output, session) {
     }
 
     n <- min(att_n(), am[["nrow"]] %||% 0)
-    qs <- am[["questioners"]][1:n]
+    # parse_json() returns lists, so flatten before building the matrix
+    qs <- unlist(am[["questioners"]])[1:n]
 
     # Reconstruct matrix from flat data
-    mat <- matrix(am[["data"]], nrow = am[["nrow"]], ncol = am[["ncol"]], byrow = TRUE)
+    mat <- matrix(as.numeric(unlist(am[["data"]])), nrow = am[["nrow"]], ncol = am[["ncol"]], byrow = TRUE)
     mat <- mat[1:n, , drop = FALSE]
-    ws <- am[["witnesses"]]
+    ws <- unlist(am[["witnesses"]])
 
     # Only keep witnesses with at least one interaction
     col_sums <- colSums(mat)
@@ -1581,6 +1756,11 @@ server <- function(input, output, session) {
 
   # ── Search ───────────────────────────────────────────────────
   observe({
+    first_day <- suppressWarnings(min(as.Date(get_hearings(conn)$hearing_date), na.rm = TRUE))
+    if (is.finite(first_day)) updateDateInput(session, "search_from", value = first_day)
+  })
+
+  observe({
     spk <- get_speaker_stats(conn)
     choices <- setNames(spk$canonical_name, paste0(spk$canonical_name, " (", spk$role, ")"))
     updateSelectizeInput(session, "search_spk", choices = choices, server = TRUE)
@@ -1588,9 +1768,10 @@ server <- function(input, output, session) {
 
   sr <- reactive({
     req(input$search_q)
+    date_arg <- function(d) if (length(d) == 1 && !is.na(d)) as.character(d) else NULL
     search_fts(conn, input$search_q,
-      date_from = if (!is.null(input$search_from)) as.character(input$search_from) else NULL,
-      date_to   = if (!is.null(input$search_to))   as.character(input$search_to)   else NULL,
+      date_from = date_arg(input$search_from),
+      date_to   = date_arg(input$search_to),
       speaker   = if (length(input$search_spk) > 0) input$search_spk[1] else NULL)
   }) |> bindEvent(input$search_q, input$search_from, input$search_to, input$search_spk)
 
@@ -1603,17 +1784,67 @@ server <- function(input, output, session) {
     req(input$search_q)
     df <- sr()
     if (nrow(df) == 0) return(NULL)
-    reactable(df[, c("date", "speaker", "preview")],
+    reactable(df[, c("citation", "date", "speaker", "preview")],
       columns = list(
+        citation = colDef(name = "Citation", width = 190),
         date    = colDef(name = "Date", width = 100),
         speaker = colDef(name = "Speaker", width = 180),
         preview = colDef(name = "Text", minWidth = 350, html = TRUE)
       ),
       defaultPageSize = 20, compact = TRUE, bordered = TRUE,
+      selection = "single", onClick = "select",
       theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
-        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"))
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"),
+        rowSelectedStyle = list(backgroundColor = "#1a3a5c"))
     )
   })
+
+  search_selected <- reactive({
+    sel <- getReactableState("search_results", "selected")
+    if (is.null(sel) || is.null(input$search_q) || !nzchar(input$search_q)) return(NULL)
+    df <- sr()
+    if (sel > nrow(df)) return(NULL)
+    df[sel, ]
+  })
+
+  output$search_detail_header <- renderText({
+    r <- search_selected()
+    if (is.null(r)) return("Select a result to see the full excerpt and team notes")
+    paste0(r$citation, " \u2014 ", r$speaker)
+  })
+
+  output$search_detail <- renderUI({
+    r <- search_selected()
+    if (is.null(r)) return(p("Click a row above.", class = "text-muted"))
+    tagList(
+      tags$p(tags$b("Citation: "), tags$code(r$citation),
+             tags$span(class = "text-muted", style = "margin-left:8px;", r$date)),
+      tags$blockquote(style = "font-size:0.9rem; border-left:3px solid #3498db; padding-left:12px; margin:8px 0;",
+        r$text)
+    )
+  })
+
+  annotation_form_server("search_notes",
+    target = reactive({
+      r <- search_selected()
+      if (is.null(r)) return(NULL)
+      list(source = r$source, source_id = r$source_id, citation = r$citation,
+           speaker = r$speaker, excerpt = r$text)
+    }),
+    author = note_author, ann_con = ann_con,
+    annotations = annotations_all, ann_bump = ann_bump)
+
+  output$search_citations <- downloadHandler(
+    filename = function() paste0("citations_", Sys.Date(), ".csv"),
+    content = function(file) {
+      df <- if (!is.null(input$search_q) && nzchar(input$search_q)) sr() else NULL
+      out <- if (is.null(df) || nrow(df) == 0)
+        data.frame(citation = character(0), date = character(0),
+                   speaker = character(0), excerpt = character(0))
+        else citations_csv(df)
+      write.csv(out, file, row.names = FALSE, fileEncoding = "UTF-8")
+    }
+  )
 
   # ── Entities ─────────────────────────────────────────────────
   ent_data <- reactive({
@@ -1981,11 +2212,10 @@ server <- function(input, output, session) {
     df <- ec_wit()
     if (is.null(df) || nrow(df) == 0) return(NULL)
     df$ctx <- substr(df$context_text, 1, 200)
-    df$day_ref <- paste0("Day ", df$day_number)
-    reactable(df[, c("hearing_date", "day_ref", "speaker", "speaker_role", "ctx")],
+    reactable(df[, c("hearing_date", "citation", "speaker", "speaker_role", "ctx")],
       columns = list(
         hearing_date = colDef(name = "Date", width = 90),
-        day_ref      = colDef(name = "Day", width = 60),
+        citation     = colDef(name = "Citation", width = 150),
         speaker = colDef(name = "Witness", width = 160),
         speaker_role = colDef(name = "Role", width = 100),
         ctx = colDef(name = "Context", minWidth = 200)
@@ -2024,7 +2254,7 @@ server <- function(input, output, session) {
     } else if (!is.null(wit)) {
       tagList(
         tags$p(tags$b("Speaker: "), wit$speaker, " (", wit$speaker_role, ")"),
-        tags$p(tags$b("Date: "), wit$hearing_date, " | Day ", wit$day_number),
+        tags$p(tags$b("Date: "), wit$hearing_date, " | ", tags$code(wit$citation)),
         tags$p(tags$b("Entity: "), wit$entity_value, " (", wit$entity_type, ")"),
         tags$hr(),
         tags$b("Context:"),
@@ -2036,6 +2266,21 @@ server <- function(input, output, session) {
     }
   })
 
+  output$ec_notes_slot <- renderUI({
+    if (is.null(sel_ec_wit())) return(NULL)
+    annotation_form_ui("ec_notes")
+  })
+
+  annotation_form_server("ec_notes",
+    target = reactive({
+      w <- sel_ec_wit()
+      if (is.null(w)) return(NULL)
+      list(source = "entity", source_id = w$id, citation = w$citation,
+           speaker = w$speaker, excerpt = w$context_text)
+    }),
+    author = note_author, ann_con = ann_con,
+    annotations = annotations_all, ann_bump = ann_bump)
+
   # ── Premium: Evidence Bundle Export ────────────────────────────
   output$ec_bundle_button <- renderUI({
     req(input$ec_entity)
@@ -2046,24 +2291,33 @@ server <- function(input, output, session) {
           tags$strong("Professional"), " tier")
       )
     } else {
-      actionButton("generate_bundle", "Generate Evidence Bundle",
-        icon = icon("file-alt"), class = "btn-success btn-sm",
-        width = "100%")
+      tagList(
+        downloadButton("download_bundle", "Download Evidence Bundle",
+          icon = icon("file-alt"), class = "btn-success btn-sm", style = "width:100%;"),
+        tags$small(class = "text-muted",
+          "Opens as a web page. Use its Print / Save as PDF button for a PDF copy.")
+      )
     }
   })
 
-  observeEvent(input$generate_bundle, {
-    req(input$ec_entity)
-    html <- generate_bundle_html(conn, input$ec_entity, input$ec_type)
-    if (is.null(html)) {
-      showNotification("No data to generate bundle.", type = "warning")
-      return()
+  # Sent to the user's browser as a download, so it works on a hosted server
+  output$download_bundle <- downloadHandler(
+    filename = function() {
+      paste0("evidence_bundle_", gsub("[^A-Za-z0-9]+", "_", input$ec_entity %||% "entity"),
+             "_", Sys.Date(), ".html")
+    },
+    content = function(file) {
+      html <- if (LICENSE$tier == "starter") NULL
+              else generate_bundle_html(conn, input$ec_entity, input$ec_type)
+      if (is.null(html)) {
+        html <- paste0("<!DOCTYPE html><html><body><p>No evidence found for ",
+                       escape_html(input$ec_entity %||% ""), ".</p></body></html>")
+      }
+      con <- file(file, open = "w", encoding = "UTF-8")
+      on.exit(close(con))
+      writeLines(html, con)
     }
-    tmp <- file.path(tempdir(), paste0("evidence_bundle_", gsub("[^A-Za-z0-9]", "_", input$ec_entity), ".html"))
-    writeLines(html, tmp)
-    showNotification("Evidence bundle generated! Opening in browser...", type = "success", duration = 5)
-    browseURL(tmp)
-  })
+  )
 
   # ── Premium: Witness Preparation Pack ──────────────────────────
   output$witness_prep_pack <- renderUI({
@@ -2144,31 +2398,44 @@ server <- function(input, output, session) {
   })
 
   # ── Premium: Contradiction Engine ──────────────────────────────
-  contradiction_data <- reactive({
+  contradiction_all <- reactive({
     etype <- if (input$contradiction_type == "All") NULL else input$contradiction_type
-    get_contradiction_candidates(conn, min_witnesses = input$contradiction_min_wit)
+    find_contradictions(conn, min_witnesses = input$contradiction_min_wit, entity_type = etype)
+  }) |> bindCache(input$contradiction_type, input$contradiction_min_wit)
+
+  contradiction_data <- reactive({
+    df <- contradiction_all()
+    if (identical(input$contradiction_show, "conflicts"))
+      df <- df[df$conflict_pairs > 0, , drop = FALSE]
+    df
   })
 
   output$contradiction_list_header <- renderText({
     df <- contradiction_data()
-    if (is.null(df) || nrow(df) == 0) return("No entities with multiple witnesses")
-    paste0("Entities mentioned by 2+ witnesses (", nrow(df), " found)")
+    conflicts <- identical(input$contradiction_show, "conflicts")
+    if (is.null(df) || nrow(df) == 0)
+      return(if (conflicts) "No potential contradictions found" else "No entities with multiple witnesses")
+    if (conflicts) paste0("Potential contradictions (", nrow(df), " entities)")
+    else paste0("Entities mentioned by ", input$contradiction_min_wit, "+ witnesses (", nrow(df), " found)")
   })
 
   output$contradiction_list <- renderReactable({
     df <- contradiction_data()
     if (is.null(df) || nrow(df) == 0) return(NULL)
-    reactable(df, columns = list(
-      entity_value = colDef(name = "Entity", minWidth = 200),
+    reactable(df[, c("entity_value", "entity_type", "conflict_pairs", "witness_count", "total_mentions")],
+      columns = list(
+      entity_value = colDef(name = "Entity", minWidth = 180),
       entity_type = colDef(name = "Type", width = 100),
-      witness_count = colDef(name = "Witnesses", width = 90,
+      conflict_pairs = colDef(name = "Conflicts", width = 85,
         style = function(v) list(fontWeight = "bold",
-          color = if (v >= 5) "#e74c3c" else if (v >= 3) "#f39c12" else "#ecf0f1")),
-      total_mentions = colDef(name = "Mentions", width = 90)
+          color = if (v >= 3) "#e74c3c" else if (v >= 1) "#f39c12" else "#95a5a6")),
+      witness_count = colDef(name = "Witnesses", width = 85),
+      total_mentions = colDef(name = "Mentions", width = 85)
     ), defaultPageSize = 20, compact = TRUE, bordered = TRUE,
     selection = "single", onClick = "select",
     theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
-      borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+      borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"),
+      rowSelectedStyle = list(backgroundColor = "#1a3a5c")))
   })
 
   selected_contradiction <- reactive({
@@ -2191,38 +2458,202 @@ server <- function(input, output, session) {
     tagList(
       p(tags$b("Entity: "), sel$entity_value),
       p(tags$b("Type: "), sel$entity_type),
-      p(tags$b("Witnesses: "), sel$witness_count),
-      p(tags$b("Total mentions: "), sel$total_mentions)
+      p(tags$b("Witnesses: "), sel$witness_count, " | ", tags$b("Mentions: "), sel$total_mentions),
+      p(tags$b(style = "color:#27ae60;", "Affirming: "), if (nzchar(sel$affirming)) sel$affirming else "none"),
+      p(tags$b(style = "color:#e74c3c;", "Denying: "), if (nzchar(sel$denying)) sel$denying else "none")
     )
   })
 
   output$contradiction_detail <- renderUI({
     sel <- selected_contradiction()
-    if (is.null(sel)) return(p("Select an entity to see side-by-side witness statements.", class = "text-muted"))
+    if (is.null(sel)) return(p("Select an entity to see affirming and denying statements side by side.", class = "text-muted"))
 
     by_witness <- get_entity_by_witness(conn, sel$entity_value)
     if (is.null(by_witness) || nrow(by_witness) == 0) {
       return(p("No detailed data available.", class = "text-muted"))
     }
 
-    witnesses <- unique(by_witness$witness)
-    cards <- lapply(witnesses, function(w) {
-      w_data <- by_witness[by_witness$witness == w, ]
-      card(
-        card_header(span(style = "color:#e74c3c;font-weight:bold;", icon("user"), " ", w)),
-        card_body(
-          reactable(w_data[, c("hearing_date", "day_number", "context_text")], columns = list(
-            hearing_date = colDef(name = "Date", width = 100),
-            day_number = colDef(name = "Day", width = 60),
-            context_text = colDef(name = "Statement", minWidth = 350)
-          ), defaultPageSize = 5, compact = TRUE, bordered = TRUE,
-          theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
-            borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
-        )
+    stance_column <- function(stance, title, color) {
+      d <- by_witness[by_witness$stance == stance, , drop = FALSE]
+      div(class = "stance-col",
+        h6(style = paste0("color:", color, ";"), title, " (", nrow(d), ")"),
+        if (nrow(d) == 0) p("None", class = "text-muted")
+        else tagList(lapply(seq_len(min(nrow(d), 25)), function(i) {
+          r <- d[i, ]
+          div(class = "annotation", style = paste0("border-left-color:", color, ";"),
+            tags$small(class = "text-muted", tags$b(r$witness), " — ", r$citation),
+            div(HTML(highlight_stance(r$context_text))))
+        }))
       )
-    })
-    do.call(tagList, cards)
+    }
+
+    neutral <- sum(by_witness$stance == "neutral")
+    tagList(
+      layout_columns(col_widths = c(6, 6),
+        stance_column("affirms", "Affirming", "#27ae60"),
+        stance_column("denies", "Denying", "#e74c3c")),
+      if (neutral > 0) p(class = "text-muted", style = "font-size:0.8rem;",
+        neutral, " other mention(s) take no clear position.")
+    )
   })
+
+  # ── Institutions ──────────────────────────────────────────────
+  inst_con <- get_institutional_db()
+  if (!is.null(inst_con)) onStop(function() { dbDisconnect(inst_con) })
+  institutions <- if (is.null(inst_con)) NULL else get_institutions(inst_con)
+
+  observe({
+    if (is.null(institutions) || nrow(institutions) == 0) return()
+    updateSelectInput(session, "inst_id",
+      choices = setNames(institutions$id,
+                         paste0(institutions$abbreviation, " — ", institutions$department)))
+  })
+
+  selected_inst <- reactive({
+    req(institutions, input$inst_id)
+    institutions[institutions$id == as.integer(input$inst_id), , drop = FALSE]
+  })
+
+  output$inst_summary <- renderUI({
+    if (is.null(inst_con)) {
+      return(p("Institutional database not found. Run pipeline/build_institutional_db.py ",
+               "(or python pipeline/build_db.py institutions).", class = "text-muted"))
+    }
+    i <- selected_inst()
+    if (nrow(i) == 0) return(NULL)
+    tagList(
+      p(tags$b(i$department)),
+      p(tags$b("Jurisdiction: "), i$jurisdiction,
+        if (!is.na(i$parent)) tagList(tags$br(), tags$b("Part of: "), i$parent),
+        if (!is.na(i$governed_by) && !identical(i$governed_by, i$parent))
+          tagList(tags$br(), tags$b("Governed by: "), i$governed_by),
+        tags$br(), tags$b("Budget: "),
+        if (is.na(i$budget)) "not recorded" else paste0("R", format(i$budget / 1e9, nsmall = 1, digits = 3), " billion")),
+      if (!is.na(i$notes)) p(class = "text-muted", style = "font-size:0.85rem;", i$notes)
+    )
+  })
+
+  output$inst_gaps <- renderUI({
+    req(inst_con)
+    gaps <- get_research_gaps(inst_con, as.integer(input$inst_id))
+    if (length(gaps) == 0) return(p("Nothing missing.", class = "text-success"))
+    tags$ul(style = "font-size:0.85rem; padding-left:18px;", lapply(gaps, tags$li))
+  })
+
+  inst_table <- function(df, columns) {
+    if (is.null(df) || nrow(df) == 0) return(p("No records yet.", class = "text-muted"))
+    reactable(df[, names(columns), drop = FALSE], columns = columns,
+      defaultPageSize = 8, compact = TRUE, bordered = TRUE, wrap = TRUE,
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e")))
+  }
+
+  output$inst_body <- renderUI({
+    req(inst_con)
+    id <- as.integer(input$inst_id)
+    req(!is.na(id))
+    pos <- get_institution_positions(inst_con, id)
+    if (nrow(pos) > 0) {
+      pos$role <- ifelse(pos$is_accounting_officer == 1, "Accounting officer",
+                    ifelse(pos$is_cfo == 1, "CFO", ""))
+      pos$tenure <- paste0(pos$start_date %||% "?", " – ", ifelse(is.na(pos$end_date), "present", pos$end_date))
+    }
+    aud <- get_institution_audits(inst_con, id)
+    if (nrow(aud) > 0) aud$audit_opinion <- tools::toTitleCase(gsub("_", " ", aud$audit_opinion))
+    tagList(
+      card(card_header("Leadership"), card_body(inst_table(pos, list(
+        full_name = colDef(name = "Person", minWidth = 160),
+        title = colDef(name = "Position", minWidth = 180),
+        role = colDef(name = "Budget role", width = 130),
+        tenure = colDef(name = "Tenure", width = 150),
+        source = colDef(name = "Source", minWidth = 160))))),
+      layout_columns(col_widths = c(6, 6),
+        card(card_header("AGSA audit outcomes"), card_body(inst_table(aud, list(
+          financial_year = colDef(name = "Year", width = 80),
+          audit_opinion = colDef(name = "Opinion", width = 150),
+          material_irregularities = colDef(name = "Findings", minWidth = 180),
+          source = colDef(name = "Source", minWidth = 140))))),
+        card(card_header("Testimony about this institution"), card_body(inst_table(
+          get_institution_witness_topics(inst_con, id), list(
+          witness = colDef(name = "Witness", minWidth = 150),
+          day_numbers = colDef(name = "Days", width = 80),
+          key_topics = colDef(name = "Topics", minWidth = 200),
+          sentiment = colDef(name = "Stance", width = 90)))))
+      ),
+      card(card_header("Allegations"), card_body(inst_table(
+        get_institution_allegations(inst_con, id), list(
+        severity = colDef(name = "Severity", width = 85),
+        witness = colDef(name = "Witness", minWidth = 140),
+        summary = colDef(name = "Allegation", minWidth = 260),
+        day_number = colDef(name = "Day", width = 60),
+        corroborated_by = colDef(name = "Corroborated by", minWidth = 140))))),
+      card(card_header("Conflicts of interest"), card_body(inst_table(
+        get_institution_conflicts(inst_con, id), list(
+        severity = colDef(name = "Severity", width = 85),
+        title = colDef(name = "Conflict", minWidth = 220),
+        category = colDef(name = "Type", width = 100),
+        detail = colDef(name = "Detail", minWidth = 260),
+        source = colDef(name = "Source", minWidth = 140)))))
+    )
+  })
+
+  # ── Notes ─────────────────────────────────────────────────────
+  notes_view <- reactive({
+    df <- annotations_all()
+    if (!identical(input$notes_kind, "all")) df <- df[df$kind == input$notes_kind, , drop = FALSE]
+    df
+  })
+
+  output$notes_header <- renderText({
+    df <- notes_view()
+    flags <- sum(df$kind == "flag")
+    paste0(nrow(df), " team note(s)", if (flags > 0) paste0(", ", flags, " flagged as incorrect") else "")
+  })
+
+  output$notes_table <- renderReactable({
+    df <- notes_view()
+    if (nrow(df) == 0) return(NULL)
+    df$type <- ifelse(df$kind == "flag", "⚠ Incorrect", "Note")
+    reactable(df[, c("created_at", "author", "type", "citation", "speaker", "note", "excerpt")],
+      columns = list(
+        created_at = colDef(name = "When", width = 140),
+        author = colDef(name = "By", width = 120),
+        type = colDef(name = "Type", width = 100,
+          style = function(v) if (grepl("Incorrect", v)) list(color = "#e74c3c", fontWeight = "bold") else NULL),
+        citation = colDef(name = "Citation", width = 170),
+        speaker = colDef(name = "Speaker", width = 140),
+        note = colDef(name = "Note", minWidth = 220),
+        excerpt = colDef(name = "Excerpt", minWidth = 220,
+          cell = function(v) substr(v, 1, 160))
+      ), defaultPageSize = 20, compact = TRUE, bordered = TRUE, wrap = TRUE,
+      selection = "single", onClick = "select",
+      theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
+        borderColor = "#2c3e50", headerStyle = list(background = "#1a1a2e"),
+        rowSelectedStyle = list(backgroundColor = "#1a3a5c")))
+  })
+
+  observeEvent(input$notes_delete, {
+    sel <- getReactableState("notes_table", "selected")
+    df <- notes_view()
+    if (is.null(sel) || sel > nrow(df)) {
+      showNotification("Select a note first.", type = "warning")
+      return()
+    }
+    me <- session$user %||% note_author()
+    if (delete_annotation(ann_con, df$id[sel], me)) {
+      ann_bump(ann_bump() + 1)
+      showNotification("Note deleted.", type = "message")
+    } else {
+      showNotification("You can delete only notes saved under your own name.", type = "error")
+    }
+  })
+
+  output$notes_download <- downloadHandler(
+    filename = function() paste0("team_notes_", Sys.Date(), ".csv"),
+    content = function(file) {
+      write.csv(notes_view(), file, row.names = FALSE, fileEncoding = "UTF-8")
+    }
+  )
 }
 
 shinyApp(ui, server)

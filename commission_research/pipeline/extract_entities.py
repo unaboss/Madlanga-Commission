@@ -144,6 +144,10 @@ def process_transcripts():
                     "entity_type": ent["type"],
                     "entity_value": ent["value"],
                     "context": seg["text"][:300],
+                    "page": seg.get("page", 0),
+                    "line_start": seg.get("line_start", 0),
+                    "page_end": seg.get("page_end", seg.get("page", 0)),
+                    "line_end": seg.get("line_end", 0),
                 }
                 fout.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 count += 1

@@ -40,9 +40,11 @@ It operates under the **Commissions Act, 1947** and was established by president
 | Evidence Compare | Side-by-side view: what commission documents say vs what witnesses say about any entity |
 | Story Map | Dual timeline: commission documents vs witness testimony |
 | Entity Browser | Browse 16,000+ unique entities by type, see every mention context |
-| Contradiction Detection | (Enterprise feature — not yet implemented) Auto-flag entities mentioned by multiple witnesses with conflicting testimony |
-| Witness Prep Pack | (Professional feature — not yet implemented) One-click witness summary card |
-| Evidence Bundle Export | (Professional feature — not yet implemented) Formatted HTML/PDF of entity evidence |
+| Contradiction Detection | (Enterprise feature) Flags entities where one witness affirms and another denies, side by side with the wording highlighted |
+| Witness Prep Pack | (Professional feature) One-click witness summary: days testified, questioners, entities named |
+| Evidence Bundle Export | (Professional feature) Downloadable, printable bundle of every mention of an entity, with citations |
+| Citations | Every search result and testimony excerpt carries "Day 47, p.23, lines 10–15"; search results export to CSV |
+| Team Notes | Evidence leaders can attach notes to excerpts or flag them as incorrect against the source |
 
 ### The Super Dictionary for Prosecutors Vision
 
@@ -170,7 +172,7 @@ Investigate these with evidence leaders, junior researchers, or anyone who works
 **Step 1: Desk Review (2-3 days)**
 - Read the madlanga_downloader.py script to understand what data exists
 - Launch the dashboard (`run.ps1` or `launch.bat` from `commission_research/`)
-- Explore each of the 11 nav panels to understand current capabilities
+- Explore each of the 13 nav panels to understand current capabilities
 - Read the Business Pitch and Value Analysis docs in `business/`
 
 **Step 2: Interview Prep (1 day)**
@@ -256,7 +258,7 @@ Include anonymized notes from each interview — verbatim quotes are especially 
 
 4. **For report drafting, the tool provides recommendations and citations only.** The legal team writes the actual report.
 
-5. **Contradiction detection, witness prep packs, and evidence bundles are planned but not yet built.** Your research should inform how these are designed.
+5. **Contradiction detection, witness prep packs, evidence bundles, citations and team notes are built as first versions.** Test them against real workflows: your findings decide how they change in v2. Question 18 (citation format) matters most, since the tool now assumes "Day, page, lines".
 
 ---
 

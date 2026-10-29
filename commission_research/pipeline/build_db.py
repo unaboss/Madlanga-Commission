@@ -12,6 +12,7 @@ Steps:
     4. index    — Build SQLite FTS5 search database
     5. network  — Compute network graph for dashboard
     6. storymap — Build story map timeline for dashboard
+    7. institutions — Build institutional_analysis.db (Institutions tab)
 """
 
 import sys
@@ -28,6 +29,7 @@ STEPS = {
     "index":   [PIPELINE_DIR / "index_search.py"],
     "network": [PIPELINE_DIR / "compute_network.py"],
     "storymap": [PIPELINE_DIR / "build_story_map.py"],
+    "institutions": [PIPELINE_DIR / "build_institutional_db.py"],
 }
 
 
