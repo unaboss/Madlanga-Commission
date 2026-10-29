@@ -56,7 +56,10 @@ def build_db():
             speaker_id INTEGER REFERENCES speakers(id),
             text TEXT NOT NULL,
             page_number INTEGER DEFAULT 0,
-            line_number INTEGER DEFAULT 0
+            line_number INTEGER DEFAULT 0,
+            line_start INTEGER DEFAULT 0,
+            page_end INTEGER DEFAULT 0,
+            line_end INTEGER DEFAULT 0
         );
 
         CREATE TABLE statements (
@@ -85,7 +88,11 @@ def build_db():
             entity_value TEXT NOT NULL,
             context_text TEXT DEFAULT '',
             hearing_id INTEGER REFERENCES hearings(id),
-            speaker_id INTEGER REFERENCES speakers(id)
+            speaker_id INTEGER REFERENCES speakers(id),
+            page_number INTEGER DEFAULT 0,
+            line_start INTEGER DEFAULT 0,
+            page_end INTEGER DEFAULT 0,
+            line_end INTEGER DEFAULT 0
         );
 
         CREATE VIRTUAL TABLE IF NOT EXISTS search_index USING fts5(
@@ -147,13 +154,17 @@ def build_db():
 
                 day = seg.get("day", 0)
                 seg_batch.append((day, spk_id, seg["text"],
-                                  seg.get("page", 0), seg.get("line", 0)))
+                                  seg.get("page", 0), seg.get("line", 0),
+                                  seg.get("line_start", 0),
+                                  seg.get("page_end", seg.get("page", 0)),
+                                  seg.get("line_end", 0)))
 
                 if len(seg_batch) >= 10000:
                     conn.executemany(
                         "INSERT INTO transcript_segments "
-                        "(hearing_id, speaker_id, text, page_number, line_number) "
-                        "VALUES (?, ?, ?, ?, ?)", seg_batch)
+                        "(hearing_id, speaker_id, text, page_number, line_number, "
+                        "line_start, page_end, line_end) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", seg_batch)
                     seg_count += len(seg_batch)
                     seg_batch.clear()
                     print(f"  {seg_count} segments loaded...")
@@ -161,8 +172,9 @@ def build_db():
             if seg_batch:
                 conn.executemany(
                     "INSERT INTO transcript_segments "
-                    "(hearing_id, speaker_id, text, page_number, line_number) "
-                    "VALUES (?, ?, ?, ?, ?)", seg_batch)
+                    "(hearing_id, speaker_id, text, page_number, line_number, "
+                    "line_start, page_end, line_end) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", seg_batch)
                 seg_count += len(seg_batch)
         print(f"  {seg_count} transcript segments total  ({len(speaker_map)} speakers)")
 
@@ -243,18 +255,22 @@ def build_db():
                     e.get("source", ""), e.get("day", 0),
                     e.get("entity_type", ""), e.get("entity_value", ""),
                     e.get("context", ""), e.get("day", 0),
-                    speaker_map.get(e.get("speaker", ""), 0)
+                    speaker_map.get(e.get("speaker", ""), 0),
+                    e.get("page", 0), e.get("line_start", 0),
+                    e.get("page_end", e.get("page", 0)), e.get("line_end", 0)
                 ))
                 if len(ent_batch) >= 5000:
                     conn.executemany(
                         "INSERT INTO entities (source, source_id, entity_type, entity_value, "
-                        "context_text, hearing_id, speaker_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        "context_text, hearing_id, speaker_id, page_number, line_start, "
+                        "page_end, line_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         ent_batch)
                     ent_batch.clear()
             if ent_batch:
                 conn.executemany(
                     "INSERT INTO entities (source, source_id, entity_type, entity_value, "
-                    "context_text, hearing_id, speaker_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    "context_text, hearing_id, speaker_id, page_number, line_start, "
+                    "page_end, line_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     ent_batch)
         print(f"  {sum(1 for _ in open(INPUT_ENTITIES, encoding='utf-8') if _.strip())} entities loaded")
 
