@@ -1,5 +1,6 @@
 # app.R — Commission Research Tool
-# Professional intelligence dashboard for the Madlanga Commission of Inquiry
+# Intelligence dashboard for a commission of inquiry. Which inquiry, its
+# names and its branding come from inquiry.json (see inquiry.R).
 source("global.R")
 
 library(shiny)
@@ -80,7 +81,7 @@ layout_concentric <- function(nodes_df, edges_df,
   nodes_df$x[!is_person] <- outer_radius * cos(ent_angles)
   nodes_df$y[!is_person] <- outer_radius * sin(ent_angles)
 
-  ci <- grep("Mkhwanazi", nodes_df$label, ignore.case = TRUE)
+  ci <- which(is_focus_label(nodes_df$label))
   if (length(ci)) { nodes_df$x[ci] <- 0; nodes_df$y[ci] <- 0 }
   nodes_df
 }
@@ -107,7 +108,7 @@ annotation_form_ui <- function(id) {
 annotation_form_server <- function(id, target, author, ann_con, annotations, ann_bump) {
   moduleServer(id, function(input, output, session) {
     output$author_field <- renderUI({
-      if (!is.null(session$user)) return(NULL)
+      if (!is.null(current_username(session))) return(NULL)
       textInput(session$ns("author"), NULL, value = isolate(author()),
                 placeholder = "Your name", width = "100%")
     })
@@ -116,8 +117,13 @@ annotation_form_server <- function(id, target, author, ann_con, annotations, ann
     save <- function(kind) {
       t <- target()
       req(t)
+      if (!can_write_notes(session)) {
+        showNotification("Your account is read-only. Ask an admin for analyst access to add notes.",
+                         type = "warning")
+        return()
+      }
       ok <- tryCatch({
-        add_annotation(ann_con, session$user %||% author(), kind, t$source,
+        add_annotation(ann_con, current_username(session) %||% author(), kind, t$source,
                        t$source_id, t$citation, t$speaker, t$excerpt, input$note)
         TRUE
       }, error = function(e) {
@@ -154,19 +160,24 @@ annotation_form_server <- function(id, target, author, ann_con, annotations, ann
 }
 
 # ── UI ──────────────────────────────────────────────────────────
-ui <- page_navbar(
+# `user` is the signed-in account (NULL when logins are off); admins get
+# the Users tab.
+app_ui <- function(user = NULL) page_navbar(
   title = tags$span(
     tags$img(src = "", style = "display:none"),
-    "Commission Research"
+    INQUIRY$branding$product_name,
+    tags$small(style = "margin-left:8px; font-size:0.8rem; opacity:0.7;", INQUIRY$short_name)
   ),
   theme = DARK_THEME,
   id = "nav",
   footer = div(
     style = "text-align:center; padding:15px; font-size:0.75rem; color:#666; border-top:1px solid #2a2a2a; margin-top:20px;",
-    "\u00a9 2026 Open Eye Data Analyst. All rights reserved."
+    if (nzchar(INQUIRY$branding$vendor))
+      paste0("\u00a9 ", format(Sys.Date(), "%Y"), " ", INQUIRY$branding$vendor, ". All rights reserved.")
   ),
   header = tagList(
     tags$head(
+      tags$script(HTML(AUTH_JS)),
       tags$style(HTML("
       .stat-card { text-align: center; padding: 20px 10px; border-radius: 8px; }
       .stat-card h2 { font-size: 2rem; margin: 5px 0; font-weight: 700; }
@@ -194,8 +205,11 @@ ui <- page_navbar(
                     border-left: 3px solid #3498db; background: rgba(255,255,255,0.03); }
       .annotation.flag { border-left-color: #e74c3c; }
       .stance-col h6 { margin-bottom: 8px; }
+      .publish-note { font-size: 0.78rem; color: #aaa; background: #1b1b1b; border-bottom: 1px solid #2a2a2a;
+                      padding: 6px 16px; margin: 0 -12px 8px; }
     "))
-  )),
+  ),
+  div(class = "publish-note", role = "note", icon("scale-balanced"), " ", INQUIRY$disclaimer)),
 
   # ── Overview ─────────────────────────────────────────────────
   nav_panel(
@@ -573,9 +587,9 @@ ui <- page_navbar(
     full_screen = TRUE, style = "margin-top:10px;",
     card_header(
       div(style = "display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;",
-        span("All Accusations"),
+        span("Allegations raised in testimony"),
         selectInput("acc_filter", NULL, width = 280,
-          choices = c("All Accusations" = "all",
+          choices = c("All allegations" = "all",
             "Critical (murder, kill, death, threat, violence)" = "critical",
             "High (bribe, fraud, theft, embezzle, kickback)" = "high",
             "Medium (leak, cover up, obstruction, conspiracy)" = "medium",
@@ -593,8 +607,12 @@ ui <- page_navbar(
     ),
     card(
       full_screen = TRUE,
-      card_header("Witness Reliability"),
-      card_body(reactableOutput("dash_reliability_table"))
+      card_header("Corroboration by other witnesses"),
+      card_body(
+        p(class = "text-muted", style = "font-size:0.8rem; margin-bottom:6px;",
+          "Share of the entities a witness named that at least one other witness also named. ",
+          "It shows overlap between testimonies, not whether a witness is truthful."),
+        reactableOutput("dash_reliability_table"))
     )
   ),
   card(
@@ -606,7 +624,7 @@ ui <- page_navbar(
           card(
             card_body(
               h3(textOutput("dash_validity_pct", inline = TRUE)),
-              p("of accused entities have documentary corroboration"),
+              p("of named entities also appear in commission documents"),
               p(textOutput("dash_validity_detail"), class = "text-muted", style = "font-size:0.85rem;")
             )
           ),
@@ -617,8 +635,10 @@ ui <- page_navbar(
       )
     )
   ),
+  if (identical(user$role, "admin")) nav_panel(title = "Users", users_admin_ui()),
   nav_spacer(),
   nav_item(uiOutput("license_status")),
+  auth_nav_items(user),
   nav_menu("Stats",
     nav_item(div(style = "padding:8px 15px; white-space:nowrap;",
       span(style = "font-weight:700;font-size:1.2rem;color:#3498db;", textOutput("stat_hearings", inline = TRUE)),
@@ -645,7 +665,7 @@ ui <- page_navbar(
 )
 
 # ── Server ──────────────────────────────────────────────────────
-server <- function(input, output, session) {
+app_server <- function(input, output, session) {
 
   # ── License ───────────────────────────────────────────────────
   # Validated per session, so dropping in a renewed license.key and
@@ -686,13 +706,9 @@ server <- function(input, output, session) {
                     revoked = "License Revoked", "License Required")
     showModal(modalDialog(
       title = div(style = "color:#e74c3c;", icon("lock"), " ", title),
-      h4("Access to the Commission Research Dashboard has been blocked."),
+      h4(paste0("Access to ", INQUIRY$branding$product_name, " has been blocked.")),
       p(LICENSE$message),
-      p(
-        "Contact ", tags$b("Mabek"),
-        " at ", tags$a(href = "mailto:mabek@madlangaresearch.co.za", "mabek@madlangaresearch.co.za"),
-        " to activate or renew."
-      ),
+      if (!is.null(contact_line())) p(contact_line(), " to activate or renew."),
       tags$hr(),
       p("After renewing, place the new license.key file in the app directory and click below.",
         class = "text-muted", style = "font-size:0.85rem;"),
@@ -703,6 +719,8 @@ server <- function(input, output, session) {
     ))
     return(invisible())
   }
+
+  users_admin_server(input, output, session)
 
   conn <- get_db()
   onStop(function() { dbDisconnect(conn) })
@@ -761,7 +779,7 @@ server <- function(input, output, session) {
   output$dash_acc_count <- renderText({
     df <- get_accusation_stats(conn)
     total_ents <- sum(df$unique_entities)
-    paste0(total_ents, " unique accused entities")
+    paste0(total_ents, " unique named entities")
   })
 
   output$dash_accused_table <- renderReactable({
@@ -806,12 +824,8 @@ server <- function(input, output, session) {
     reactable(df[, c("name", "rel", "corr")],
       columns = list(
         name = colDef(name = "Witness", minWidth = 220),
-        rel = colDef(name = "Reliability", width = 100,
-          style = function(value) {
-            v <- as.numeric(sub("%", "", value))
-            color <- if (v >= 80) "#27ae60" else if (v >= 50) "#f39c12" else "#e74c3c"
-            list(fontWeight = "bold", color = color)
-          }),
+        rel = colDef(name = "Also named by others", width = 160,
+          style = list(fontWeight = "bold")),
         corr = colDef(name = "Corroborated", width = 130)
       ), defaultPageSize = 10, compact = TRUE, bordered = TRUE,
       theme = reactableTheme(backgroundColor = "#16213e", color = "#ecf0f1",
@@ -830,7 +844,7 @@ server <- function(input, output, session) {
     shared <- sm$stats$total_shared_entities
     acc_stats <- get_accusation_stats(conn)
     total_ents <- sum(acc_stats$unique_entities)
-    paste0(shared, " of ", total_ents, " accused entities have both documentary evidence and witness testimony support")
+    paste0(shared, " of ", total_ents, " named entities appear in both commission documents and witness testimony")
   })
 
   output$dash_validity_table <- renderReactable({
@@ -915,8 +929,8 @@ server <- function(input, output, session) {
     reactable(cbind(data.frame(sev = sev_badge), df),
       columns = list(
         sev = colDef(name = "Severity", width = 100, html = TRUE),
-        accusation = colDef(name = "Accusation", minWidth = 270, html = TRUE),
-        accused = colDef(name = "Accused", minWidth = 210),
+        accusation = colDef(name = "Allegation (excerpt)", minWidth = 270, html = TRUE),
+        accused = colDef(name = "Witness \u2192 entity named", minWidth = 210),
         severity = colDef(show = FALSE),
         snippet = colDef(show = FALSE),
         accuser = colDef(show = FALSE),
@@ -1017,23 +1031,23 @@ server <- function(input, output, session) {
             hbg <- lighten_hex(hbg, 0.30)
           }
         }
-        is_mkhwanazi <- grepl("Mkhwanazi", n$label)
+        is_focus <- is_focus_label(n$label)
           data.frame(
             id = n$id,
             label = n$label,
             origLabel = n$label,
-            startLabel = if (is_mkhwanazi) n$label else "",
+            startLabel = if (is_focus) n$label else "",
             labelSize = (n$font$size %||% 10) * 1.1,
             group = n$group,
             size = n$size * 0.7,
             baseSize = n$size * 0.7,
           # Only the centre node stays pinned; the rest can be dragged
-          fixed = is_mkhwanazi,
+          fixed = is_focus,
           x = n$x %||% NA,
           y = n$y %||% NA,
           shape = "dot",
           font.size = 12,
-          font.opacity = if (is_mkhwanazi) 1 else 0,
+          font.opacity = if (is_focus) 1 else 0,
           font.color = "#FFFFFF",
           font.face = "Arial",
           font.strokeWidth = 3,
@@ -1140,10 +1154,11 @@ server <- function(input, output, session) {
           var nBatch = [];
           for (var i = 0; i < allNodeIds.length; i++) {
             var d = net.body.data.nodes.get(allNodeIds[i]);
-            // Only Mkhwanazi gets a label by default (check label text)
-            var isMkhwanazi = d.label && d.label.indexOf('Mkhwanazi') !== -1;
+            // Only the inquiry's focus witness keeps a label by default
+            // (startLabel is set for that node alone)
+            var isFocus = !!d.startLabel;
             nBatch.push({id: allNodeIds[i], size: d.baseSize,
-              'font.opacity': isMkhwanazi ? 1 : 0});
+              'font.opacity': isFocus ? 1 : 0});
           }
           net.body.data.nodes.update(nBatch);
 
@@ -1192,16 +1207,17 @@ server <- function(input, output, session) {
           tags$span(style = "display:inline-block; width:16px; height:16px;
             background:#C0392B; border:2px solid #999999; border-radius:50%;"),
           tags$span("Protected Witness")),
-        tags$div(style = "display:flex; align-items:center; gap:10px;",
-          tags$span(style = "display:inline-block; width:16px; height:16px;
-            background:#777777; border:2px solid #444444; border-radius:50%;"),
-          tags$span("Mkhwanazi (Whistleblower)")),
+        if (nzchar(INQUIRY$focus_person$legend %||% ""))
+          tags$div(style = "display:flex; align-items:center; gap:10px;",
+            tags$span(style = "display:inline-block; width:16px; height:16px;
+              background:#777777; border:2px solid #444444; border-radius:50%;"),
+            tags$span(INQUIRY$focus_person$legend)),
         tags$hr(),
         tags$b("Case Entities (all grey)"),
         tags$div(style = "display:flex; align-items:center; gap:10px;",
           tags$span(style = "display:inline-block; width:16px; height:16px;
             background:#999999; border:2px solid #666666; border-radius:50%;"),
-                  tags$span("Organizations (SAPS, SSA, Carnilinx, Hawks...)")),
+                  tags$span("Organisations named in testimony")),
         tags$hr(),
         tags$p(class = "text-muted", style = "font-size:0.8rem;",
           "Darker shade = more frequent. Bigger node = more mentions.")
@@ -1280,8 +1296,8 @@ server <- function(input, output, session) {
         if (nrow(sn) > 0) snippets <- sn
       }, error = function(e) {})
       tagList(
-        tags$p(tags$b("Accuser: "), from_nm),
-        tags$p(tags$b("Accused entity: "), to_nm, " (", ed$entityType, ")"),
+        tags$p(tags$b("Witness: "), from_nm),
+        tags$p(tags$b("Entity named: "), to_nm, " (", ed$entityType, ")"),
         if (!is.null(snippets) && nrow(snippets) > 0)
           tagList(tags$hr(), tags$b("Evidence excerpt:"),
             lapply(seq_len(nrow(snippets)), function(i) {
@@ -1305,7 +1321,7 @@ server <- function(input, output, session) {
             tags$b("Rank: "), (nd$rank %||% ""), " | ",
             tags$b("Days: "), nd$days),
           tags$hr(style = "margin:8px 0;"),
-          p(tags$b("Entities accused of intervening in:"), style = "margin-bottom:4px;"),
+          p(tags$b("Entities this witness named:"), style = "margin-bottom:4px;"),
           if (!is.null(ents) && nrow(ents) > 0)
             tags$div(style = "display:flex; flex-wrap:wrap; gap:6px;",
               lapply(seq_len(min(nrow(ents), 20)), function(i) {
@@ -2639,7 +2655,7 @@ server <- function(input, output, session) {
       showNotification("Select a note first.", type = "warning")
       return()
     }
-    me <- session$user %||% note_author()
+    me <- current_username(session) %||% note_author()
     if (delete_annotation(ann_con, df$id[sel], me)) {
       ann_bump(ann_bump() + 1)
       showNotification("Note deleted.", type = "message")
@@ -2656,4 +2672,6 @@ server <- function(input, output, session) {
   )
 }
 
-shinyApp(ui, server)
+# Logins wrap the whole app: no dashboard UI or server code runs until the
+# request carries a valid session (see auth.R).
+shinyApp(secure_ui(app_ui, DARK_THEME), secure_server(app_server))

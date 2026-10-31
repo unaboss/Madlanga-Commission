@@ -128,7 +128,7 @@ validate_license <- function(license_file = LICENSE_FILE,
   } else {
     result$status <- "expired"
     result$grace_left <- 0
-    result$message <- "License expired. Contact mabek@madlangaresearch.co.za to renew."
+    result$message <- "License expired. Contact your provider to renew."
   }
 
   # Online revocation check. A network failure never blocks the dashboard;
