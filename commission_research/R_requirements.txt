@@ -13,3 +13,4 @@ dplyr>=1.1
 digest>=0.6
 jsonlite>=1.8
 httr>=1.4
+sodium>=1.3
