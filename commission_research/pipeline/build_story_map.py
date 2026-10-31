@@ -13,50 +13,41 @@ import re
 from pathlib import Path
 from collections import defaultdict
 
+from inquiry_config import load_inquiry
+
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "commission_research.db"
 OUT_DIR = Path(__file__).resolve().parent.parent / "app" / "www"
 OUTPUT_FILE = OUT_DIR / "story_map_data.json"
 
-# Entity extraction patterns (lightweight keyword matching for document titles)
-ORG_PATTERNS = [
-    "SAPS", "HAWKS", "DPCI", "NPA", "IPID", "SIU", "SSA",
-    "Crime Intelligence", "National Prosecuting Authority",
-    "Independent Police Investigative Directorate",
-    "State Security Agency", "Special Investigating Unit",
-    "Task Team", "National Task Team",
-    "Organised Crime", "Detective Services", "Visible Policing",
-    "Crime Intelligence Division", "NATJOINTS",
-    "Medicare", "Carnilinx", "Forensic Science Laboratory",
-    "National Intervention Unit", "Tactical Response Team",
-    "Scorpions", "Directorate Special Operations",
-]
-
-LOCATIONS = [
-    "Gauteng", "KwaZulu-Natal", "KZN", "Western Cape", "Eastern Cape",
-    "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Free State",
-    "Pretoria", "Johannesburg", "Cape Town", "Durban",
-]
+# Entity extraction patterns (lightweight keyword matching for document titles),
+# from the inquiry's jurisdiction pack
+_INQUIRY = load_inquiry()
+ORG_PATTERNS = _INQUIRY["pack"].get("story_map_organisations", [])
+LOCATIONS = _INQUIRY["pack"].get("story_map_locations", [])
+TITLE_PREFIX = _INQUIRY.get("document_title_prefix", "")
 
 STOP_WORDS = {
-    "the", "and", "for", "day", "with", "from", "into", "madlanga", "commission",
+    "the", "and", "for", "day", "with", "from", "into", "commission",
     "order", "ruling", "notice", "application", "statement", "media", "amendment",
     "proclamation", "government", "gazette", "witness", "protection", "camera",
     "public", "hearing", "first", "opening", "address", "remarks", "report",
     "submitted", "use", "resumption", "clarification", "recess",
-    "chairperson", "chairpersons", "world", "cup", "interim", "terms",
+    "chairperson", "chairpersons", "interim", "terms",
     "reference", "provincial", "provisional", "final", "adjournment",
     "postponement", "testimony", "appearance", "confidentiality",
-    "annexure", "motion", "joint", "advisory", "easter", "sabc",
-    "bafana", "legal", "teams", "commencement", "enquiry", "inquiry",
-    "judicial", "criminal", "justice", "system", "held", "bridget",
-    "mabandla", "college", "in", "on", "of", "at", "to", "no", "by",
-    "league", "national", "indian", "cabal", "cartel", "letter",
+    "annexure", "motion", "joint", "advisory",
+    "legal", "teams", "commencement", "enquiry", "inquiry",
+    "judicial", "criminal", "justice", "system", "held",
+    "in", "on", "of", "at", "to", "no", "by",
+    "national", "letter",
     "2025", "2026", "september", "october", "november", "december",
     "january", "february", "march", "april", "may", "june", "july",
     "august", "date", "pdf", "doc", "file", "copy", "page", "pages",
     "draft", "agreed", "agreement", "terms", "schedule", "annexure",
     "nov", "sep", "oct", "dec", "jan", "feb", "mar", "apr", "jun", "jul",
 }
+# Inquiry-specific noise words (names of the venue, events, etc.)
+STOP_WORDS |= {w.lower() for w in _INQUIRY.get("story_map_stop_words", [])}
 
 
 def extract_entities_from_text(text):
@@ -98,7 +89,8 @@ def build_commission_timeline(conn):
 
         # Clean up title for display
         label = re.sub(r"^\d{4}-\d{2}-\d{2}_", "", title)
-        label = label.replace("Madlanga-Commission_", "")
+        if TITLE_PREFIX:
+            label = label.replace(TITLE_PREFIX, "")
         label = label.replace("_", " ")
         label = re.sub(r" +", " ", label).strip()
 

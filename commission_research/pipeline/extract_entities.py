@@ -2,13 +2,15 @@
 extract_entities.py — Extract named entities (people, orgs, dates, locations,
 case numbers, exhibit refs) from normalized transcripts and statements.
 
-Uses a hybrid of regex patterns + gazetteer lists customized for SA legal context.
+Uses a hybrid of regex patterns + gazetteer lists from the inquiry's jurisdiction pack.
 """
 
 import json
 import re
 from pathlib import Path
 from collections import defaultdict
+
+from inquiry_config import load_inquiry
 
 
 DATA_DIR   = Path(__file__).resolve().parent.parent / "data"
@@ -18,38 +20,22 @@ OUTPUT_FILE = DATA_DIR / "parsed" / "entities.jsonl"
 
 
 # ── Entity extraction patterns ──────────────────────────────────────
+# Gazetteers and reference formats come from the jurisdiction pack
+# (packs/<id>.json); inquiry-specific exhibit numbering (e.g. Madlanga's
+# "MK" bundles) comes from the inquiry config.
 
-# SA Police ranks/orgs
-SA_ORGS = [
-    "SAPS", "HAWKS", "DPCI", "NPA", "IPID", "SIU", "SSA",
-    "Crime Intelligence", "Directorate for Priority Crime Investigation",
-    "National Prosecuting Authority", "Independent Police Investigative Directorate",
-    "State Security Agency", "Special Investigating Unit",
-    "Task Team", "National Task Team", "Eastern Cape Task Team",
-    "Organised Crime", "Detective Services", "Visible Policing",
-    "Crime Intelligence Division", "Forensic Science Laboratory",
-    "National Intervention Unit", "Tactical Response Team",
-    "Directorate Special Operations", "Scorpions",
-    "Gauteng Traffic Police", "EMPD", "JMPD", "TMPD",
-    "Bridget Mabandla Justice College", "Justice College",
-]
+_INQUIRY = load_inquiry()
+_PACK = _INQUIRY["pack"]
+
+ORGANISATIONS = _PACK.get("organisations", [])
+LOCATIONS = _PACK.get("locations", [])
 
 # Case/docket reference patterns
-CASE_PATTERNS = [
-    re.compile(r"(?:[Cc]ase|[Dd]ocket|CAS)\s*(?:[Nn]o\.?|[Nn]umber[:.\s]*)?\s*([A-Z]{2,5}[\s/-]*\d{1,6}[/\-]?\d{0,4}[/\-]?\d{0,4})"),
-    re.compile(r"(?:[Cc]ase|[Dd]ocket|[Rr]eference)\s*(?:number|no)?[:.\s]*([A-Z0-9]{3,20})", re.IGNORECASE),
-    re.compile(r"\b(1[23]\d)\s*(?:docket|case)", re.IGNORECASE),
-    re.compile(r"(\d{2,6}[/\-]\d{2,4}[/\-]\d{2,4})\s*(?:docket|case|matter)", re.IGNORECASE),
-]
+CASE_PATTERNS = [re.compile(p) for p in _PACK.get("case_patterns", [])]
 
 # Exhibit/bundle references
-EXHIBIT_PATTERNS = [
-    re.compile(r"([Ee]xhibit\s*[A-Z0-9]{1,4})\b"),
-    re.compile(r"\b(MK\d{1,3})\b"),       # Mkhwanazi exhibit bundles
-    re.compile(r"\b(Annexure\s*[A-Z0-9]{1,3})\b"),
-    re.compile(r"\b(Volume\s*\d+)\b", re.IGNORECASE),
-    re.compile(r"\b(Bundle\s*[A-Z0-9]{1,4})\b"),
-]
+EXHIBIT_PATTERNS = [re.compile(p) for p in
+                    _PACK.get("exhibit_patterns", []) + _INQUIRY.get("exhibit_patterns", [])]
 
 # Date patterns
 DATE_PATTERNS = [
@@ -59,23 +45,11 @@ DATE_PATTERNS = [
     re.compile(r"(\d{1,2}(?:st|nd|rd|th)\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})"),
 ]
 
-# Location patterns (SA provinces, cities)
-SA_LOCATIONS = [
-    "Gauteng", "KwaZulu-Natal", "KZN", "Western Cape", "Eastern Cape",
-    "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Free State",
-    "Pretoria", "Johannesburg", "Cape Town", "Durban", "Port Elizabeth",
-    "Gqeberha", "Bloemfontein", "Polokwane", "Nelspruit", "Mbombela",
-    "East London", "Kimberley", "Mahikeng", "Meyerton", "Soweto",
-    "Tembisa", "Mamelodi", "Katlehong", "Vosloorus", "Thokoza",
-    "Boksburg", "Benoni", "Springs", "Kempton Park", "Midrand",
-    "Sandton", "Randburg", "Roodepoort", "Alberton", "Germiston",
-]
-
 # Money amounts
-MONEY_PATTERN = re.compile(r"R\d{1,3}(?:,\d{3})*(?:\.\d{2})?\s*(?:million|billion|m|bn)?")
+MONEY_PATTERN = re.compile(_PACK["money_pattern"]) if _PACK.get("money_pattern") else None
 
 # Vehicle registration
-VEHICLE_PATTERN = re.compile(r"\b([A-Z]{2,3}\s?\d{2,5}[A-Z]{0,2})\s*(?:GP|NW|EC|FS|KZN|MP|LP|NC|WC|ZN)\b")
+VEHICLE_PATTERN = re.compile(_PACK["vehicle_pattern"]) if _PACK.get("vehicle_pattern") else None
 
 
 def extract_entities(text: str) -> list[dict]:
@@ -83,7 +57,7 @@ def extract_entities(text: str) -> list[dict]:
     entities = []
 
     # Organizations
-    for org in SA_ORGS:
+    for org in ORGANISATIONS:
         if re.search(re.escape(org), text, re.IGNORECASE):
             entities.append({"type": "organization", "value": org})
 
@@ -103,17 +77,19 @@ def extract_entities(text: str) -> list[dict]:
             entities.append({"type": "date", "value": m.group(1).strip()})
 
     # Locations
-    for loc in SA_LOCATIONS:
+    for loc in LOCATIONS:
         if re.search(r"\b" + re.escape(loc) + r"\b", text, re.IGNORECASE):
             entities.append({"type": "location", "value": loc})
 
     # Money
-    for m in MONEY_PATTERN.finditer(text):
-        entities.append({"type": "money", "value": m.group(0).strip()})
+    if MONEY_PATTERN:
+        for m in MONEY_PATTERN.finditer(text):
+            entities.append({"type": "money", "value": m.group(0).strip()})
 
     # Vehicles
-    for m in VEHICLE_PATTERN.finditer(text):
-        entities.append({"type": "vehicle", "value": m.group(0).strip()})
+    if VEHICLE_PATTERN:
+        for m in VEHICLE_PATTERN.finditer(text):
+            entities.append({"type": "vehicle", "value": m.group(0).strip()})
 
     return entities
 

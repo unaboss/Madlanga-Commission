@@ -10,8 +10,10 @@ import re
 import json
 from pathlib import Path
 
+from inquiry_config import source_dir
 
-TRANSCRIPTS_DIR = Path(__file__).resolve().parents[2] / "madlanga_downloads" / "transcripts_txt"
+
+TRANSCRIPTS_DIR = source_dir() / "transcripts_txt"
 OUTPUT_DIR     = Path(__file__).resolve().parent.parent / "data" / "parsed"
 OUTPUT_FILE    = OUTPUT_DIR / "transcripts.jsonl"
 

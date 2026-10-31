@@ -12,6 +12,8 @@ import random
 from pathlib import Path
 from collections import Counter, defaultdict
 
+from inquiry_config import is_focus
+
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "commission_research.db"
 OUT_DIR = Path(__file__).resolve().parent.parent / "app" / "www"
 
@@ -388,9 +390,9 @@ def build_network():
         pn["corroboratedCount"] = corr_count
         pn["reliability"] = round(corr_count / total_named * 100) if total_named > 0 else 0
 
-    # Mkhwanazi: fixed at center, grey, large
+    # The inquiry's focus witness (inquiry config "focus_person"): fixed at center, grey, large
     for n in all_nodes:
-        if "Mkhwanazi" in n["label"]:
+        if is_focus(n["label"]):
             n["color"] = {"background": "#777777", "border": "#444444",
                           "highlight": {"background": "#999999", "border": "#444444"}}
             n["size"] = 45
@@ -399,7 +401,7 @@ def build_network():
             n["y"] = 0
 
     # Witnesses (person nodes): fixed on outer circle
-    person_nodes_ordered = [n for n in all_nodes if n.get("nodeType") == "person" and "Mkhwanazi" not in n["label"]]
+    person_nodes_ordered = [n for n in all_nodes if n.get("nodeType") == "person" and not is_focus(n["label"])]
     n_persons = len(person_nodes_ordered)
     outer_radius = 280
     for i, n in enumerate(person_nodes_ordered):
