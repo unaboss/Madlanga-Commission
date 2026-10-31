@@ -5,7 +5,11 @@ Usage:
     python pipeline/build_db.py          # Run all steps
     python pipeline/build_db.py --step parse  # Run a specific step
 
+    INQUIRY_CONFIG=inquiries/<id>/inquiry.json python pipeline/build_db.py
+                                         # Process a different inquiry
+
 Steps:
+    0. config   — Check the inquiry config (INQUIRY_CONFIG) and write app/inquiry.json
     1. parse    — Parse transcripts and extract text from statement PDFs
     2. norm     — Normalize speaker names
     3. extract  — Extract entities
@@ -22,6 +26,7 @@ from pathlib import Path
 
 PIPELINE_DIR = Path(__file__).resolve().parent
 STEPS = {
+    "config":  [PIPELINE_DIR / "inquiry_config.py"],
     "parse":   [PIPELINE_DIR / "parse_transcripts.py",
                 PIPELINE_DIR / "parse_statements.py"],
     "norm":    [PIPELINE_DIR / "normalize_speakers.py"],

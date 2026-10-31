@@ -13,8 +13,10 @@ from pathlib import Path
 
 import pdfplumber
 
+from inquiry_config import source_dir
 
-HEARINGS_DIR  = Path(__file__).resolve().parents[2] / "madlanga_downloads" / "hearings"
+
+HEARINGS_DIR  = source_dir() / "hearings"
 OUTPUT_DIR    = Path(__file__).resolve().parent.parent / "data" / "parsed"
 OUTPUT_FILE   = OUTPUT_DIR / "statements.jsonl"
 

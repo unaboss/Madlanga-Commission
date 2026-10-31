@@ -20,7 +20,10 @@ An intelligence dashboard for the **Judicial Commission of Inquiry into Criminal
 ```
 madlanga_downloader.py          # Downloads all public records from the Commission's site
 commission_research/
+  inquiries/<id>/inquiry.json   # One inquiry: names, speakers, focus witness, branding
+  packs/<country>.json          # One jurisdiction: organisations, places, case/money formats
   pipeline/                     # Python: parse → normalize → extract → index → build
+    inquiry_config.py           #   loads + validates the inquiry config and its pack
     parse_transcripts.py        #   speaker-labelled transcript parsing
     normalize_speakers.py       #   alias/role normalisation
     extract_entities.py         #   organisations, people, cases, exhibits, locations
@@ -33,6 +36,8 @@ commission_research/
   app/                          # R / Shiny dashboard
     app.R                       #   UI + server (bslib, visNetwork, plotly, reactable)
     global.R                    #   data access + dashboard logic
+    inquiry.R                   #   inquiry settings, publishing disclaimer
+    auth.R                      #   customer logins, roles, Users tab
   research/                     # institutional research notes & briefs
 ```
 
@@ -71,9 +76,10 @@ cd commission_research
 Rscript -e "shiny::runApp('app', launch.browser=TRUE)"
 ```
 
-The dashboard checks its license on every session. For local development
-either set `MADLANGA_DEV_MODE=true` (environment variable or `app/.Renviron`)
-or generate a license for yourself (see Licensing below).
+The dashboard checks its license and asks for a login on every session. For
+local development either set `MADLANGA_DEV_MODE=true` (environment variable or
+`app/.Renviron`), or generate a license and create a user for yourself (see
+Licensing and Logins below).
 
 ### 4. Run the tests
 
@@ -107,6 +113,47 @@ file — never hardcoded.
 - Team notes are stored in `app/data/annotations.db`. On hosts with a temporary
   disk (shinyapps.io wipes it on every redeploy or restart) set
   `MADLANGA_ANNOTATIONS_DB` to a path on persistent storage.
+
+## Running another inquiry
+
+Nothing about Madlanga is hard-coded any more. To set up a new inquiry:
+
+1. Copy `commission_research/inquiries/madlanga/inquiry.json` to
+   `inquiries/<new-id>/inquiry.json` and edit it: names, `source_dir` (where its
+   `transcripts_txt/`, `hearings/` and `metadata/` live), the speaker rules
+   (`[regex, canonical name, role]`, first match wins, `{1}` = first regex
+   group), the focus witness shown at the centre of the network, exhibit
+   numbering, branding and support contact.
+2. Pick a jurisdiction pack (`packs/za.json` for South Africa) or copy one for a
+   new country.
+3. Build: `INQUIRY_CONFIG=commission_research/inquiries/<new-id>/inquiry.json python commission_research/pipeline/build_db.py`.
+   The first step validates the config and writes `app/inquiry.json`, which is
+   what the deployed dashboard reads.
+
+Every screen carries a publishing disclaimer (a mention is not a finding of
+wrongdoing; check the cited transcript before publishing). An inquiry can
+reword it with a `"disclaimer"` key but cannot remove it.
+
+## Logins
+
+Each deployment has its own accounts, stored in `app/data/users.db` (or
+`MADLANGA_USERS_DB`) with scrypt-hashed passwords. Roles: **admin** (everything
+plus the Users tab), **analyst** (read, add notes and flags), **viewer** (read
+only). Five wrong passwords lock an account for 15 minutes; sessions last 12
+hours.
+
+```bash
+Rscript tools/manage_users.R add alice --role admin --name "Alice M"   # first admin
+Rscript tools/manage_users.R list
+Rscript tools/manage_users.R password alice      # also signs alice out everywhere
+Rscript tools/manage_users.R disable bob
+```
+
+After that, admins add and manage users in the dashboard's **Users** tab.
+Ship `users.db` with the app or point `MADLANGA_USERS_DB` at persistent storage
+(on shinyapps.io the app disk is wiped on redeploy). `MADLANGA_AUTH=off` turns
+logins off, e.g. behind a host that already authenticates users;
+`MADLANGA_DEV_MODE=true` also skips them.
 
 ## Repository notes
 

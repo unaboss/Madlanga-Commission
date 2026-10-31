@@ -64,3 +64,6 @@ transcript_research/
 # Private business/pitch documents - kept local, not in the public repo
 business/
 
+
+# Dashboard logins (one per deployment; never committed)
+commission_research/app/data/users.db*

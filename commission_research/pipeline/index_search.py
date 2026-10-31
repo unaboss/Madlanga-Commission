@@ -8,6 +8,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+from inquiry_config import source_dir
+
 
 DATA_DIR  = Path(__file__).resolve().parent.parent / "data"
 DB_PATH   = DATA_DIR / "commission_research.db"
@@ -16,8 +18,8 @@ INPUT_TRANSCRIPTS_NORM = DATA_DIR / "parsed" / "transcripts_normalized.jsonl"
 INPUT_TRANSCRIPTS_RAW  = DATA_DIR / "parsed" / "transcripts.jsonl"
 INPUT_STATEMENTS       = DATA_DIR / "parsed" / "statements.jsonl"
 INPUT_ENTITIES         = DATA_DIR / "parsed" / "entities.jsonl"
-INPUT_HEARINGS_META    = Path(__file__).resolve().parents[2] / "madlanga_downloads" / "metadata" / "hearings.json"
-INPUT_DOCUMENTS_META   = Path(__file__).resolve().parents[2] / "madlanga_downloads" / "metadata" / "documents.json"
+INPUT_HEARINGS_META    = source_dir() / "metadata" / "hearings.json"
+INPUT_DOCUMENTS_META   = source_dir() / "metadata" / "documents.json"
 
 
 def build_db():

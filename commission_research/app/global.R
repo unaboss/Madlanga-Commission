@@ -11,6 +11,12 @@ library(jsonlite)
 # license.key takes effect on reload without restarting the app.
 source("license_check.r")
 
+# ── Inquiry settings (names, branding, focus witness, disclaimer) ─────
+source("inquiry.R")
+
+# ── Customer logins ──────────────────────────────────────────────
+source("auth.R")
+
 # ── Paths ───────────────────────────────────────────────────────
 APP_DIR  <- getwd()
 DB_PATH <- normalizePath(file.path(APP_DIR, "data", "commission_research.db"), mustWork = FALSE)
@@ -616,6 +622,7 @@ generate_bundle_html <- function(conn, entity_value, entity_type) {
   .actions button { background: #1a3a5c; color: #fff; border: 0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
   .type { width: 80px; color: #666; text-transform: capitalize; }
   .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 0.75rem; color: #999; }
+  .footer .disclaimer { color: #555; font-size: 0.8rem; margin-bottom: 8px; }
   @media print { body { padding: 20px; } .actions { display: none; } th { background: #1a3a5c !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head>
@@ -643,7 +650,9 @@ generate_bundle_html <- function(conn, entity_value, entity_type) {
   </table>
 
   <div class="footer">
-    Commission Research Intelligence Dashboard &mdash; Confidential',
+    <p class="disclaimer">', escape_html(INQUIRY$disclaimer), '</p>',
+    escape_html(INQUIRY$branding$product_name), ' &mdash; ', escape_html(INQUIRY$short_name),
+    ' &mdash; Confidential',
     '<br>Generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), '
   </div>
 </body>

@@ -1,0 +1,17 @@
+{
+  "id": "madlanga",
+  "short_name": "Madlanga Commission",
+  "name": "Judicial Commission of Inquiry into Criminality, Political Interference and Corruption in the Criminal Justice System",
+  "branding": {
+    "product_name": "Commission Research",
+    "vendor": "Open Eye Data Analyst"
+  },
+  "contact": {
+    "name": "Mabek",
+    "email": "mabek@madlangaresearch.co.za"
+  },
+  "focus_person": {
+    "match": "Mkhwanazi",
+    "legend": "Mkhwanazi (Whistleblower)"
+  }
+}
